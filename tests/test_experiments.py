@@ -12,7 +12,11 @@ class FakeClient:
     submitted=0
     def __init__(self,url): self.url=url
     def connect(self): return self
-    def tools(self):return [{'name':n} for n in ('song_create','song_defaults','studio_status','studio_capabilities')]
+    def tools(self):
+        names=('song_create','song_defaults','studio_status','studio_capabilities')
+        req=('music_source','style','lyrics','abc','abc_continue','lyric_timing',
+             'seed','lm_seed','lm_batch_size','synth_batch_size')
+        return [{'name':n,'inputSchema':{'properties':{k:{} for k in req}}} if n=='song_create' else {'name':n} for n in names]
     def call(self,name,args):
         if name=='song_create':
             FakeClient.submitted+=1
@@ -44,6 +48,16 @@ class ExperimentsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             submit(self.root,'A','http://localhost:8791/mcp',True,client_factory=FakeClient)
         self.assertEqual(FakeClient.submitted,1)
+
+    def test_reject_candidate_chorus_mutation(self):
+        self.b.write_text(ABC.replace('"Bb"z2BBBd2d-','"Bb"z2BBBc2c-'))
+        with self.assertRaises(ValueError):
+            prepare(self.a,self.b,self.lyr,self.style,self.root)
+
+    def test_reject_candidate_instrument_mutation(self):
+        self.b.write_text(ABC.replace('V: Ins\\nZ4|','V: Ins\\nF8|Z3|'))
+        with self.assertRaises(ValueError):
+            prepare(self.a,self.b,self.lyr,self.style,self.root)
 
     def test_recover_and_status_offline(self):
         prepare(self.a,self.b,self.lyr,self.style,self.root)
