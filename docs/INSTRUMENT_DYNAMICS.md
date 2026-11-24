@@ -1,0 +1,9 @@
+# Instrument dynamics (native arrangement)
+
+`instrument-dynamics --mix ORIGINAL.flac --instrumental EXISTING_INS.wav --vocals EXISTING_VOCALS.wav --out NEW_DIR`
+
+Uses existing aligned stems from the exact original full mix. FFmpeg/ffprobe are required. No inference, rendering of MIDI, separator job, or library mutation. Inputs must share the same 44.1/48 kHz sample rate, mono/stereo channel count, sample length and reconstruct the mix with residual <= -30 dB. Failure stops processing; no automatic resampling or alignment. This guard detects many mismatches, not all leakage or source separation errors.
+
+The processor identifies energy-rise onsets in the instrumental stem, estimates attack level over 80 ms and applies smooth attenuation of weaker attacks relative to nearby attacks, limited to 2 dB by default (0.25–3 dB supported). It adds only the changed instrumental contribution to the original mix, rather than replacing it with a recombined stem mix. Vocals are not intentionally edited, but any leakage into the instrumental stem can change. The result is 24-bit FLAC if peak, loudness and duration guards pass; otherwise the report indicates a blocked or no-safe-effect result. Sources are hashed and never overwritten. Do not treat the candidate as a verified musical improvement or a per-note velocity change. The heuristic cannot infer individual instrument articulation or guarantee more natural sound.
+
+Upstream backing_song_id requires a matching Chord Bed with rests, rather than the existing complete vocal/Ins score. Its score composer can write a new melody; it is not a transparent way to preserve the current composition or full-band arrangement. Keep this offline postproduction path separate from the previously implemented MIDI humanizer for authored/rendered accompaniment. Actual B-stem acceptance remains to be verified; no new human listening task is required for technical QA.
