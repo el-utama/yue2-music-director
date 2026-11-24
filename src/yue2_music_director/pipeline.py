@@ -13,7 +13,8 @@ from .midi import probe
 
 
 def run(abc:Path,lyrics:Path,out:Path,style:Path | None=None,seed:int=42,
-        max_edits:int=12,midi:bool=False,url:str | None=None,title:str='YuE2 A/B') -> dict:
+        max_edits:int=12,midi:bool=False,url:str | None=None,title:str='YuE2 A/B',
+        profile:str='conservative') -> dict:
     if not 1<=max_edits<=100:
         raise ValueError('run requires 1-100 maximum edits; use audit for no-change analysis')
     if out.exists() and any(out.iterdir()):
@@ -28,7 +29,7 @@ def run(abc:Path,lyrics:Path,out:Path,style:Path | None=None,seed:int=42,
     if any(x.startswith('SECTION MISMATCH') for x in warnings):
         raise ValueError('; '.join(warnings))
     diagnostics=phrase_diagnostics(parsed,groups)
-    result=humanize_pitch(source,lyric_text,seed,max_edits)
+    result=humanize_pitch(source,lyric_text,seed,max_edits,profile=profile)
     if result['report']['change_count']==0:
         raise ValueError('No safe pitch candidates for this score; no output written')
     if style is not None and not style.is_file():

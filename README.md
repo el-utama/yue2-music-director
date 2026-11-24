@@ -1,6 +1,6 @@
 # YuE2 Music Director
 
-Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, focused on safe ABC score edits, lyric-section diagnostics, MIDI compatibility checks and controlled audio A/B experiments. **Current version 0.6.0 (beta)**.
+Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, focused on safe ABC score edits, lyric-section diagnostics, MIDI compatibility checks and controlled audio A/B experiments. **Current version 0.6.1 (beta)**.
 
 > The repository is public. Never commit private audio, unpublished lyrics, local job journals, model weights or credentials.
 
@@ -34,7 +34,17 @@ yue2-director audit path/to/song.abc --lyrics path/to/lyrics.txt
 yue2-director humanize path/to/song.abc --lyrics path/to/lyrics.txt --out results/variant.abc --seed 42
 ```
 
-The humanizer makes **conservative chord-aware pitch edits**, grouped by approximate lyric-line phrases. It protects chorus, intro, interlude, outro, and all instrumental notes, and checks meter/ties/events. The original ABC is never overwritten. It **does not** promise natural singing, syllable alignment, microtiming, vibrato, velocity or audible improvement.
+The humanizer makes **conservative chord-aware pitch edits**, grouped by approximate lyric-line phrases. In **v0.6.1**, the default `--profile conservative` re-screens the same seed-based proposals as v0.6. It defers edits that shift pitch more than three semitones, or increase a neighboring melodic leap beyond five semitones; it does **not** replace deferred edits just to fill `--max-edits`. A `deferred_changes` array in the JSON report lists each rejected proposal and the reason. You may specify `--profile legacy` to reproduce the former v0.6 candidate for a controlled comparison. The number of accepted edits is score-dependent; **eight is a hypothesis for the earlier 114-bar score, not a hardcoded quota**. It protects chorus, intro, interlude, outro, and all instrumental notes, and checks meter/ties/events. The original ABC is never overwritten. It **does not** promise natural singing, syllable alignment, microtiming, vibrato, velocity or audible improvement.
+
+### Conservative vs. legacy candidate (offline)
+
+```powershell
+# Profile changes must use NEW output paths; existing experiments are never overwritten.
+yue2-director humanize local/song.abc --lyrics local/lyrics.txt --out results/v061.abc --seed 42 --profile conservative
+yue2-director humanize local/song.abc --lyrics local/lyrics.txt --out results/v060_replay.abc --seed 42 --profile legacy
+```
+
+The report records `proposed_change_count`, `change_count`, and `deferred_changes`. A conservative filter is only a contour heuristic; musical quality and lyric stress still require human review. The change does not modify velocity, timing or audio-generation behavior.
 
 ## MCP: only explicit local Studio endpoint
 

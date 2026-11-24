@@ -1,6 +1,6 @@
 # Development and validation
 
-## Current phase: v0.6 beta
+## Current phase: v0.6.1 beta
 
 This is a **working local-first Python toolkit**, not a production-ready autonomous music director. Migrated and integrated components:
 
@@ -17,7 +17,7 @@ This is a **working local-first Python toolkit**, not a production-ready autonom
 
 ## Architecture
 
-- `music.py`: strict notation parser, fixed-duration phrase variation and post-edit score safety
+- `music.py`: strict notation parser, fixed-duration phrase variation and post-edit score safety, with configurable conservative/legacy contour screening
 - `prosody.py`: bracketed lyric sections, estimated syllables, rough phrase density report
 - `mcp.py`: modern and legacy MCP handshake, loopback-only transport, no automatic retries
 - `midi.py`: score-to-MIDI probe and bounded MIDI header checks
@@ -25,6 +25,13 @@ This is a **working local-first Python toolkit**, not a production-ready autonom
 - `job_receipt.py`: defensive ID discovery from structuredContent/text JSON
 - `experiments.py`: offline preparation, hashed input fingerprints, journal-first one-shot job submission and manual reconciliation
 - `cli.py`: single entrypoint for local operations
+
+## v0.6.1 conservative screening
+
+- Default `conservative` profile screens proposals from the reproducible `legacy` selection; it does not refill a rejected phrase with weaker alternate proposals.
+- Reject candidate edits larger than 3 semitones; additionally reject a newly worsened neighboring leap above 5 semitones.
+- Preserve unchanged timing, chords, phrase and section structure, chorus and instrumental voices; diagnostics explicitly record deferred proposals.
+- **Not** a substitute for real lyric-to-note alignment, verified vocal stress, or listening tests.
 
 ## Quality gates
 

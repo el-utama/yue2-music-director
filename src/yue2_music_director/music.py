@@ -303,8 +303,31 @@ def patch_score(score: Score, changes: list[dict]) -> str:
     return ''.join(lines)
 
 
+
+def conservative_rejection(old_pitch: int, new_pitch: int,
+                           previous_pitch: int | None, next_pitch: int | None,
+                           max_shift: int = 3, max_leap: int = 5) -> list[str]:
+    """Explain why a pitch edit could damage local melodic contour.
+
+    A pre-existing wide leap is not itself disqualifying; a newly widened leap
+    over the threshold is. These are screening heuristics, not a music verdict.
+    """
+    reasons: list[str] = []
+    if abs(new_pitch - old_pitch) > max_shift:
+        reasons.append(f'pitch_shift_exceeds_{max_shift}_semitones')
+    for side, neighbor in (('previous', previous_pitch), ('next', next_pitch)):
+        if neighbor is None:
+            continue
+        old_gap = abs(old_pitch - neighbor)
+        new_gap = abs(new_pitch - neighbor)
+        if new_gap > max_leap and new_gap > old_gap:
+            reasons.append(f'{side}_leap_worsened_to_{new_gap}_semitones')
+    return reasons
+
+
 def humanize_pitch(source: str, lyrics: str, seed=42, max_edits=12,
-                   protect=('chorus','intro','interlude','outro')) -> dict:
+                   protect=('chorus','intro','interlude','outro'),
+                   profile: str = 'conservative') -> dict:
     """Make conservative, chord-aware phrase-level edits; preserve timing and hook.
 
     A phrase is provisionally a group of bars allocated to one lyric line.
@@ -312,13 +335,16 @@ def humanize_pitch(source: str, lyrics: str, seed=42, max_edits=12,
     disabled until a genuine lyric-to-note alignment is supplied.
     """
     from .prosody import parse_lyrics, alignment
+    if profile not in ('conservative','legacy'):
+        raise ValueError('profile must be conservative or legacy')
     score = parse_score(source)
     lyrics_sections = parse_lyrics(lyrics)
     warnings = alignment(score,lyrics_sections)
     if any(x.startswith('SECTION MISMATCH') for x in warnings):
         raise ScoreError('; '.join(warnings))
     if max_edits == 0:
-        return {'abc':source,'report':{'seed':seed,'max_edits':0,'changes':[],
+        return {'abc':source,'report':{'seed':seed,'max_edits':0,'profile':profile,
+                'proposed_change_count':0,'deferred_changes':[], 'changes':[],
                 'change_count':0,'source_sha256':hashlib.sha256(source.encode()).hexdigest(),
                 'output_sha256':hashlib.sha256(source.encode()).hexdigest(),
                 'original_repeat_fraction':round(repeated_pitch_fraction(score),3),
@@ -406,6 +432,27 @@ def humanize_pitch(source: str, lyrics: str, seed=42, max_edits=12,
         chosen.append(edit)
         used_phrases.add(key)
         if len(chosen)>=max_edits: break
+    proposed_change_count = len(chosen)
+    deferred_changes = []
+    if profile == 'conservative':
+        note_positions = {(e.line,e.start,e.end):i for i,e in enumerate(vocal_notes)}
+        accepted = []
+        for edit in chosen:
+            i = note_positions[(edit['line'],edit['start'],edit['end'])]
+            previous = vocal_notes[i-1].pitch if i>0 else None
+            following = vocal_notes[i+1].pitch if i+1<len(vocal_notes) else None
+            reasons = conservative_rejection(
+                edit['pitch_before'], edit['pitch_after'], previous, following)
+            if reasons:
+                deferred_changes.append({
+                    'section':edit['section'], 'bar':edit['bar'],
+                    'lyric_line_index':edit['lyric_line_index'],
+                    'pitch_before':edit['pitch_before'],'pitch_after':edit['pitch_after'],
+                    'reasons':reasons,
+                })
+            else:
+                accepted.append(edit)
+        chosen = accepted
     result = patch_score(score,chosen)
     parsed = parse_score(result)
     if parsed.counts!=score.counts or parsed.bar_chords!=score.bar_chords:
@@ -420,11 +467,14 @@ def humanize_pitch(source: str, lyrics: str, seed=42, max_edits=12,
         if old.voice=='Ins' or old.section.split('#')[0] in protect:
             if (old.raw,old.pitch)!=(new.raw,new.pitch):
                 raise ScoreError('protected phrase or instrument changed')
-    report = {'seed':seed,'max_edits':max_edits,'changes':chosen,
+    report = {'seed':seed,'max_edits':max_edits,'profile':profile,
+              'proposed_change_count':proposed_change_count,
+              'deferred_changes':deferred_changes, 'changes':chosen,
               'change_count':len(chosen),'source_sha256':hashlib.sha256(source.encode()).hexdigest(),
               'output_sha256':hashlib.sha256(result.encode()).hexdigest(),
               'original_repeat_fraction':round(repeated_pitch_fraction(score),3),
               'candidate_repeat_fraction':round(repeated_pitch_fraction(parsed),3),
               'section_sequence':section_sequence(score),
-              'warnings':warnings+score.warnings+['Pitch edits do not directly control vocal timbre, vibrato or microtiming.']}
+              'warnings':warnings+score.warnings+['Pitch edits do not directly control vocal timbre, vibrato or microtiming.',
+              'Conservative screening does not verify syllable stress or guarantee better audio.']}
     return {'abc':result,'report':report}
