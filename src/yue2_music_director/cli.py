@@ -24,6 +24,7 @@ def main(argv=None) -> int:
     work.add_argument('--out',required=True,type=Path)
     work.add_argument('--seed',type=int,default=42)
     work.add_argument('--max-edits',type=int,default=12)
+    work.add_argument('--profile',choices=('conservative','legacy'),default='conservative')
     work.add_argument('--midi',action='store_true',help='Run score_to_midi after offline stages; never song_create')
     work.add_argument('--url',help='Local Studio URL if --midi enabled')
     work.add_argument('--title',default='YuE2 A/B')
@@ -37,6 +38,7 @@ def main(argv=None) -> int:
     variation.add_argument('--out',type=Path,required=True)
     variation.add_argument('--seed',type=int,default=42)
     variation.add_argument('--max-edits',type=int,default=12)
+    variation.add_argument('--profile',choices=('conservative','legacy'),default='conservative')
 
     midi=sub.add_parser('midi-probe',help='Convert ABC to MIDI through local MCP; no audio generation')
     midi.add_argument('abc',type=Path,nargs='+')
@@ -78,7 +80,7 @@ def main(argv=None) -> int:
         if args.command=='run':
             result=run_pipeline(args.abc,args.lyrics,args.out,style=args.style,
                                 seed=args.seed,max_edits=args.max_edits,
-                                midi=args.midi,url=args.url,title=args.title)
+                                midi=args.midi,url=args.url,title=args.title,profile=args.profile)
         elif args.command=='audit':
             score=parse_score(args.abc.read_text(encoding='utf-8-sig'))
             result={'bars':score.counts,'sections':section_sequence(score),
@@ -98,7 +100,7 @@ def main(argv=None) -> int:
                 raise ValueError('output or report already exists; refusing overwrite')
             score=args.abc.read_text(encoding='utf-8-sig')
             lyrics=args.lyrics.read_text(encoding='utf-8-sig')
-            candidate=humanize_pitch(score,lyrics,args.seed,args.max_edits)
+            candidate=humanize_pitch(score,lyrics,args.seed,args.max_edits,profile=args.profile)
             args.out.parent.mkdir(parents=True,exist_ok=True)
             args.out.write_text(candidate['abc'],encoding='utf-8')
             report=args.out.with_suffix('.report.json')
