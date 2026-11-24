@@ -16,6 +16,7 @@ from .lyric_fidelity import compare_lyrics
 from .phrase_rhythm import analyze as analyze_rhythm
 from .acoustic import compare as compare_audio
 from .native_recognition import capture as capture_recognition, review as review_recognition
+from .fidelity_gate import diagnose as diagnose_fidelity
 from .mcp import MCPError,Client,configured_endpoint,unpack
 
 
@@ -113,6 +114,13 @@ def main(argv=None) -> int:
     ar.add_argument('--a',required=True,type=Path)
     ar.add_argument('--b',required=True,type=Path)
     ar.add_argument('--out',required=True,type=Path)
+
+    fg=sub.add_parser('fidelity-audit',help='Offline human-led fidelity gate and score diagnostics')
+    fg.add_argument('abc',type=Path)
+    fg.add_argument('--lyrics',required=True,type=Path)
+    fg.add_argument('--asr-review',required=True,type=Path)
+    fg.add_argument('--observations',required=True,type=Path)
+    fg.add_argument('--out',required=True,type=Path)
 
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
@@ -226,6 +234,19 @@ def main(argv=None) -> int:
             result={'report':str(args.out),'arms':report['arms'],
                     'quality_decision':report['quality_decision'],
                     'human_verified':False,'audio_jobs_created':0,'recognition_calls':0}
+        elif args.command=='fidelity-audit':
+            report=diagnose_fidelity(args.abc.read_text(encoding='utf-8-sig'),
+                                     args.lyrics.read_text(encoding='utf-8-sig'),
+                                     json.loads(args.asr_review.read_text(encoding='utf-8-sig')),
+                                     json.loads(args.observations.read_text(encoding='utf-8-sig')))
+            args.out.parent.mkdir(parents=True,exist_ok=True)
+            with args.out.open('x',encoding='utf-8') as f:
+                json.dump(report,f,indent=2,ensure_ascii=False,allow_nan=False)
+                f.write('\n')
+            result={'report':str(args.out),**{k:report[k] for k in (
+                'gate','confirmed_issue_lines','confirmed_issue_transitions',
+                'reviewed_line_observations','total_lines','audio_jobs_created',
+                'recognition_calls','score_edits')}}
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
