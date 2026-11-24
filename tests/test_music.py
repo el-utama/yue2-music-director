@@ -1,7 +1,7 @@
 import unittest
 from yue2_music_director.music import (ScoreError, parse_score, humanize_pitch, section_sequence,
                                         chord_tones, repeated_pitch_fraction)
-from yue2_music_director.prosody import parse_lyrics, alignment, estimate_syllables
+from yue2_music_director.prosody import parse_lyrics, alignment, estimate_syllables, phrase_diagnostics
 
 ABC = (
 'X:1\nT:Test\nM:2/4\nL:1/16\nK:Bb\n'
@@ -61,6 +61,13 @@ class MusicTests(unittest.TestCase):
         self.assertGreater(result['report']['change_count'],0)
         self.assertNotEqual(result['abc'],ABC)
         self.assertEqual(parse_score(ABC).counts,parse_score(result['abc']).counts)
+
+    def test_16_phrase_density_reports_are_review_only(self):
+        score=parse_score(ABC)
+        rows=phrase_diagnostics(score,parse_lyrics(LYRICS))
+        self.assertEqual(len(rows),4)
+        self.assertTrue(all('approximate_syllables' in item for item in rows))
+        self.assertTrue(all('notated_note_events' in item for item in rows))
 
     def test_14_no_output_if_budget_zero(self):
         self.assertEqual(humanize_pitch(ABC,LYRICS,max_edits=0)['abc'],ABC)
