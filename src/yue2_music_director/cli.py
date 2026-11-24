@@ -8,6 +8,7 @@ import sys
 from .music import ScoreError,parse_score,section_sequence,humanize_pitch
 from .prosody import parse_lyrics,alignment,phrase_diagnostics
 from .midi import probe
+from .instrument_velocity import write as humanize_instruments
 from .midi_events import compare_files,MIDIEventError
 from .pipeline import run as run_pipeline
 from .experiments import prepare,submit,reconcile,status
@@ -128,6 +129,11 @@ def main(argv=None) -> int:
     hs.add_argument('--asr-review',required=True,type=Path)
     hs.add_argument('--preferences',required=True,type=Path)
     hs.add_argument('--out',required=True,type=Path)
+
+    iv=sub.add_parser('instrument-velocity',help='Humanize named accompaniment MIDI tracks for DAW export')
+    iv.add_argument('midi',type=Path)
+    iv.add_argument('--out',required=True,type=Path)
+    iv.add_argument('--strength',type=int,default=12)
 
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
@@ -269,6 +275,9 @@ def main(argv=None) -> int:
                 'provisional_lyric_preferred','provisional_preferred','selection_status','absolute_fidelity_status',
                 'automatic_acceptance','automatic_regeneration','audio_jobs_created',
                 'recognition_calls','score_edits')}}
+        elif args.command=='instrument-velocity':
+            report=humanize_instruments(args.midi,args.out,args.strength)
+            result={'output':str(args.out),**{k:v for k,v in report.items() if k!='changes'}}
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
