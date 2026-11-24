@@ -1,6 +1,6 @@
 # Musical acceptance: v0.6.1 -> v0.7
 
-Status: protocol ready; musical and audio outcomes pending local evaluation.
+Historical protocol, retained for provenance. Routine mandatory listening and the proposed design below are superseded by the current [research handbook](RESEARCH_HANDBOOK.md) and [changelog](../CHANGELOG.md); do not rerun frozen experiments.
 Tracking: [Issue #4](https://github.com/el-utama/yue2-music-director/issues/4).
 
 ## Frozen baseline

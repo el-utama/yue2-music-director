@@ -1,6 +1,8 @@
 # Development and validation
 
-## Current phase: v0.6.1 beta
+## Current phase: v0.7.0a8.post3 (experimental)
+
+See [research handbook](docs/RESEARCH_HANDBOOK.md) for current architecture, module status and decisions, and [changelog](CHANGELOG.md) for history. The following describes the earlier v0.6.1 foundation.
 
 This is a **working local-first Python toolkit**, not a production-ready autonomous music director. Migrated and integrated components:
 
@@ -39,7 +41,7 @@ This is a **working local-first Python toolkit**, not a production-ready autonom
 - Real score is validated by `yue2-director audit` **on the user's machine**.
 - MIDI compatibility requires explicit local Studio `midi-probe`.
 - Real audio requires human-confirmed Studio idle and explicit `ab-submit`; it is never run by CI.
-- Human listening is essential. No pitch edit or identical seed proves a more natural or more expressive vocal.
+- No pitch edit or identical seed proves a more natural or more expressive vocal. Routine QA is ASR-led and technical; human listening is optional for musical preference, not a repetitive required step.
 
 ## Porting note
 
