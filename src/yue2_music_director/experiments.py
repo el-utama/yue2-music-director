@@ -61,6 +61,24 @@ def prepare(original: Path,candidate: Path,lyrics: Path,style: Path,root: Path,s
     scores=[parse_score(inputs[arm]['text']) for arm in 'AB']
     if inputs['A']['text']==inputs['B']['text']:
         raise ValueError('A and B have identical ABC: not a useful experiment')
+    # Controlled pitch-only A/B: timing, notes count, chords, instrument and hook
+    # must match. This comparison is symbolic, NOT proof of acoustic causality.
+    if len(scores[0].events)!=len(scores[1].events) or scores[0].bar_chords!=scores[1].bar_chords:
+        raise ValueError('Score event count or chords differ')
+    pitch_changes=0
+    for a,b in zip(scores[0].events,scores[1].events):
+        if (a.voice,a.section,a.kind,a.bar,a.offset,a.duration,a.chord)!=(
+                b.voice,b.section,b.kind,b.bar,b.offset,b.duration,b.chord):
+            raise ValueError('A/B contains a structural or rhythmic difference')
+        if a.raw != b.raw and (a.kind!='note' or a.pitch==b.pitch):
+            raise ValueError('A/B has a non-pitch symbol change')
+        if a.pitch!=b.pitch:
+            if a.voice!='Vocal' or a.section.split('#')[0] in (
+                    'chorus','intro','outro','interlude'):
+                raise ValueError('A/B changes protected vocals or instrument')
+            pitch_changes+=1
+    if not pitch_changes:
+        raise ValueError('No actual vocal pitch changes between A and B')
     if scores[0].counts != scores[1].counts or section_sequence(scores[0]) != section_sequence(scores[1]):
         raise ValueError('A and B score structures differ')
     lyric_groups=parse_lyrics(inputs['lyrics']['text'])
@@ -131,10 +149,17 @@ def submit(root: Path,arm: str,url: str | None,confirm_idle: bool,confirm_a_comp
     manifest,request=_verify(root,arm)
     client=client_factory(configured_endpoint(url))
     client.connect()
-    names={item.get('name') for item in client.tools()}
+    tool_index={item.get('name'):item for item in client.tools()}
+    names=set(tool_index)
     needed={'song_create','song_defaults','studio_status','studio_capabilities'}
     if not needed.issubset(names):
         raise ValueError('Missing Studio MCP tools: '+str(sorted(needed-names)))
+    schema=tool_index['song_create'].get('inputSchema',{})
+    properties=schema.get('properties',{})
+    expected_fields={'music_source','style','lyrics','abc','abc_continue',
+                     'lyric_timing','seed','lm_seed','lm_batch_size','synth_batch_size'}
+    if not expected_fields.issubset(properties):
+        raise ValueError('Studio song_create schema missing expected fields')
     defaults=unpack(client.call('song_defaults',{}))
     capabilities=unpack(client.call('studio_capabilities',{}))
     status=unpack(client.call('studio_status',{}))
