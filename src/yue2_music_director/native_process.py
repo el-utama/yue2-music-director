@@ -225,3 +225,60 @@ def preview(source, song_id, effect, amount, out, url=None, *, confirm=False, ti
             evaluation["recognition_calls"]="unknown_after_submission"
     _write(out/"evaluation.json",evaluation)
     return {**report,"evaluation":evaluation,"recognition_calls":evaluation["recognition_calls"]}
+
+
+def inspect_preview(out, source):
+    """Read existing evidence only. Never contact Studio or retry uncertain work."""
+    out=Path(out).resolve(strict=True)
+    source=Path(source).resolve(strict=True)
+    def load(name):
+        path=out/name
+        if not path.is_file():
+            return None
+        data=json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data,dict):
+            raise ValueError("Invalid transaction record: "+name)
+        return data
+    submission=load("submission.json")
+    if submission is None or submission.get("state")!="SUBMITTING" or _sha(source)!=submission.get("source_sha256"):
+        raise ValueError("Missing submission or original source no longer matches")
+    receipt=load("receipt.json")
+    identity=load("run_identity.json")
+    report=load("report.json")
+    evaluation=load("evaluation.json")
+    marker=load("recognition/submission.json")
+    recognition_receipt=load("recognition/receipt.json")
+    status={"schema":"native-preview-inspect-v1","processing_calls":0,"recognition_calls":0,
+            "library_mutations":0,"automatic_acceptance":False,"naturalness_verified":False,
+            "retry_allowed":False,"submission_recorded":True,"receipt_recorded":receipt is not None,
+            "run_id":identity.get("run_id") if identity else None,
+            "provisional_output":str(source)}
+    if report is None:
+        status["status"]="processing_outcome_unverified"
+        return status
+    target=out/"preview.flac"
+    if (report.get("source_sha256")!=submission["source_sha256"]
+            or report.get("request")!=submission["request"]
+            or identity is None or report.get("run_id")!=identity.get("run_id")
+            or identity.get("request")!=submission["request"]
+            or not target.is_file() or _sha(target)!=report.get("preview_sha256")):
+        raise ValueError("Preview evidence does not match recorded transaction")
+    status["status"]=report.get("status")
+    if marker is not None:
+        status["prior_recognition_state"]="response_received" if recognition_receipt else "unknown_after_submission"
+        if marker.get("audio_sha256")!=report["preview_sha256"] or (recognition_receipt and
+                recognition_receipt.get("audio_sha256")!=report["preview_sha256"]):
+            raise ValueError("Recognition receipt does not match preview")
+    if evaluation is not None:
+        if evaluation.get("processing_run_id")!=report["run_id"]:
+            raise ValueError("Evaluation does not match preview run")
+        status["status"]=evaluation.get("status")
+        if (status["status"]=="candidate_nonregression_unverified" and report["status"]=="preview_acoustic_pass"
+                and recognition_receipt and recognition_receipt.get("state")=="RESPONSE_RECEIVED"
+                and marker and evaluation.get("lyric_screen",{}).get("status") in ("improved","unchanged")):
+            status["provisional_output"]=str(target)
+    elif marker is not None:
+        status["status"]="recognition_outcome_unverified"
+    elif report["status"]=="preview_acoustic_pass":
+        status["status"]="preview_acoustic_pass_unscreened"
+    return status
