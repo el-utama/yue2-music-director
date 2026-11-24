@@ -56,6 +56,17 @@ class DynamicsTests(unittest.TestCase):
             self.assertLess(report["reconstruction_residual_db"],-30)
             self.assertEqual(report["audio_jobs_created"],0)
             self.assertFalse(report["naturalness_verified"])
+            # Simulate a modest reconstruction residual without altering the source.
+            scaled=[root/"scaled_ins.wav",root/"scaled_voice.wav"]
+            for source,target in zip(paths[1:],scaled):
+                subprocess.run([shutil.which("ffmpeg"),"-nostdin","-v","error","-i",str(source),
+                                "-af","volume=0.94","-c:a","pcm_f32le",str(target)],
+                               check=True,capture_output=True)
+            moderate=process(paths[0],*scaled,root/"moderate")
+            self.assertEqual(moderate["status"],"candidate_created")
+            self.assertTrue(-30<moderate["reconstruction_residual_db"]<-20)
+            self.assertTrue(0.25<moderate["effective_max_attenuation_db"]<2)
+            self.assertTrue((root/"moderate/candidate.flac").is_file())
             with self.assertRaises(ValueError):
                 process(paths[0],paths[2],paths[1],root/"out")
             # Incorrect mix/stem identity must not produce a candidate.
