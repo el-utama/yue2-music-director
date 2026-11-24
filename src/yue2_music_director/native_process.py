@@ -10,7 +10,7 @@ from pathlib import Path
 import shutil
 
 from .mcp import Client, configured_endpoint, unpack
-from .native_recognition import _busy_keys, _sha, _write, capture, _recognition
+from .native_recognition import _busy_keys, _sha, _write, capture, _recognition, recognition_preflight
 from .multilingual_fidelity import assess, compare as compare_text
 from .acoustic import compare
 
@@ -133,6 +133,8 @@ def preview(source, song_id, effect, amount, out, url=None, *, confirm=False, ti
     client=Client(configured_endpoint(url),timeout=30).connect()
     source_hash=_sha(source)
     work=preflight(client,source,request)
+    if screening:
+        recognition_preflight(client)
     if out==work.resolve() or work.resolve() in out.parents:
         raise ValueError("Output must be outside Studio processing workspace")
     if _sha(source)!=source_hash:
@@ -143,7 +145,11 @@ def preview(source, song_id, effect, amount, out, url=None, *, confirm=False, ti
     if not shutil.which("ffmpeg") or not shutil.which("ffprobe"):
         raise ValueError("FFmpeg and ffprobe are required for preview QA")
     out.mkdir(parents=True,exist_ok=False)
-    _write(out/"submission.json",{"state":"SUBMITTING","request":request,"source_sha256":source_hash})
+    submission={"state":"SUBMITTING","request":request,"source_sha256":source_hash}
+    if screening:
+        submission["screening"]={"language":language,"lyrics_sha256":input_hashes[0],
+                                 "baseline_asr_sha256":input_hashes[1]}
+    _write(out/"submission.json",submission)
     # No retry. A failure after this call is an uncertain submission.
     receipt=unpack(client.call("processing_start",request))
     _write(out/"receipt.json",receipt)
@@ -153,7 +159,10 @@ def preview(source, song_id, effect, amount, out, url=None, *, confirm=False, ti
     run_id=None
     while time.monotonic()<deadline:
         run=_run(unpack(client.call("processing_get",{})))
+        first=run_id is None
         run_id=_verify_run(run,request,run_id)
+        if first:
+            _write(out/"run_identity.json",{"run_id":run_id,"request":request})
         if run["error"] is not None:
             raise ValueError("Native processing reported failure")
         if run["done"]:
@@ -215,4 +224,4 @@ def preview(source, song_id, effect, amount, out, url=None, *, confirm=False, ti
         if (out/"recognition/submission.json").exists() and not evaluation["recognition_calls"]:
             evaluation["recognition_calls"]="unknown_after_submission"
     _write(out/"evaluation.json",evaluation)
-    return {**report,"evaluation":evaluation}
+    return {**report,"evaluation":evaluation,"recognition_calls":evaluation["recognition_calls"]}
