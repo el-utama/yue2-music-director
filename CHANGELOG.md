@@ -23,6 +23,8 @@ This is a retrospective index, not a complete record of every historical prototy
 
 | Native headroom continuation | Real native preview capture succeeded; raw true peak -0.45 dBTP blocked ASR. Added bounded gain-only continuation from saved preview, with real FFmpeg synthetic test and mocked recognition. No repeat native effect. |
 
+| Finishing selection | Offline comparison of completed custom and native headroom transactions; common headroom and non-regression gates, no inference. |
+
 ## Real-song evidence (2026-11-24)
 
 A/B/C were exploratory, not replicated causal trials. Full-mix native ASR disagreements: A 23/180 (12.78%), B 44/180 (24.44%), C 56/180 (31.11%). Human preference for music and ASR ranking can disagree. B retained as an experimental baseline, not an absolute winner. Isolated vocals did not improve the B ASR result (45 vs 44 edits). Do not repeat these runs merely to recover a report.
@@ -32,3 +34,5 @@ Instrument MIDI: fixed per-track velocity; 364 velocity-only changes in accompan
 B finishing: 398 detected onsets, 155 edits, max attenuation 1.61 dB, reconstruction residual -24.57 dB, both stems resampled 44.1 to 48 kHz and one tail frame removed each. One additional native ASR call, zero song jobs. WER disagreement 44 to 42 edits (24.44% to 23.33%); CER 141 to 140 (19.80% to 19.66%). Candidate non-regression, not verified improvement or final acceptance. Sample peak nearly full scale; headroom needs attention. [Acceptance record](https://github.com/el-utama/yue2-music-director/issues/4#issuecomment-7137257793).
 
 Historical evidence is based on retained experiment reports and recorded issue comments; private source artifacts are not bundled. Claims of perceptual naturalness, universal pronunciation verification, or production readiness are not supported.
+
+Native Naturalize continuation succeeded on real audio: -0.60 dB fixed attenuation, measured -1.05 dBTP, -17.67 LUFS, same duration/rate/channels/LRA; WER 44/180 and CER 141/712 unchanged. One ASR, no additional native processing or library mutation. See Issue #4. Naturalness unverified.
