@@ -1,0 +1,9 @@
+# Finish existing song (alpha 8)
+
+`finish-existing --mix MIX.flac --instrumental INS.wav --vocals VOCALS.wav --lyrics LYRICS.txt --baseline-asr BASELINE.json --language en --out NEW_DIR --url LOOPBACK --confirm-recognition`
+
+Use existing aligned stems and the existing Whisper full-mix recognition of the exact source; no new separation or song generation. The command applies one bounded instrumental dynamics pass and its technical guards. Only if a candidate is created, it invokes native local recognition once with the existing settings and automatic language detection, compares both hypotheses against the reference, and saves a single report. ASR regression retains the original as provisional output. Non-regression permits a provisional candidate, not verified naturalness, lyric fidelity or final acceptance. A blocked status or no_candidate leaves sources intact. Fresh output required; if a recognition submission marker exists, do not retry blindly. Existing baseline ASR without a receipt is unverified provenance. Never send files to remote ASR.
+
+Language-aware text comparison can also run offline using `multilingual-score --lyrics LYRICS.txt --transcript TEXT.txt --language ja`. Word/CER metrics for en,id,fr,de,es,it,pt,nl,ar,ru,vi,tr; primary code-point CER for ja,zh,ko,th. NFC and case folding, punctuation filtering, preservation of combining marks. No dictionary tokenization, phonetic metrics, script conversion, confidence, or evidence that the local recognizer supports every listed language. Unsupported language fails closed.
+
+This is a bounded finishing workflow for a completed song, not a fully autonomous composition/generation agent. The -30 dB stem reconstruction guard is deliberately conservative and may reject actual separated stems; no automatic alignment or bypass. A successful technical run does not guarantee better instrumental performance. Local real-song integration is pending.

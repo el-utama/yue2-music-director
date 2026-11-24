@@ -15,6 +15,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install FFmpeg for real audio tests (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          ffmpeg -version
+          ffprobe -version
       - run: python -m pip install -e .
       - run: python -m unittest discover -s tests -v
       - run: python -m yue2_music_director.cli --help
