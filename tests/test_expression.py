@@ -62,6 +62,16 @@ class ExpressionTests(unittest.TestCase):
                               LYRICS.replace("Verse","Chorus"))["report"]["change_count"], 0)
         self.assertEqual(plan(SCORE, "[Verse]\none\ntwo\nthree")["report"]["change_count"], 0)
 
+    def test_contour_diversity_across_sections(self):
+        # Two verse occurrences, each with identical local choices.
+        header, body = SCORE.split("%Verse\n", 1)
+        source = header + "%Verse\n" + body + "%Verse\n" + body
+        result = plan(source, LYRICS + LYRICS)
+        edits = result["report"]["changes"]
+        self.assertEqual(len(edits), 2)
+        self.assertEqual(len({tuple(e["intervals_after"]) for e in edits}), 2)
+        self.assertEqual({e["pitch_after"] for e in edits}, {62,65})
+
     def test_invalid_arguments(self):
         with self.assertRaises(ValueError):
             plan(SCORE, LYRICS, protected_bars=[4])
