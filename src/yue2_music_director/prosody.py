@@ -55,3 +55,41 @@ def alignment(score, sections: list[dict]) -> list[str]:
             warnings.append('Possible empty/unreadable syllable group')
     warnings.append('Lyric lines are mapped only to approximate bar groups; no verified syllable-to-note alignment')
     return warnings
+
+def phrase_diagnostics(score, sections: list[dict]) -> list[dict]:
+    """Coarse lyric-line-to-bar allocation, NOT a syllable-to-note alignment.
+
+    Reports only quantities verifiable from the lyric text and parsed score.
+    A flag means "review this phrase", not "the singer will be incorrect".
+    """
+    from .music import ScoreError, section_sequence
+    if section_sequence(score) != [x['name'] for x in sections]:
+        raise ScoreError('Cannot map phrases with mismatched section sequences')
+    result=[]
+    for group in sections:
+        key=f"{group['name']}#{group['occurrence']}"
+        bars=[i for i, section in enumerate(score.sections['Vocal']) if section==key]
+        lines=group['lines']
+        if not lines or not bars:
+            continue
+        for position,line in enumerate(lines):
+            start=(position*len(bars))//len(lines)
+            end=((position+1)*len(bars))//len(lines)
+            selection=bars[start:end]
+            events=[event for bar in selection for event in score.bar_events['Vocal'][bar]]
+            notes=[event for event in events if event.kind=='note']
+            rest_count=sum(event.kind=='rest' for event in events)
+            syllables=estimate_syllables(line)
+            ratio=round(len(notes)/syllables,2) if syllables else None
+            result.append({
+                'section':key,'line_index':position+1,'lyric':line,
+                'approximate_syllables':syllables,'allocated_bars':len(selection),
+                'notated_note_events':len(notes),'notated_rest_events':rest_count,
+                'notes_per_estimated_syllable':ratio,
+                'review_flags':(
+                    ['few note events relative to estimated syllables']
+                    if syllables and len(notes)<syllables*0.7
+                    else []
+                ) + (['zero bars allocated'] if not selection else [])
+            })
+    return result
