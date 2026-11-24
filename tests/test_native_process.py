@@ -3,8 +3,8 @@ import json
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
-from yue2_music_director.native_process import effect_request, preflight, preview, _verify_run
-from yue2_music_director.native_recognition import BUSY_KEYS
+from yue2_music_director.native_process import effect_request, preflight, preview, _verify_run, inspect_preview
+from yue2_music_director.native_recognition import BUSY_KEYS, _sha
 
 
 class NativeProcessTests(unittest.TestCase):
@@ -18,12 +18,15 @@ class NativeProcessTests(unittest.TestCase):
         self.client=Mock()
         self.client.tools.return_value=[
             {"name":n,"inputSchema":{"properties":{"song_id":{},"naturalize":{},"lifter":{}}}}
-            for n in ("studio_status","library_song_files","processing_get","processing_start")]
+            for n in ("studio_status","library_song_files","processing_get","processing_start","karaoke_settings_get","lyrics_recognise")]
         self.run={"id":"test-run","song_id":"test-song","stages":["naturalize"],
                   "request":{"naturalize":self.request["naturalize"]},"done":True,
                   "preview_ready":True,"error":None}
 
     def response(self,name,args):
+        if name=="karaoke_settings_get":
+            return {"provider":"whisper","enabled":True,"ready":True,"download":None,
+                    "models":[{"id":"crisperwhisper-turbo","installed":True}]}
         if name=="studio_status":
             return {k:None for k in BUSY_KEYS}
         if name=="library_song_files":
@@ -87,6 +90,9 @@ class NativeProcessTests(unittest.TestCase):
                        "http://127.0.0.1:1234/mcp",confirm=True)
         self.assertEqual(report["status"],"preview_acoustic_pass")
         self.assertEqual(count[0],1)
+        evidence=inspect_preview(self.root/"out",self.source)
+        self.assertEqual(evidence["status"],"preview_acoustic_pass_unscreened")
+        self.assertFalse(evidence["retry_allowed"])
         self.assertFalse(report["automatic_acceptance"])
         self.assertEqual((self.root/"out"/"preview.flac").read_bytes(),b"preview")
         self.assertEqual(self.source.read_bytes(),b"source")
@@ -135,3 +141,19 @@ class NativeProcessTests(unittest.TestCase):
         self.assertTrue(Path(report["evaluation"]["provisional_output"]).samefile(self.source))
         self.assertEqual(calls,["processing_start"])
         capture.assert_called_once()
+        self.assertEqual(report["recognition_calls"],1)
+        self.assertEqual(inspect_preview(self.root/"out",self.source)["status"],"retain_original_asr_regression")
+
+
+    def test_interrupted_submission_never_retries(self):
+        out=self.root/"interrupted"
+        out.mkdir()
+        (out/"submission.json").write_text(json.dumps({"state":"SUBMITTING","request":self.request,
+                                                       "source_sha256":_sha(self.source)}),encoding="utf-8")
+        result=inspect_preview(out,self.source)
+        self.assertEqual(result["status"],"processing_outcome_unverified")
+        self.assertFalse(result["retry_allowed"])
+        self.assertEqual(result["processing_calls"],0)
+        self.source.write_bytes(b"changed")
+        with self.assertRaises(ValueError):
+            inspect_preview(out,self.source)

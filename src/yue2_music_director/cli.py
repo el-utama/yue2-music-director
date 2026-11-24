@@ -12,7 +12,7 @@ from .instrument_velocity import write as humanize_instruments
 from .instrument_render import run as render_instruments
 from .instrument_dynamics import process as process_dynamics
 from .finish import finish as finish_existing
-from .native_process import preview as native_preview
+from .native_process import preview as native_preview, inspect_preview
 from .multilingual_fidelity import assess as assess_multilingual
 from .midi_events import compare_files,MIDIEventError
 from .pipeline import run as run_pipeline
@@ -180,6 +180,10 @@ def main(argv=None) -> int:
     np.add_argument('--language')
     np.add_argument('--confirm-recognition',action='store_true')
 
+    ni=sub.add_parser('native-process-inspect',help='Inspect saved native preview evidence offline; never resubmit')
+    ni.add_argument('--source',type=Path,required=True)
+    ni.add_argument('--out',type=Path,required=True)
+
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
     args=parser.parse_args(argv)
@@ -339,6 +343,8 @@ def main(argv=None) -> int:
             result=native_preview(args.source,args.song_id,args.effect,args.amount,args.out,args.url,
                                   confirm=args.confirm_preview,lyrics=args.lyrics,baseline_asr=args.baseline_asr,
                                   language=args.language,confirm_recognition=args.confirm_recognition)
+        elif args.command=='native-process-inspect':
+            result=inspect_preview(args.out,args.source)
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}

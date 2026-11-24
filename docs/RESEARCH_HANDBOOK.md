@@ -45,3 +45,6 @@ Read [changelog](../CHANGELOG.md) and [Issue #4](https://github.com/el-utama/yue
 ## Documentation rule
 
 For each new PR, update the applicable command guide, changelog, status/limitations, regression test and evidence record. Retain negative results. Separate observed facts from hypotheses. Do not publish private lyrics, ABC, audio, job IDs, source hashes, manifests, journals, local paths/endpoints, model weights or credentials. Older prototypes not in this repo remain a historical gap; avoid reconstructing missing artifacts as facts.
+
+
+Native preview development: optional ASR after acoustic pass and read-only `native-process-inspect` are implemented. Live native preview and recognition remain unverified; preserve interrupted journals. The inspection command never submits or resumes work.
