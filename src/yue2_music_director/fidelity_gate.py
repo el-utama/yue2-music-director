@@ -12,7 +12,22 @@ def _key(row):
     return row["section"], row["line_index"]
 
 
-def diagnose(source, lyrics, asr, observations):
+def _native_counts(native, phrases):
+    if not isinstance(native, dict) or not isinstance(native.get("lines"), list):
+        raise ValueError("Expected native lyrics_syllables response")
+    rows = native["lines"]
+    if len(rows) != len(phrases):
+        raise ValueError("Native syllable response line count differs")
+    counts = []
+    for row, phrase in zip(rows, phrases):
+        if (not isinstance(row, dict) or row.get("line") != phrase["lyric"]
+                or type(row.get("syllables")) is not int or row["syllables"] <= 0):
+            raise ValueError("Native syllable response text/order or count differs")
+        counts.append(row["syllables"])
+    return counts
+
+
+def diagnose(source, lyrics, asr, observations, native_syllables=None):
     rhythm = analyze(source, lyrics)
     phrases = rhythm["phrases"]
     keys = [_key(p) for p in phrases]
@@ -44,8 +59,9 @@ def diagnose(source, lyrics, asr, observations):
         if pair not in adjacent or pair in transition_obs or state not in STATES:
             raise ValueError("Invalid or duplicate human transition observation")
         transition_obs[pair] = state
+    native = _native_counts(native_syllables, phrases) if native_syllables is not None else None
     result = []
-    for p, row in zip(phrases, rows):
+    for i, (p, row) in enumerate(zip(phrases, rows)):
         if row.get("reference_text") != p["lyric"] or row.get("reference_words") != p["reference_words"]:
             raise ValueError("ASR reference text differs from current lyrics")
         counts = {}
@@ -56,9 +72,15 @@ def diagnose(source, lyrics, asr, observations):
                 raise ValueError("Invalid ASR line counts")
             counts[arm] = count
         syllables = estimate_syllables(p["lyric"])
+        count = native[i] if native is not None else syllables
         result.append({**p, "human_status":line_obs.get(_key(p), "not_reviewed"),
                        "asr_edit_counts":counts, "rough_english_syllables":syllables,
-                       "notes_per_estimated_syllable":p["note_events"]/syllables if syllables else None})
+                       "notes_per_estimated_syllable":p["note_events"]/syllables if syllables else None,
+                       "native_syllables":native[i] if native is not None else None,
+                       "syllable_count_used":count,
+                       "syllable_count_source":"studio_native" if native is not None else "rough_english",
+                       "notes_per_syllable":p["note_events"]/count if count else None,
+                       "syllables_per_sounding_quarter":count/p["sounding_quarter_notes"] if p["sounding_quarter_notes"] else None})
     transitions = [{"after":{"section":a[0],"line_index":a[1]},
                     "before":{"section":b[0],"line_index":b[1]},
                     "human_status":state}
@@ -70,10 +92,14 @@ def diagnose(source, lyrics, asr, observations):
             "confirmed_issue_lines":confirmed, "confirmed_issue_transitions":confirmed_transitions,
             "reviewed_line_observations":len(line_obs), "total_lines":len(phrases),
             "phrases":result, "transitions":transitions, "audio_jobs_created":0,
+            "native_syllable_lines":len(native) if native is not None else 0,
+            "native_syllable_total":sum(native) if native is not None else None,
+            "rough_syllable_total":sum(p["rough_english_syllables"] for p in result),
+            "syllable_count_disagreements":sum(p["native_syllables"] != p["rough_english_syllables"] for p in result) if native is not None else None,
             "recognition_calls":0, "score_edits":0,
             "warnings":rhythm["warnings"] + [
                 "Human observations are phrase-level, not a verified word error rate.",
                 "ASR arms A/B are the input report labels, not necessarily original/candidate.",
                 "ASR and score source identity beyond matching lyrics must be established by the operator.",
-                "Rough English syllable estimates and equal bar partitions do not establish actual phonetic alignment.",
+                "Native and rough syllable counts are estimates; equal bar partitions do not establish actual phonetic alignment.",
                 "No causal attribution, automatic correction, or approval from this report."]}
