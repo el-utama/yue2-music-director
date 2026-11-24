@@ -36,6 +36,9 @@ def finish(mix, instrumental, vocals, lyrics, baseline_asr, out, language,
         dynamics=process(*sources[:3],out/"dynamics",max_db)
         report["dynamics_status"]=dynamics["status"]
         report["attacks_edited"]=dynamics["attacks_edited"]
+        for key in ("reconstruction_residual_db","effective_max_attenuation_db","residual_proxy_target_db","stem_alignment","gain_min_db","onsets_detected","candidate_sample_peak"):
+            if key in dynamics:
+                report[key]=dynamics[key]
         if dynamics["status"]!="candidate_created":
             report["status"]="no_candidate"
             save()

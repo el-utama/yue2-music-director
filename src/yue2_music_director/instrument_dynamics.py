@@ -24,6 +24,19 @@ def _db(energy):
     return 10 * math.log10(max(energy, 1e-12))
 
 
+def residual_budget(residual_db, requested_db):
+    """Conservative engineering proxy, not a bound on vocal leakage.
+
+    Scale maximum gain change so that gain-change fraction times the
+    measured reconstruction residual RMS is at most -40 dB of mix RMS.
+    Reject gross mismatch independently; preserve original mix residual.
+    """
+    if not math.isfinite(residual_db) or residual_db > -20:
+        return 0.0
+    fraction = min(1-10**(-requested_db/20), 10**((-40-residual_db)/20))
+    return min(requested_db,-20*math.log10(1-fraction))
+
+
 def envelope(energies, max_db=2.0):
     """Enhance existing attack-level contrast, not a synthetic beat grid."""
     if not math.isfinite(max_db) or not 0.25 <= max_db <= 3:
@@ -198,13 +211,19 @@ def process(mix, instrumental, vocals, out, max_db=2.0):
         energies,residual,count=inspect(raws,block)
         report.update({"sample_rate_hz":rate,"channels":channels,"frames":count//channels,
                        "reconstruction_residual_db":residual})
-        if residual > -30:
-            raise ValueError(f"Stems do not reconstruct mix within -30 dB residual; measured {residual:.2f} dB; refusing processing")
-        gains,onsets,edited=envelope(energies,max_db)
+        effective_db=residual_budget(residual,max_db)
+        report["effective_max_attenuation_db"]=effective_db
+        report["residual_proxy_target_db"]=-40
+        report["warnings"].append("Residual budget is a global engineering proxy, not a bound on vocal leakage or a quality certificate.")
+        if effective_db<0.25:
+            gains,onsets,edited=[0.0]*len(energies),[],[]
+            report["status"]="blocked_reconstruction"
+        else:
+            gains,onsets,edited=envelope(energies,effective_db)
         report.update({"onsets_detected":len(onsets),"attacks_edited":len(edited),
                        "gain_min_db":min(gains),"edits":edited})
         if not edited:
-            report["status"]="no_safe_effect"
+            report.setdefault("status","no_safe_effect")
         else:
             raw_out=work/"candidate.f32"
             peak=0.0
