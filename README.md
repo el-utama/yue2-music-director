@@ -1,18 +1,20 @@
 # YuE2 Music Director
 
-Local-first music composition humanization toolkit for **YuE2-Studio (timoncool) v5.0.0**.
+A local-first toolbox for safer musical score variation and YuE2-Studio integration.
 
-This repository is under active development. The goal is to analyze and modify YuE2 ABC scores safely, validate the resulting MIDI, and evaluate audio A/B experiments without unnecessary GPU work.
+**Target:** timoncool YuE2-Studio v5.0.0 (MCP integration). **Stage:** repository bootstrap and migration from local prototypes, not production-ready.
 
-## Status
+## What's here
 
-Initial repository bootstrap. Tested Python prototypes will be introduced via pull requests before the stable branch is expanded.
+- Score guard: read-only validation for a restricted subset of YuE2 ABC (Vocal and Ins voices).
+- Job receipt: safely parses the live song_create response, including top-level id, without confusing library song IDs with job IDs.
+- Standard-library tests and GitHub Actions. Python >=3.10.
 
-## Safety
+## Run tests
 
-- MCP endpoint is configurable; no endpoint is hardcoded.
-- No automatic audio generation without deliberate user action.
-- Local audio, model files, runtime journals and generated reports must stay out of version control.
-- Never resubmit a song job blindly after a timeout.
+    python -m pip install -e .
+    python -m unittest discover -s tests -v
 
-See the development pull request for the initial codebase.
+Do not deploy this score guard as a replacement for the full prototype's parser. The full humanizer and other established local tools will be ported in follow-up commits. No generation commands are shipped in this initial bootstrap.
+
+See DEVELOPMENT.md for verified local results, scope and migration steps.
