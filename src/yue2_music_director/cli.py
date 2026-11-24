@@ -13,6 +13,7 @@ from .pipeline import run as run_pipeline
 from .experiments import prepare,submit,reconcile,status
 from .expression import plan as expression_plan
 from .lyric_fidelity import compare_lyrics
+from .phrase_rhythm import analyze as analyze_rhythm
 from .mcp import MCPError,Client,configured_endpoint,unpack
 
 
@@ -86,6 +87,12 @@ def main(argv=None) -> int:
     fidelity.add_argument('--lyrics',required=True,type=Path)
     fidelity.add_argument('--transcript',required=True,type=Path)
     fidelity.add_argument('--out',required=True,type=Path)
+
+    rhythm=sub.add_parser('phrase-rhythm',help='Read-only score density and optional reviewed A/B timing analysis')
+    rhythm.add_argument('abc',type=Path)
+    rhythm.add_argument('--lyrics',required=True,type=Path)
+    rhythm.add_argument('--timings',type=Path,help='Optional reviewed A/B phrase timing JSON')
+    rhythm.add_argument('--out',required=True,type=Path)
 
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
@@ -164,6 +171,16 @@ def main(argv=None) -> int:
             with args.out.open('x',encoding='utf-8') as f:
                 json.dump(result,f,indent=2,ensure_ascii=False)
                 f.write('\n')
+        elif args.command=='phrase-rhythm':
+            timings=json.loads(args.timings.read_text(encoding='utf-8-sig')) if args.timings else None
+            report=analyze_rhythm(args.abc.read_text(encoding='utf-8-sig'),
+                                  args.lyrics.read_text(encoding='utf-8-sig'),timings)
+            args.out.parent.mkdir(parents=True,exist_ok=True)
+            with args.out.open('x',encoding='utf-8') as f:
+                json.dump(report,f,indent=2,ensure_ascii=False)
+                f.write('\n')
+            result={'report':str(args.out),'phrase_count':report['phrase_count'],
+                    'paired_timing_count':report['paired_timing_count'],'audio_jobs_created':0}
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
