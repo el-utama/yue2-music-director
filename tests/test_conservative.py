@@ -35,8 +35,8 @@ class ConservativePitchTests(unittest.TestCase):
                       revised['report']['deferred_changes'][0]['reasons'])
 
     def test_worsened_melodic_leap_is_deferred(self):
-        # Bb3 -> G3 widens the following leap up to F4 from 7 to 10.
-        original = score('Eb', 'B,2B,2F2z2')
+        # Bb3 -> G3 widens the following leap up to F4 from 4 to 7.
+        original = score('Eb', 'B,2B,2D2z2')
         old = humanize_pitch(original, LYRICS, seed=42, profile='legacy')
         self.assertEqual(old['report']['change_count'], 1)
         self.assertEqual(old['report']['changes'][0]['pitch_before'], 58)
@@ -48,9 +48,7 @@ class ConservativePitchTests(unittest.TestCase):
                             for reason in new['report']['deferred_changes'][0]['reasons']))
 
     def test_benign_edit_allowed_and_deterministic(self):
-        original = score('Bb', 'z2B,F2F2F-') # needs tied continuation
-        # Use the existing validated fixture rather than pretending an invalid
-        # score is usable.
+        # Use a valid score with a tied note across a barline.
         sample = ('X:1\nT:Demo\nM:2/4\nL:1/16\nK:Bb\n'
                   '% verse\nV: Vocal\n"Bb"z2B,F2F2F-|"Bb"F2DD3CC-|"Eb"CB,z6|"Eb"z8|\n'
                   'V: Ins\nZ4|\n')
