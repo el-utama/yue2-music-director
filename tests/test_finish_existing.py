@@ -15,7 +15,7 @@ class MultilingualTests(unittest.TestCase):
 
     def test_character_language(self):
         r=assess("[Verse]\n君が好き","君がすき","ja")
-        self.assertEqual(r["CER"]["edits"],2)
+        self.assertEqual(r["CER"]["edits"],1)
         self.assertNotIn("WER",r)
         self.assertEqual(r["primary_metric"],"CER")
 
