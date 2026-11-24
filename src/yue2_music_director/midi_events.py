@@ -153,7 +153,7 @@ def parse_midi_data(data: bytes) -> dict:
 def compare_midi_data(original: bytes,candidate: bytes,allowed_pitch_tracks: list[int] | None=None) -> dict:
     a=parse_midi_data(original)
     b=parse_midi_data(candidate)
-    for field in ('tracks','division','tempos','signatures'):
+    for field in ('format','tracks','division','tempos','signatures'):
         if a[field]!=b[field]:
             raise MIDIEventError(f'MIDI metadata differs: {field}')
     if len(a['notes'])!=len(b['notes']):
