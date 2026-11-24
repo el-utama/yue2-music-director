@@ -120,6 +120,10 @@ def preview(source, song_id, effect, amount, out, url=None, *, confirm=False, ti
     client=Client(configured_endpoint(url),timeout=30).connect()
     source_hash=_sha(source)
     work=preflight(client,source,request)
+    if out==work.resolve() or work.resolve() in out.parents:
+        raise ValueError("Output must be outside Studio processing workspace")
+    if _sha(source)!=source_hash:
+        raise ValueError("Source changed during preflight")
     if not confirm:
         return {"status":"preflight_passed","effect":effect,"processing_calls":0,
                 "audio_jobs_created":0,"recognition_calls":0,"library_mutations":0}
@@ -130,6 +134,8 @@ def preview(source, song_id, effect, amount, out, url=None, *, confirm=False, ti
     # No retry. A failure after this call is an uncertain submission.
     receipt=unpack(client.call("processing_start",request))
     _write(out/"receipt.json",receipt)
+    if not isinstance(receipt,dict) or receipt.get("error"):
+        raise ValueError("Native preview submission receipt uncertain; never retry blindly")
     deadline=time.monotonic()+timeout
     run_id=None
     while time.monotonic()<deadline:
