@@ -1,6 +1,6 @@
 # Native Process Audio integration contract
 
-Status: source audit completed, live adapter not implemented. Reference: [pinned upstream MCP](https://github.com/timoncool/YuE2-Studio/blob/ca37d2d3ea96f3c7073167de0e5e1eb3b4ec2f25/crates/music-server/src/mcp.rs), [processing implementation](https://github.com/timoncool/YuE2-Studio/blob/ca37d2d3ea96f3c7073167de0e5e1eb3b4ec2f25/crates/music-server/src/processing.rs). Verify against installed Studio before writes.
+Status: initial preview adapter implemented; live Studio contract and preview capture remain unverified. Reference: [pinned upstream MCP](https://github.com/timoncool/YuE2-Studio/blob/ca37d2d3ea96f3c7073167de0e5e1eb3b4ec2f25/crates/music-server/src/mcp.rs), [processing implementation](https://github.com/timoncool/YuE2-Studio/blob/ca37d2d3ea96f3c7073167de0e5e1eb3b4ec2f25/crates/music-server/src/processing.rs). Verify against installed Studio before writes.
 
 | Tool | Audited contract |
 |---|---|
@@ -9,7 +9,7 @@ Status: source audit completed, live adapter not implemented. Reference: [pinned
 | processing_keep | persists processed audio as a library track/version, optional label |
 | processing_discard | destroys the pending processed audio |
 
-Stages run in order: denoise, lifter, naturalize, VST, master, normalize. Omitted stages are skipped. The native preview is not the source file; the server hides the preview filename in serialized ProcessRun. The upstream UI uses /v1/processing/preview; it is not an advertised MCP file-export tool. Do not guess paths or bypass access controls. Validate an authorized local preview retrieval contract before evaluation. Keep/discard are writes and must not happen speculatively or affect an unrelated pending preview.
+Stages run in order: denoise, lifter, naturalize, VST, master, normalize. Omitted stages are skipped. The native preview is not the source file; the server hides the preview filename in serialized ProcessRun. The upstream UI uses /v1/processing/preview; it is not an advertised MCP file-export tool. Do not guess paths or bypass access controls. The initial adapter uses the upstream documented local media/processing workspace, requiring it to be empty initially and to contain exactly one new regular FLAC file after the matching run completes. It never guesses a preview filename or contacts an undocumented endpoint. Exclusive Studio use is required; the server does not return a preview path bound to the run ID. Keep/discard are writes and must not happen speculatively or affect an unrelated pending preview.
 
 Native naturalize is full-mix band processing, not syllable/pitch repair. Native lifter supports denoise_strength, noise_floor, hf_mix, transient_boost and shimmer_reduction_db. Peak normalization can intentionally clip a configurable number of samples; do not equate it with true-peak headroom management. Native mastering requires a reference, and VST is user-specific. Do not invoke either without explicit supported configuration.
 
@@ -22,3 +22,12 @@ Native naturalize is full-mix band processing, not syllable/pitch repair. Native
 5. Return a provisional recommendation; keep/discard only after run ownership and semantics are verified. No automatic library mutations in first integration.
 
 The next native experiment should isolate one effect rather than stack on the custom stem-delta candidate; the existing original is the comparator. No repeat generation, split, MIDI test or routine listening.
+
+
+## Initial adapter
+
+`native-process-preview --source ORIGINAL.flac --song-id SONG_ID --effect naturalize --amount 0.2 --out NEW_DIR`
+
+Read-only preflight by default. Explicit loopback MCP endpoint required. With `--confirm-preview`, submit exactly one native preview, journal the request and receipt, poll the matching run, copy the preview to a new local directory, and measure acoustic QA. Supported stages are naturalize and lifter only (0.05–0.3 intensity, explicitly specified stage settings). Lifter requests transient boost only; upstream code may still perform additional STFT processing. No source overwrite, no generation, no keep/discard, no model/settings changes. An existing run or nonempty workspace blocks submission. Unknown source-file schema blocks submission. Native preview is left pending intentionally. No blind retry after submission.
+
+Acoustic gate requires equal reported duration, true peak <= -1 dBTP and loudness difference <= 1 LU; these are conservative engineering limits, not an artistic judgment. ASR screening of a pending native preview is not implemented yet: the existing recognition preflight rejects active/pending processing. No automatic acceptance. Mock tests cover the transaction; actual Studio response schema and preview location are not yet confirmed. Do not run this on an occupied Studio or assume a failed receipt means no preview was created.

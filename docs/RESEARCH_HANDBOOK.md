@@ -15,11 +15,11 @@ Build a local-first music director that diagnoses score, lyric, performance and 
 | Studio gateway | mcp, experiments, job_receipt, native_recognition | Explicit loopback, bounded calls, preflight, journal before submit, no blind retries |
 | Lyric evidence | lyric_fidelity, native_recognition, fidelity_gate, human_selection, multilingual_fidelity | ASR-primary text disagreement; line alignment not timestamps; basic WER/CER, not phonetic alignment |
 | Audio finishing | acoustic, instrument_dynamics, finish | FFmpeg measurements, stem-delta gain, one bounded ASR check; completed real B run |
-| Native effects | planned orchestration | Native Process Audio already implements denoise, lifter, naturalize, VST3, reference mastering, normalize |
+| Native effects | initial native_process preview adapter; simulated tests only | Native Process Audio already implements denoise, lifter, naturalize, VST3, reference mastering, normalize |
 
 ### Entry points
 
-Use `py -3 -m yue2_music_director.cli --help` and each subcommand's `--help` for the authoritative interface. `run` prepares score/AB artifacts without audio generation, optionally MIDI. `audit`, `humanize`, `expression`, `phrase-rhythm` are score-side. `midi-probe`, `midi-audit`, `instrument-velocity`, `instrument-render-qa` are symbolic/rendered accompaniment. `ab-prepare`, `ab-submit`, `ab-status`, `ab-recover` manage deliberate experiments. `native-recognise`, `asr-review`, `lyric-compare`, `multilingual-score`, `fidelity-audit`, `human-select` address distinct evidence scopes; legacy human observation workflows are optional for routine ASR-led evaluation. `acoustic-compare`, `instrument-dynamics`, `finish-existing` operate on finished audio. `studio-check` is read-only.
+Use `py -3 -m yue2_music_director.cli --help` and each subcommand's `--help` for the authoritative interface. `run` prepares score/AB artifacts without audio generation, optionally MIDI. `audit`, `humanize`, `expression`, `phrase-rhythm` are score-side. `midi-probe`, `midi-audit`, `instrument-velocity`, `instrument-render-qa` are symbolic/rendered accompaniment. `ab-prepare`, `ab-submit`, `ab-status`, `ab-recover` manage deliberate experiments. `native-recognise`, `asr-review`, `lyric-compare`, `multilingual-score`, `fidelity-audit`, `human-select` address distinct evidence scopes; legacy human observation workflows are optional for routine ASR-led evaluation. `acoustic-compare`, `instrument-dynamics`, `finish-existing` operate on finished audio. `studio-check` is read-only. `native-process-preview` defaults to read-only preflight; explicit confirmation enables a single bounded native preview.
 
 ## Evidence and acceptance
 

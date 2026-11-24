@@ -12,6 +12,7 @@ from .instrument_velocity import write as humanize_instruments
 from .instrument_render import run as render_instruments
 from .instrument_dynamics import process as process_dynamics
 from .finish import finish as finish_existing
+from .native_process import preview as native_preview
 from .multilingual_fidelity import assess as assess_multilingual
 from .midi_events import compare_files,MIDIEventError
 from .pipeline import run as run_pipeline
@@ -165,6 +166,15 @@ def main(argv=None) -> int:
     ml.add_argument('--lyrics',type=Path,required=True)
     ml.add_argument('--transcript',type=Path,required=True)
     ml.add_argument('--language',required=True)
+
+    np=sub.add_parser('native-process-preview',help='Read-only preflight or one explicitly confirmed native audio preview')
+    np.add_argument('--source',type=Path,required=True)
+    np.add_argument('--song-id',required=True)
+    np.add_argument('--effect',choices=('naturalize','lifter'),required=True)
+    np.add_argument('--amount',type=float,default=0.2)
+    np.add_argument('--out',type=Path,required=True)
+    np.add_argument('--url')
+    np.add_argument('--confirm-preview',action='store_true')
 
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
@@ -321,6 +331,9 @@ def main(argv=None) -> int:
         elif args.command=='multilingual-score':
             result=assess_multilingual(args.lyrics.read_text(encoding='utf-8-sig'),
                                        args.transcript.read_text(encoding='utf-8-sig'),args.language)
+        elif args.command=='native-process-preview':
+            result=native_preview(args.source,args.song_id,args.effect,args.amount,args.out,args.url,
+                                  confirm=args.confirm_preview)
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
