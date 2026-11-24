@@ -353,7 +353,7 @@ def humanize_pitch(source: str, lyrics: str, seed=42, max_edits=12,
         first = (phrase*len(locations))//line_total
         last_bar = ((phrase+1)*len(locations)-1)//line_total
         # Guard phrase starts/ends as stronger melodic anchors.
-        if local_bar in (first,last_bar):
+        if last_bar - first >= 2 and local_bar in (first,last_bar):
             continue
         chords = score.bar_chords.get(('Vocal',e.bar),[])
         tones = chord_tones(chords[0]) if chords else None
@@ -408,6 +408,8 @@ def humanize_pitch(source: str, lyrics: str, seed=42, max_edits=12,
     for old,new in zip(score.events,parsed.events):
         if (old.voice,old.section,old.kind,old.duration,old.offset)!=(new.voice,new.section,new.kind,new.duration,new.offset):
             raise ScoreError('non-pitch structure changed')
+        if old.raw==new.raw and old.pitch!=new.pitch:
+            raise ScoreError('pitch of an unedited event changed (accidental carry)')
         if old.voice=='Ins' or old.section.split('#')[0] in protect:
             if (old.raw,old.pitch)!=(new.raw,new.pitch):
                 raise ScoreError('protected phrase or instrument changed')
