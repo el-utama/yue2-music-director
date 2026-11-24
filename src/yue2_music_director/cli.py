@@ -9,6 +9,7 @@ from .music import ScoreError,parse_score,section_sequence,humanize_pitch
 from .prosody import parse_lyrics,alignment,phrase_diagnostics
 from .midi import probe
 from .midi_events import compare_files,MIDIEventError
+from .pipeline import run as run_pipeline
 from .experiments import prepare,submit,reconcile,status
 from .mcp import MCPError,Client,configured_endpoint,unpack
 
@@ -16,6 +17,17 @@ from .mcp import MCPError,Client,configured_endpoint,unpack
 def main(argv=None) -> int:
     parser=argparse.ArgumentParser(prog='yue2-director')
     sub=parser.add_subparsers(dest='command',required=True)
+    work=sub.add_parser('run',help='Audit, humanize and optionally prepare A/B in one local command')
+    work.add_argument('abc',type=Path)
+    work.add_argument('--lyrics',required=True,type=Path)
+    work.add_argument('--style',type=Path)
+    work.add_argument('--out',required=True,type=Path)
+    work.add_argument('--seed',type=int,default=42)
+    work.add_argument('--max-edits',type=int,default=12)
+    work.add_argument('--midi',action='store_true',help='Run score_to_midi after offline stages; never song_create')
+    work.add_argument('--url',help='Local Studio URL if --midi enabled')
+    work.add_argument('--title',default='YuE2 A/B')
+
     aud=sub.add_parser('audit',help='Validate ABC without contacting Studio')
     aud.add_argument('abc',type=Path)
     aud.add_argument('--lyrics',type=Path)
@@ -63,7 +75,11 @@ def main(argv=None) -> int:
     ping.add_argument('--url')
     args=parser.parse_args(argv)
     try:
-        if args.command=='audit':
+        if args.command=='run':
+            result=run_pipeline(args.abc,args.lyrics,args.out,style=args.style,
+                                seed=args.seed,max_edits=args.max_edits,
+                                midi=args.midi,url=args.url,title=args.title)
+        elif args.command=='audit':
             score=parse_score(args.abc.read_text(encoding='utf-8-sig'))
             result={'bars':score.counts,'sections':section_sequence(score),
                     'warnings':score.warnings,'errors':[]}
