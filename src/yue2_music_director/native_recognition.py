@@ -11,6 +11,27 @@ BUSY_KEYS = ("song_jobs", "covers_and_karaoke", "stems", "midi", "restore",
              "preparation", "training", "processing")
 
 
+def _busy_keys(status):
+    """Only the observed successful terminal stem record is exempted."""
+    if not isinstance(status, dict) or not all(k in status for k in BUSY_KEYS):
+        raise ValueError("Unrecognized Studio busy-state schema")
+    busy = []
+    for key in BUSY_KEYS:
+        value = status[key]
+        if value is None or value == []:
+            continue
+        if (key == "stems" and isinstance(value, dict)
+                and value.get("done") is True and "error" in value
+                and value["error"] is None
+                and type(value.get("progress")) in (int, float)
+                and value["progress"] == 1.0
+                and isinstance(value.get("song_id"), str)
+                and value["song_id"]):
+            continue
+        busy.append(key)
+    return busy
+
+
 def _recognition(data):
     if not isinstance(data, dict) or data.get("provider") != "whisper":
         raise ValueError("Expected a native Whisper recognition response")
@@ -58,10 +79,9 @@ def capture(audio, out, url=None, *, confirm=False, language=None):
         and m.get("installed") is True for m in models):
         raise ValueError("Installed CrisperWhisper Turbo not confirmed")
     status = unpack(client.call("studio_status", {}))
-    if not isinstance(status, dict) or not all(k in status for k in BUSY_KEYS):
-        raise ValueError("Unrecognized Studio busy-state schema")
-    if any(status[k] for k in BUSY_KEYS):
-        raise ValueError("Studio is not idle")
+    busy = _busy_keys(status)
+    if busy:
+        raise ValueError("Studio is not idle: " + ", ".join(busy))
     out.mkdir(parents=True, exist_ok=False)
     _write(out/"submission.json", {"state":"SUBMITTING", "audio_sha256":sha,
           "provider":"whisper", "runtime_configured":s.get("runtime"),
