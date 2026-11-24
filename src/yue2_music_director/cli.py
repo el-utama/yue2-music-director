@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 
 from .music import ScoreError,parse_score,section_sequence,humanize_pitch
-from .prosody import parse_lyrics,alignment
+from .prosody import parse_lyrics,alignment,phrase_diagnostics
 from .midi import probe
 from .experiments import prepare,submit,reconcile,status
 from .mcp import MCPError,Client,configured_endpoint,unpack
@@ -61,7 +61,10 @@ def main(argv=None) -> int:
                     'warnings':score.warnings,'errors':[]}
             if args.lyrics:
                 text=args.lyrics.read_text(encoding='utf-8-sig')
-                result['warnings']+=alignment(score,parse_lyrics(text))
+                groups=parse_lyrics(text)
+                result['warnings']+=alignment(score,groups)
+                if not any(w.startswith('SECTION MISMATCH') for w in result['warnings']):
+                    result['phrases']=phrase_diagnostics(score,groups)
         elif args.command=='humanize':
             if not 0<=args.max_edits<=100:
                 raise ValueError('max-edits must be 0 to 100')
