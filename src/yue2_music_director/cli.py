@@ -265,7 +265,8 @@ def main(argv=None) -> int:
                 f.write('\n')
             result={'report':str(args.out),**{k:report[k] for k in (
                 'human_preference_counts','asr_comparison_counts','asr_edit_totals',
-                'provisional_preferred','selection_status','absolute_fidelity_status',
+                'lyric_evidence_policy','asr_lyric_preferred','human_music_preferred',
+                'provisional_lyric_preferred','provisional_preferred','selection_status','absolute_fidelity_status',
                 'automatic_acceptance','automatic_regeneration','audio_jobs_created',
                 'recognition_calls','score_edits')}}
         elif args.command=='studio-check':
