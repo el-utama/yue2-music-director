@@ -317,6 +317,13 @@ def humanize_pitch(source: str, lyrics: str, seed=42, max_edits=12,
     warnings = alignment(score,lyrics_sections)
     if any(x.startswith('SECTION MISMATCH') for x in warnings):
         raise ScoreError('; '.join(warnings))
+    if max_edits == 0:
+        return {'abc':source,'report':{'seed':seed,'max_edits':0,'changes':[],
+                'change_count':0,'source_sha256':hashlib.sha256(source.encode()).hexdigest(),
+                'output_sha256':hashlib.sha256(source.encode()).hexdigest(),
+                'original_repeat_fraction':round(repeated_pitch_fraction(score),3),
+                'candidate_repeat_fraction':round(repeated_pitch_fraction(score),3),
+                'section_sequence':section_sequence(score),'warnings':warnings+score.warnings}}
     signature = key_signature(score.headers['K'])
     rng = random.Random(seed)
     candidates: list[tuple[float,dict]] = []
