@@ -11,6 +11,8 @@ from .midi import probe
 from .midi_events import compare_files,MIDIEventError
 from .pipeline import run as run_pipeline
 from .experiments import prepare,submit,reconcile,status
+from .expression import plan as expression_plan
+from .lyric_fidelity import compare_lyrics
 from .mcp import MCPError,Client,configured_endpoint,unpack
 
 
@@ -73,6 +75,18 @@ def main(argv=None) -> int:
         if command=='ab-recover':
             sp.add_argument('--confirm-complete',action='store_true')
 
+    ex=sub.add_parser('expression',help='Offline experimental expression preview; no Studio calls')
+    ex.add_argument('abc',type=Path)
+    ex.add_argument('--lyrics',required=True,type=Path)
+    ex.add_argument('--out',required=True,type=Path,help='New output directory')
+    ex.add_argument('--max-edits',type=int,default=4)
+    ex.add_argument('--protect-bar',type=int,action='append',default=[])
+
+    fidelity=sub.add_parser('lyric-compare',help='Compare intended lyrics with a complete human-reviewed transcript')
+    fidelity.add_argument('--lyrics',required=True,type=Path)
+    fidelity.add_argument('--transcript',required=True,type=Path)
+    fidelity.add_argument('--out',required=True,type=Path)
+
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
     args=parser.parse_args(argv)
@@ -127,6 +141,29 @@ def main(argv=None) -> int:
             result=reconcile(args.out,args.arm,args.confirm_complete)
         elif args.command=='ab-status':
             result=status(args.out,args.arm,args.url)
+        elif args.command=='expression':
+            planned=expression_plan(args.abc.read_text(encoding='utf-8-sig'),
+                                    args.lyrics.read_text(encoding='utf-8-sig'),
+                                    args.max_edits,args.protect_bar)
+            args.out.mkdir(parents=True,exist_ok=False)
+            report=args.out/'expression_report.json'
+            with report.open('x',encoding='utf-8') as f:
+                json.dump(planned['report'],f,indent=2,ensure_ascii=False)
+                f.write('\n')
+            result={'status':planned['report']['status'],'report':str(report),
+                    'changes':planned['report']['change_count'],'audio_jobs_created':0}
+            if result['changes']:
+                candidate=args.out/'candidate_expression.abc'
+                with candidate.open('x',encoding='utf-8',newline='') as f:
+                    f.write(planned['abc'])
+                result['candidate']=str(candidate)
+        elif args.command=='lyric-compare':
+            result=compare_lyrics(args.lyrics.read_text(encoding='utf-8-sig'),
+                                  args.transcript.read_text(encoding='utf-8-sig'))
+            args.out.parent.mkdir(parents=True,exist_ok=True)
+            with args.out.open('x',encoding='utf-8') as f:
+                json.dump(result,f,indent=2,ensure_ascii=False)
+                f.write('\n')
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
