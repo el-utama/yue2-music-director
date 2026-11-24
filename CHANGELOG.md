@@ -21,6 +21,8 @@ This is a retrospective index, not a complete record of every historical prototy
 
 | Native preview transaction inspection | ASR readiness preflight before processing, observed run identity and input fingerprints, offline inspection of partial/completed transactions, no automatic resubmission. |
 
+| Native headroom continuation | Real native preview capture succeeded; raw true peak -0.45 dBTP blocked ASR. Added bounded gain-only continuation from saved preview, with real FFmpeg synthetic test and mocked recognition. No repeat native effect. |
+
 ## Real-song evidence (2026-11-24)
 
 A/B/C were exploratory, not replicated causal trials. Full-mix native ASR disagreements: A 23/180 (12.78%), B 44/180 (24.44%), C 56/180 (31.11%). Human preference for music and ASR ranking can disagree. B retained as an experimental baseline, not an absolute winner. Isolated vocals did not improve the B ASR result (45 vs 44 edits). Do not repeat these runs merely to recover a report.
