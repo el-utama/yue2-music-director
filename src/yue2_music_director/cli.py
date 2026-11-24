@@ -10,6 +10,7 @@ from .prosody import parse_lyrics,alignment,phrase_diagnostics
 from .midi import probe
 from .instrument_velocity import write as humanize_instruments
 from .instrument_render import run as render_instruments
+from .instrument_dynamics import process as process_dynamics
 from .midi_events import compare_files,MIDIEventError
 from .pipeline import run as run_pipeline
 from .experiments import prepare,submit,reconcile,status
@@ -142,6 +143,13 @@ def main(argv=None) -> int:
     iq.add_argument('--soundfont',required=True,type=Path)
     iq.add_argument('--out',required=True,type=Path)
     iq.add_argument('--renderer',default='fluidsynth')
+
+    dy=sub.add_parser('instrument-dynamics',help='Process existing aligned instrumental stem without regenerating song')
+    dy.add_argument('--mix',required=True,type=Path)
+    dy.add_argument('--instrumental',required=True,type=Path)
+    dy.add_argument('--vocals',required=True,type=Path)
+    dy.add_argument('--out',required=True,type=Path)
+    dy.add_argument('--max-db',type=float,default=2.0)
 
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
@@ -288,6 +296,9 @@ def main(argv=None) -> int:
             result={'output':str(args.out),**{k:v for k,v in report.items() if k!='changes'}}
         elif args.command=='instrument-render-qa':
             result=render_instruments(args.source,args.candidate,args.soundfont,args.out,args.renderer)
+        elif args.command=='instrument-dynamics':
+            report=process_dynamics(args.mix,args.instrumental,args.vocals,args.out,args.max_db)
+            result={'report':str(args.out/'report.json'),**{k:v for k,v in report.items() if k not in ('edits','acoustic','source_sha256')}}
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
