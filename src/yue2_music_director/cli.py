@@ -14,6 +14,7 @@ from .instrument_dynamics import process as process_dynamics
 from .finish import finish as finish_existing
 from .native_process import preview as native_preview, inspect_preview
 from .native_headroom import continue_preview
+from .finishing_selection import select as select_finishing
 from .multilingual_fidelity import assess as assess_multilingual
 from .midi_events import compare_files,MIDIEventError
 from .pipeline import run as run_pipeline
@@ -194,6 +195,15 @@ def main(argv=None) -> int:
     nc.add_argument('--url')
     nc.add_argument('--confirm-recognition',action='store_true')
 
+    fs=sub.add_parser('finishing-select',help='Select from existing finishing evidence offline')
+    fs.add_argument('--source',type=Path,required=True)
+    fs.add_argument('--lyrics',type=Path,required=True)
+    fs.add_argument('--baseline-asr',type=Path,required=True)
+    fs.add_argument('--language',required=True)
+    fs.add_argument('--custom',type=Path)
+    fs.add_argument('--native',type=Path)
+    fs.add_argument('--out',type=Path,required=True)
+
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
     args=parser.parse_args(argv)
@@ -358,6 +368,9 @@ def main(argv=None) -> int:
         elif args.command=='native-process-continue':
             result=continue_preview(args.source,args.out,args.lyrics,args.baseline_asr,args.language,args.url,
                                     confirm=args.confirm_recognition)
+        elif args.command=='finishing-select':
+            result=select_finishing(args.source,args.lyrics,args.baseline_asr,args.language,args.out,
+                                    custom=args.custom,native=args.native)
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
