@@ -157,9 +157,43 @@ def process(mix, instrumental, vocals, out, max_db=2.0):
         work=Path(tmp)
         raws=[work/(str(i)+".f32") for i in range(3)]
         formats=[_decode(p,q,ffmpeg,ffprobe) for p,q in zip(inputs,raws)]
-        if len(set(formats))!=1 or len({p.stat().st_size for p in raws})!=1:
-            raise ValueError(f"Stem format or sample count differs; no automatic alignment: formats={formats}, decoded_bytes={[p.stat().st_size for p in raws]}")
         rate,channels=formats[0]
+        if any(c!=channels for _,c in formats):
+            raise ValueError(f"Channel count differs; no downmix: {formats}")
+        original_frames=[p.stat().st_size//(4*channels) for p in raws]
+        if any(p.stat().st_size%(4*channels) or n<=0 for p,n in zip(raws,original_frames)):
+            raise ValueError("Invalid decoded frame count")
+        frames=original_frames[0]
+        adjustments=[]
+        for i in (1,2):
+            stem_rate=formats[i][0]
+            # Require durations to agree within two source/target frames.
+            # No arbitrary time stretch, offset search or long padding.
+            if abs(original_frames[i]/stem_rate-frames/rate)>2/min(rate,stem_rate):
+                raise ValueError(f"Stem duration differs: rates={formats}, frames={original_frames}")
+            if stem_rate!=rate:
+                target=work/(str(i)+".resampled.f32")
+                _run([ffmpeg,"-nostdin","-v","error","-f","f32le","-ar",str(stem_rate),
+                      "-ac",str(channels),"-i",str(raws[i]),"-af",
+                      f"aresample={rate}:resampler=swr:filter_size=64:phase_shift=10",
+                      "-c:a","pcm_f32le","-f","f32le","-n",str(target)],180)
+                raws[i]=target
+            size=raws[i].stat().st_size
+            if size%(4*channels):
+                raise ValueError("Invalid resampled PCM frame count")
+            delta=size//(4*channels)-frames
+            if abs(delta)>4:
+                raise ValueError(f"Unexpected resampled frame difference: {delta}")
+            if delta:
+                with raws[i].open("r+b") as f:
+                    f.truncate(frames*channels*4)
+            adjustments.append({"stem":("instrumental","vocals")[i-1],
+                                "source_rate_hz":stem_rate,"source_frames":original_frames[i],
+                                "resampled":stem_rate!=rate,"tail_frames_removed":max(0,delta),
+                                "tail_frames_zero_padded":max(0,-delta)})
+        report["source_sample_rates_hz"]=[r for r,_ in formats]
+        report["source_frame_counts"]=original_frames
+        report["stem_alignment"]=adjustments
         block=rate//100*channels
         energies,residual,count=inspect(raws,block)
         report.update({"sample_rate_hz":rate,"channels":channels,"frames":count//channels,

@@ -90,3 +90,42 @@ class DynamicsTests(unittest.TestCase):
             target=root/"decoded.f32"
             self.assertEqual(_decode(flac,target,ffmpeg,ffprobe),(44100,1))
             self.assertEqual(target.stat().st_size,44100*4)
+
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"),"FFmpeg required")
+    def test_roformer_rate_conversion(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            ffmpeg=shutil.which("ffmpeg")
+            rate=48000
+            paths=[root/(name+".wav") for name in ("mix","instrumental48","vocals48")]
+            buffers=[bytearray() for _ in paths]
+            # Non-integer conversion length, stereo, alternating attacks.
+            for i in range(rate*5+1):
+                phase=(i//480)%25
+                amp=0.06 if (i//12000)%3==0 else 0.24
+                ins=round(amp*32767*math.sin(i*2*math.pi*220/rate)) if 5<=phase<13 else 0
+                vocal=round(0.025*32767*math.sin(i*2*math.pi*440/rate))
+                for buf,value in zip(buffers,(ins+vocal,ins,vocal)):
+                    buf.extend(struct.pack("<hh",value,value))
+            for p,data in zip(paths,buffers):
+                with wave.open(str(p),"wb") as f:
+                    f.setparams((2,2,rate,0,"NONE","not compressed"))
+                    f.writeframes(data)
+            stems=[root/"instrumental44.wav",root/"vocals44.wav"]
+            for p,q in zip(paths[1:],stems):
+                subprocess.run([ffmpeg,"-nostdin","-v","error","-i",str(p),
+                                "-ar","44100","-c:a","pcm_f32le",str(q)],check=True,capture_output=True)
+            report=process(paths[0],*stems,root/"out")
+            self.assertEqual(report["status"],"candidate_created")
+            self.assertEqual(report["source_sample_rates_hz"],[48000,44100,44100])
+            self.assertEqual(report["sample_rate_hz"],48000)
+            self.assertEqual(report["frames"],rate*5+1)
+            self.assertTrue(all(s["resampled"] for s in report["stem_alignment"]))
+            self.assertLessEqual(report["reconstruction_residual_db"],-30)
+            self.assertTrue((root/"out/candidate.flac").is_file())
+            shorter=root/"short.wav"
+            subprocess.run([ffmpeg,"-nostdin","-v","error","-i",str(stems[0]),
+                            "-t","4.9","-c:a","pcm_f32le",str(shorter)],check=True,capture_output=True)
+            with self.assertRaisesRegex(ValueError,"Stem duration differs"):
+                process(paths[0],shorter,stems[1],root/"bad")
+            self.assertFalse((root/"bad").exists())
