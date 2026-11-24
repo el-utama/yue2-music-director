@@ -67,7 +67,7 @@ class FinishTests(unittest.TestCase):
         capture.side_effect=recognise
         r=finish(*self.inputs,self.root/"out","en",confirm=True)
         self.assertEqual(r["status"],"retain_original_asr_regression")
-        self.assertEqual(r["provisional_output"],str(self.inputs[0]))
+        self.assertTrue(Path(r["provisional_output"]).samefile(self.inputs[0]))
         self.assertFalse(r["automatic_acceptance"])
         capture.assert_called_once()
 
