@@ -1,0 +1,7 @@
+# Instrument render QA
+
+Run `instrument-render-qa ORIGINAL.mid HUMANIZED.mid --soundfont LOCAL.sf2 --out NEW_DIR` using a locally installed FluidSynth executable (or pass its path with --renderer). No installation, network call or Studio audio job is performed. Both inputs must differ only in eligible accompaniment note-on velocity bytes. The conductor and named accompaniment tracks are copied to separate MIDI files; all other tracks are removed from these copies. Sources remain untouched.
+
+Outputs are control.mid, candidate.mid, control.wav, candidate.wav and report.json. Both WAVs use the same SoundFont, sample rate and gain. The report measures short RMS windows from the score-derived onset grid (not isolated attacks), variation of paired gain differences, clipping and duration. It reports response_detected only for measurable nonuniform response without sample clipping, otherwise inconclusive. The diagnostic threshold is an initial engineering heuristic, not a calibrated quality score. No subjective naturalness certification or automatic regeneration.
+
+This path uses an explicit local renderer and SF2; the Studio GUI's embedded SoundFont renderer is not assumed available from MCP. Native backing_song_id is a separate optional future integration, subject to local schema and arrangement validation. The simplified exported accompaniment is not equivalent to the original full-band generated audio. Do not replace A/B/C or their frozen artifacts.
