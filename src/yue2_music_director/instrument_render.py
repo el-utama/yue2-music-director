@@ -73,7 +73,10 @@ def _db(samples,start,end):
 
 
 def measure(a_path,b_path,midi_a,midi_b):
-    a,b=_read_wav(a_path),_read_wav(b_path)
+    try:
+        a,b=_read_wav(a_path),_read_wav(b_path)
+    except (wave.Error,EOFError) as exc:
+        raise ValueError("Invalid rendered WAV") from exc
     x,y=parse_midi_data(midi_a),parse_midi_data(midi_b)
     if len(a)!=len(b):
         raise ValueError("Render lengths differ")
@@ -124,7 +127,10 @@ def run(source,candidate,soundfont,out,renderer="fluidsynth"):
     if not exe:
         raise ValueError("FluidSynth executable unavailable; no download attempted")
     def invoke(args,timeout):
-        result=subprocess.run([exe,*args],capture_output=True,text=True,timeout=timeout)
+        try:
+            result=subprocess.run([exe,*args],capture_output=True,text=True,timeout=timeout)
+        except subprocess.TimeoutExpired as exc:
+            raise ValueError("FluidSynth render timed out") from exc
         if result.returncode:
             raise ValueError("FluidSynth failed: "+result.stderr[-1000:])
         return result.stdout
@@ -135,6 +141,7 @@ def run(source,candidate,soundfont,out,renderer="fluidsynth"):
             for chunk in iter(lambda:f.read(1048576),b""):
                 h.update(chunk)
         return h.hexdigest()
+    exe=str(Path(exe).resolve())
     sf_hash=digest(sf)
     out=Path(out).resolve()
     out.mkdir(parents=True,exist_ok=False)
