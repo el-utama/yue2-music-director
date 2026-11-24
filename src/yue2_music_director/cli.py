@@ -14,6 +14,7 @@ from .experiments import prepare,submit,reconcile,status
 from .expression import plan as expression_plan
 from .lyric_fidelity import compare_lyrics
 from .phrase_rhythm import analyze as analyze_rhythm
+from .acoustic import compare as compare_audio
 from .mcp import MCPError,Client,configured_endpoint,unpack
 
 
@@ -93,6 +94,11 @@ def main(argv=None) -> int:
     rhythm.add_argument('--lyrics',required=True,type=Path)
     rhythm.add_argument('--timings',type=Path,help='Optional reviewed A/B phrase timing JSON')
     rhythm.add_argument('--out',required=True,type=Path)
+
+    ac=sub.add_parser('acoustic-compare',help='Measure existing local FLAC/WAV mixes using FFmpeg')
+    ac.add_argument('--a',required=True,type=Path)
+    ac.add_argument('--b',required=True,type=Path)
+    ac.add_argument('--out',required=True,type=Path)
 
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
@@ -181,6 +187,17 @@ def main(argv=None) -> int:
                 f.write('\n')
             result={'report':str(args.out),'phrase_count':report['phrase_count'],
                     'paired_timing_count':report['paired_timing_count'],'audio_jobs_created':0}
+        elif args.command=='acoustic-compare':
+            if args.out.exists():
+                raise ValueError('Acoustic report already exists')
+            report=compare_audio(args.a,args.b)
+            args.out.parent.mkdir(parents=True,exist_ok=True)
+            with args.out.open('x',encoding='utf-8') as f:
+                json.dump(report,f,indent=2,ensure_ascii=False,allow_nan=False)
+                f.write('\n')
+            result={'report':str(args.out),'B_minus_A':report['B_minus_A'],
+                    'suggested_playback_gain_db':report['suggested_playback_gain_db'],
+                    'audio_jobs_created':0}
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
