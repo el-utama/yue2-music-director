@@ -8,7 +8,7 @@ import unittest
 import wave
 from array import array
 from pathlib import Path
-from yue2_music_director.instrument_dynamics import envelope, apply_delta, process, _decode
+from yue2_music_director.instrument_dynamics import envelope, apply_delta, process, _decode, residual_budget
 
 
 class DynamicsTests(unittest.TestCase):
@@ -61,9 +61,9 @@ class DynamicsTests(unittest.TestCase):
             # Incorrect mix/stem identity must not produce a candidate.
             bad=root/"bad.wav"
             bad.write_bytes(paths[2].read_bytes())
-            with self.assertRaisesRegex(ValueError,"reconstruct"):
-                process(paths[0],bad,paths[2],root/"invalid")
-            self.assertFalse((root/"invalid").exists())
+            blocked=process(paths[0],bad,paths[2],root/"invalid")
+            self.assertEqual(blocked["status"],"blocked_reconstruction")
+            self.assertFalse((root/"invalid/candidate.flac").exists())
 
     @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"),"FFmpeg required")
     def test_flac_with_attached_picture(self):
@@ -129,3 +129,12 @@ class DynamicsTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"Stem duration differs"):
                 process(paths[0],shorter,stems[1],root/"bad")
             self.assertFalse((root/"bad").exists())
+
+    def test_adaptive_residual_budget(self):
+        self.assertAlmostEqual(residual_budget(-60,2),2)
+        budget=residual_budget(-24.57,2)
+        self.assertGreater(budget,0.25)
+        self.assertLess(budget,2)
+        self.assertLessEqual((1-10**(-budget/20))*10**(-24.57/20),0.010000001)
+        self.assertEqual(residual_budget(-19.99,2),0)
+        self.assertEqual(residual_budget(float("nan"),2),0)
