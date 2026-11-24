@@ -51,6 +51,22 @@ class CLITests(unittest.TestCase):
                            '--out',str(self.src)])
         self.assertEqual(rc,2)
 
+    def test_midi_audit_cli_and_json_report(self):
+        header=b'MThd'+(6).to_bytes(4,'big')+b'\x00\x01\x00\x01\x01\xe0'
+        def midi(note):
+            notes=bytes([0,0x90,note,80,120,0x80,note,0,0,0xff,0x2f,0])
+            return header+b'MTrk'+len(notes).to_bytes(4,'big')+notes
+        a=self.root/'a.mid'
+        b=self.root/'b.mid'
+        out=self.root/'audit.json'
+        a.write_bytes(midi(60))
+        b.write_bytes(midi(62))
+        rc,output=self.capture(['midi-audit','--original',str(a),
+                                '--candidate',str(b),'--out',str(out),
+                                '--allowed-pitch-track','0','--enforce-pitch-only'])
+        self.assertEqual(rc,0,output)
+        self.assertEqual(json.loads(out.read_text())['pitch_changes'],1)
+
     def test_studio_check_requires_url(self):
         import unittest.mock
         with unittest.mock.patch.dict('os.environ',{},clear=True):

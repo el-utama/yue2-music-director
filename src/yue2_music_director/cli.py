@@ -8,6 +8,7 @@ import sys
 from .music import ScoreError,parse_score,section_sequence,humanize_pitch
 from .prosody import parse_lyrics,alignment,phrase_diagnostics
 from .midi import probe
+from .midi_events import compare_files,MIDIEventError
 from .experiments import prepare,submit,reconcile,status
 from .mcp import MCPError,Client,configured_endpoint,unpack
 
@@ -29,6 +30,13 @@ def main(argv=None) -> int:
     midi.add_argument('abc',type=Path,nargs='+')
     midi.add_argument('--out',type=Path,required=True)
     midi.add_argument('--url',help='Explicit local Studio MCP endpoint; or use YUE2_MCP_URL')
+
+    comp=sub.add_parser('midi-audit',help='Compare MIDI note events offline, no Studio access')
+    comp.add_argument('--original',type=Path,required=True)
+    comp.add_argument('--candidate',type=Path,required=True)
+    comp.add_argument('--out',type=Path,required=True)
+    comp.add_argument('--allowed-pitch-track',type=int,action='append')
+    comp.add_argument('--enforce-pitch-only',action='store_true')
 
     p=sub.add_parser('ab-prepare',help='Create A/B requests and manifest offline; no audio jobs')
     p.add_argument('--original',type=Path,required=True)
@@ -84,6 +92,14 @@ def main(argv=None) -> int:
                     'warnings':candidate['report']['warnings']}
         elif args.command=='midi-probe':
             result=probe(args.abc,args.out,args.url)
+        elif args.command=='midi-audit':
+            if args.out.exists():
+                raise ValueError('MIDI audit report exists; refusing overwrite')
+            result=compare_files(args.original,args.candidate,args.allowed_pitch_track)
+            if args.enforce_pitch_only and (result['timing_changes'] or result['velocity_changes']):
+                raise MIDIEventError('Non-pitch changes detected during pitch-only audit')
+            args.out.parent.mkdir(parents=True,exist_ok=True)
+            args.out.write_text(json.dumps(result,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
         elif args.command=='ab-prepare':
             result=prepare(args.original,args.candidate,args.lyrics,args.style,
                            args.out,args.seed,args.title)
@@ -103,7 +119,7 @@ def main(argv=None) -> int:
             raise ValueError('Unknown command')
         print(json.dumps(result,indent=2,ensure_ascii=False,default=str))
         return 0
-    except (ScoreError,MCPError,ValueError,OSError,UnicodeError,KeyError,TypeError) as exc:
+    except (ScoreError,MIDIEventError,MCPError,ValueError,OSError,UnicodeError,KeyError,TypeError) as exc:
         print('ERROR:',str(exc),file=sys.stderr)
         return 2
 
