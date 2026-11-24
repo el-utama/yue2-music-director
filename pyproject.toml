@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yue2-music-director"
+version = "0.6.0"
+description = "Local-first YuE2 Studio score safety, phrase variation and MCP tooling"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+yue2-director = "yue2_music_director.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

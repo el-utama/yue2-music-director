@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+.env
+.env.*
+!*.env.example
+# Local user content and generated artifacts (public GitHub repo)
+local/
+hasil_*/
+results/
+experiments/
+*.abc
+*.flac
+*.wav
+*.mp3
+*.mid
+*.midi
+*.safetensors
+*.gguf
+journal_*.json
+*preflight_report.json
