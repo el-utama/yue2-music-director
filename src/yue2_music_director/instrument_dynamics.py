@@ -118,10 +118,10 @@ def _decode(path, target, ffmpeg, ffprobe):
         raise ValueError("Only FLAC and WAV inputs are supported")
     opts=["-f",fmt,"-protocol_whitelist","file"]
     probe=_run([ffprobe,"-v","error",*opts,"-show_entries",
-                "stream=codec_type,sample_rate,channels,duration","-of","json",str(path)],30)
+                "stream=codec_type,sample_rate,channels,duration","-select_streams","a","-of","json",str(path)],30)
     streams=json.loads(probe.stdout).get("streams",[])
     if len(streams)!=1 or streams[0].get("codec_type")!="audio":
-        raise ValueError("Expected one audio stream")
+        raise ValueError(f"{path.name}: expected one audio stream, found {len(streams)}")
     s=streams[0]
     rate,channels=int(s["sample_rate"]),int(s["channels"])
     duration=float(s.get("duration",0))
@@ -158,14 +158,14 @@ def process(mix, instrumental, vocals, out, max_db=2.0):
         raws=[work/(str(i)+".f32") for i in range(3)]
         formats=[_decode(p,q,ffmpeg,ffprobe) for p,q in zip(inputs,raws)]
         if len(set(formats))!=1 or len({p.stat().st_size for p in raws})!=1:
-            raise ValueError("Stem format or sample count differs; no automatic alignment")
+            raise ValueError(f"Stem format or sample count differs; no automatic alignment: formats={formats}, decoded_bytes={[p.stat().st_size for p in raws]}")
         rate,channels=formats[0]
         block=rate//100*channels
         energies,residual,count=inspect(raws,block)
         report.update({"sample_rate_hz":rate,"channels":channels,"frames":count//channels,
                        "reconstruction_residual_db":residual})
         if residual > -30:
-            raise ValueError("Stems do not reconstruct mix within -30 dB residual; refusing processing")
+            raise ValueError(f"Stems do not reconstruct mix within -30 dB residual; measured {residual:.2f} dB; refusing processing")
         gains,onsets,edited=envelope(energies,max_db)
         report.update({"onsets_detected":len(onsets),"attacks_edited":len(edited),
                        "gain_min_db":min(gains),"edits":edited})
