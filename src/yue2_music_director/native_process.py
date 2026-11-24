@@ -200,8 +200,16 @@ def preview(source, song_id, effect, amount, out, url=None, *, confirm=False, ti
                         "Pending Studio preview is deliberately retained; no keep/discard.",
                         "Baseline ASR provenance/settings are operator-supplied; ASR is not verified sung fidelity."]}
     _write(out/"report.json",report)
-    if not screening or not passed:
+    if not screening:
         return report
+    if not passed:
+        from .native_headroom import gain_plan, continue_preview
+        try:
+            gain_plan(acoustic)
+        except ValueError:
+            return report
+        continuation=continue_preview(source,out,reference_path,baseline_path,language,url,confirm=True)
+        return {**report,"continuation":continuation,"recognition_calls":continuation["recognition_calls"]}
     # Keep the preview/acoustic report even when recognition fails. No blind retry.
     evaluation={"status":"screening_pending","processing_run_id":run_id,"recognition_calls":0,
                 "automatic_acceptance":False,"naturalness_verified":False,"library_mutations":0}
@@ -264,6 +272,10 @@ def inspect_preview(out, source):
             or not target.is_file() or _sha(target)!=report.get("preview_sha256")):
         raise ValueError("Preview evidence does not match recorded transaction")
     status["status"]=report.get("status")
+    if (out/"headroom-continuation").exists():
+        status["status"]="headroom_continuation_recorded"
+        status["continuation_report_present"]=(out/"headroom-continuation/report.json").is_file()
+        return status
     if marker is not None:
         status["prior_recognition_state"]="response_received" if recognition_receipt else "unknown_after_submission"
         if marker.get("audio_sha256")!=report["preview_sha256"] or (recognition_receipt and
