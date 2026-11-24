@@ -1,4 +1,6 @@
 import math
+import subprocess
+import zlib
 import shutil
 import struct
 import tempfile
@@ -6,7 +8,7 @@ import unittest
 import wave
 from array import array
 from pathlib import Path
-from yue2_music_director.instrument_dynamics import envelope, apply_delta, process
+from yue2_music_director.instrument_dynamics import envelope, apply_delta, process, _decode
 
 
 class DynamicsTests(unittest.TestCase):
@@ -62,3 +64,29 @@ class DynamicsTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"reconstruct"):
                 process(paths[0],bad,paths[2],root/"invalid")
             self.assertFalse((root/"invalid").exists())
+
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"),"FFmpeg required")
+    def test_flac_with_attached_picture(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            # A valid 1x1 RGB PNG without image library dependencies.
+            def chunk(kind, data):
+                return struct.pack(">I",len(data))+kind+data+struct.pack(">I",zlib.crc32(kind+data))
+            picture=root/"cover.png"
+            picture.write_bytes(b"\x89PNG\r\n\x1a\n"+chunk(b"IHDR",struct.pack(">IIBBBBB",1,1,8,2,0,0,0))
+                +chunk(b"IDAT",zlib.compress(b"\x00\x40\x80\xc0"))+chunk(b"IEND",b""))
+            wav=root/"input.wav"
+            with wave.open(str(wav),"wb") as f:
+                f.setparams((1,2,44100,0,"NONE","not compressed"))
+                f.writeframes(struct.pack("<h",1000)*44100)
+            flac=root/"covered.flac"
+            ffmpeg,ffprobe=shutil.which("ffmpeg"),shutil.which("ffprobe")
+            subprocess.run([ffmpeg,"-nostdin","-v","error","-i",str(wav),"-i",str(picture),
+                            "-map","0:a","-map","1:v","-c:a","flac","-c:v","copy",
+                            "-disposition:v:0","attached_pic",str(flac)],check=True,capture_output=True)
+            probe=subprocess.run([ffprobe,"-v","error","-show_entries","stream=codec_type",
+                                  "-of","csv=p=0",str(flac)],check=True,capture_output=True,text=True)
+            self.assertEqual(sorted(probe.stdout.split()),["audio","video"])
+            target=root/"decoded.f32"
+            self.assertEqual(_decode(flac,target,ffmpeg,ffprobe),(44100,1))
+            self.assertEqual(target.stat().st_size,44100*4)
