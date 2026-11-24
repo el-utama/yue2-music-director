@@ -33,7 +33,7 @@ Requires FFmpeg/ffprobe, existing stems from the exact source mix, reference lyr
 py -3 -m yue2_music_director.cli finish-existing --mix local/mix.flac --instrumental local/ins.wav --vocals local/vocals.wav --lyrics local/lyrics.txt --baseline-asr local/recognition.json --language en --out results/finish-001 --confirm-recognition
 ```
 
-Set the loopback MCP endpoint first. A non-regression candidate is provisional; no claim of improved naturalness. See the finishing guide for statuses and recovery. The command has completed on one real YuE2 song. Native Process Audio integration is planned, not implemented.
+Set the loopback MCP endpoint first. A non-regression candidate is provisional; no claim of improved naturalness. See the finishing guide for statuses and recovery. The command has completed on one real YuE2 song. Initial native Process Audio preview adapter is under development; live compatibility and ASR screening are not yet verified.
 
 ## One-command score preparation workflow
 
