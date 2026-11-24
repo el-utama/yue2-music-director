@@ -20,11 +20,10 @@ py -3 -m unittest discover -s tests -v
 Put your own score, lyrics and style text in a **local ignored folder** and run:
 
 ```powershell
-$env:YUE2_MCP_URL = Read-Host "Studio MCP URL (optional for MIDI verification)"
 yue2-director run local/song.abc --lyrics local/lyrics.txt --style local/style.txt --out results/run-001 --seed 42
 ```
 
-This single command validates ABC, checks lyric-section order, reports approximate phrase density, generates a **separate** pitch candidate and prepares an A/B manifest. **Zero Studio calls and zero audio jobs** by default. Add `--midi` to also verify both scores through `score_to_midi` (still zero audio jobs). The output directory must be new and empty; existing results are never overwritten. No safe candidate means the run refuses to prepare A/B instead of inventing random edits.
+This single command validates ABC, checks lyric-section order, reports approximate phrase density, generates a **separate** pitch candidate and prepares an A/B manifest. **Zero Studio calls and zero audio jobs** by default. Set `YUE2_MCP_URL` or pass `--url` and add `--midi` to also verify both scores through `score_to_midi` (still zero audio jobs). The output directory must be new and empty; existing results are never overwritten. No safe candidate means the run refuses to prepare A/B instead of inventing random edits.
 
 To create audio later, review the manifest and use the separately confirmed `ab-submit` commands below, pointing `--out` to `results/run-001/ab`.
 
