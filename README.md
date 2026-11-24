@@ -36,6 +36,16 @@ yue2-director midi-probe path/to/song.abc results/variant.abc --out results/midi
 
 Only `localhost`, `127.0.0.1` and `[::1]` endpoints are accepted, with a configurable port/path. No audio job is started by `studio-check` or `midi-probe`.
 
+## Offline MIDI event audit
+
+After converting two ABC versions with `midi-probe`, compare their symbolic note events without any new Studio calls:
+
+```powershell
+yue2-director midi-audit --original results/midi/01_original.mid --candidate results/midi/02_variant.mid --out results/midi_audit.json --allowed-pitch-track 1 --enforce-pitch-only
+```
+
+The audit compares note counts, pitch, start/duration, velocity, tracks, tempo and meter. Pass `--allowed-pitch-track` as many times as needed for explicit vocal tracks; remove `--enforce-pitch-only` if intentionally auditing a rhythm variant. The tool rejects malformed MIDI, does **not** prove audio quality, and does not call YuE2.
+
 ## A/B audio experiment
 
 This operation **is not a dry run after you call `ab-submit`**. Each submit can launch a GPU-intensive Studio job. Make sure the Studio is idle and no active job needs to be preserved before confirming.
