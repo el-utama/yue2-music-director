@@ -3,7 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import MagicMock, patch
-from yue2_music_director.native_recognition import capture, review, BUSY_KEYS
+from yue2_music_director.native_recognition import capture, review, BUSY_KEYS, _busy_keys
 
 
 def response(text):
@@ -64,6 +64,21 @@ class NativeRecognitionTests(unittest.TestCase):
                     capture(audio,out,"http://localhost:1234/mcp",confirm=True)
                 self.assertEqual(c.call.call_count,count)
 
+    def test_terminal_stem_record_is_not_active(self):
+        status = {k:None for k in BUSY_KEYS}
+        terminal = {"song_id":"synthetic-id","done":True,"error":None,"progress":1.0}
+        status["stems"] = terminal
+        self.assertEqual(_busy_keys(status), [])
+        for change in ({"done":False},{"error":"failure"},{"progress":0.5},
+                       {"progress":True},{"song_id":""}):
+            self.assertEqual(_busy_keys({**status,"stems":{**terminal,**change}}),["stems"])
+        self.assertEqual(_busy_keys({**status,"processing":{"done":True}}),["processing"])
+        self.assertEqual(_busy_keys({**status,"song_jobs":[{"id":"active"}]}),["song_jobs"])
+        self.assertEqual(_busy_keys({**status,"stems":{}}),["stems"])
+        self.assertEqual(_busy_keys({**status,"stems":{"done":True}}),["stems"])
+        with self.assertRaises(ValueError):
+            _busy_keys({})
+
     def test_success_keeps_raw_response(self):
         with TemporaryDirectory() as d:
             audio=Path(d)/"a.wav"
@@ -76,7 +91,9 @@ class NativeRecognitionTests(unittest.TestCase):
                       "models":[{"id":"crisperwhisper-turbo","installed":True}]}
             raw=response("one two")
             c.call.side_effect=[{"structuredContent":settings},
-                                {"structuredContent":{k:None for k in BUSY_KEYS}},
+                                {"structuredContent":{**{k:None for k in BUSY_KEYS},
+                                    "stems":{"song_id":"synthetic-id","done":True,
+                                             "error":None,"progress":1.0}}},
                                 {"structuredContent":raw}]
             with patch("yue2_music_director.native_recognition.Client") as factory:
                 factory.return_value.connect.return_value=c
