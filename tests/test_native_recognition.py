@@ -101,3 +101,15 @@ class NativeRecognitionTests(unittest.TestCase):
             self.assertEqual(result["recognition_calls"],1)
             self.assertEqual(json.loads((out/"recognition.json").read_text()),raw)
             self.assertTrue((out/"receipt.json").exists())
+
+    def test_only_matching_finished_preview_exempted(self):
+        run={"id":"r","song_id":"s","done":True,"preview_ready":True,"error":None}
+        status={**{k:None for k in BUSY_KEYS},"processing":run}
+        self.assertEqual(_busy_keys(status),["processing"])
+        self.assertEqual(_busy_keys(status,run),[])
+        self.assertEqual(_busy_keys({**status,"midi":{"done":False}},run),["midi"])
+        for change in ({"id":"other"},{"done":False},{"preview_ready":False},{"error":"failed"}):
+            with self.assertRaises(ValueError):
+                _busy_keys({**status,"processing":{**run,**change}},run)
+        with self.assertRaises(ValueError):
+            _busy_keys({**status,"processing":None},run)

@@ -4,12 +4,14 @@ No keep/discard, no generation, no implicit endpoint discovery.
 The caller must reserve the Studio processing workspace for the whole run.
 """
 import math
+import json
 import time
 from pathlib import Path
 import shutil
 
 from .mcp import Client, configured_endpoint, unpack
-from .native_recognition import _busy_keys, _sha, _write
+from .native_recognition import _busy_keys, _sha, _write, capture, _recognition
+from .multilingual_fidelity import assess, compare as compare_text
 from .acoustic import compare
 
 REQUIRED = {"studio_status", "library_song_files", "processing_get", "processing_start"}
@@ -106,7 +108,8 @@ def preflight(client, source, request):
     return _workspace(source)
 
 
-def preview(source, song_id, effect, amount, out, url=None, *, confirm=False, timeout=300):
+def preview(source, song_id, effect, amount, out, url=None, *, confirm=False, timeout=300,
+            lyrics=None, baseline_asr=None, language=None, confirm_recognition=False):
     """Read-only preflight by default, or one explicit preview and acoustic report."""
     source=Path(source).resolve(strict=True)
     if not source.is_file() or source.suffix.lower() not in (".flac",".wav"):
@@ -117,6 +120,16 @@ def preview(source, song_id, effect, amount, out, url=None, *, confirm=False, ti
     if type(timeout) is not int or not 10<=timeout<=600:
         raise ValueError("Timeout must be 10 to 600 seconds")
     request=effect_request(song_id,effect,amount)
+    screening=any(v is not None for v in (lyrics,baseline_asr,language)) or confirm_recognition
+    if screening and not (lyrics is not None and baseline_asr is not None and language and confirm_recognition and confirm):
+        raise ValueError("Screening requires lyrics, baseline ASR, language and both confirmations")
+    if screening:
+        reference_path=Path(lyrics).resolve(strict=True)
+        baseline_path=Path(baseline_asr).resolve(strict=True)
+        reference=reference_path.read_text(encoding="utf-8-sig")
+        baseline=_recognition(json.loads(baseline_path.read_text(encoding="utf-8-sig")))
+        assess(reference,baseline,language)
+        input_hashes=(_sha(reference_path),_sha(baseline_path))
     client=Client(configured_endpoint(url),timeout=30).connect()
     source_hash=_sha(source)
     work=preflight(client,source,request)
@@ -166,6 +179,7 @@ def preview(source, song_id, effect, amount, out, url=None, *, confirm=False, ti
     acoustic=compare(source,target)
     a,b=acoustic["arms"]["A"],acoustic["arms"]["B"]
     passed=(a["duration_seconds"]==b["duration_seconds"]
+            and a["sample_rate_hz"]==b["sample_rate_hz"] and a["channels"]==b["channels"]
             and b["true_peak_dbtp"] is not None and b["true_peak_dbtp"]<=-1.0
             and a["integrated_lufs"] is not None and b["integrated_lufs"] is not None
             and abs(a["integrated_lufs"]-b["integrated_lufs"])<=1.0)
@@ -175,6 +189,30 @@ def preview(source, song_id, effect, amount, out, url=None, *, confirm=False, ti
             "library_mutations":0,"automatic_acceptance":False,"naturalness_verified":False,
             "warnings":["Preview identification relies on exclusive workspace use and observed run identity.",
                         "Pending Studio preview is deliberately retained; no keep/discard.",
-                        "ASR screening not performed in this stage."]}
+                        "Baseline ASR provenance/settings are operator-supplied; ASR is not verified sung fidelity."]}
     _write(out/"report.json",report)
-    return report
+    if not screening or not passed:
+        return report
+    # Keep the preview/acoustic report even when recognition fails. No blind retry.
+    evaluation={"status":"screening_pending","processing_run_id":run_id,"recognition_calls":0,
+                "automatic_acceptance":False,"naturalness_verified":False,"library_mutations":0}
+    try:
+        if (_sha(reference_path),_sha(baseline_path))!=input_hashes or _sha(target)!=sha or _sha(source)!=source_hash:
+            raise ValueError("Screening inputs changed")
+        receipt=capture(target,out/"recognition",url,confirm=True,pending_processing=current)
+        evaluation["recognition_calls"]=receipt["recognition_calls"]
+        observed=_recognition(json.loads((out/"recognition/recognition.json").read_text(encoding="utf-8")))
+        latest=_run(unpack(client.call("processing_get",{})))
+        if latest!=current or _sha(target)!=sha or _sha(source)!=source_hash or (_sha(reference_path),_sha(baseline_path))!=input_hashes:
+            raise ValueError("Preview transaction or screening inputs changed")
+        screen=compare_text(reference,baseline,observed,language)
+        evaluation["lyric_screen"]=screen
+        evaluation["status"]="retain_original_asr_regression" if screen["status"]=="regression" else "candidate_nonregression_unverified"
+        evaluation["provisional_output"]=str(source if screen["status"]=="regression" else target)
+    except (ValueError,OSError,RuntimeError,KeyError,TypeError) as exc:
+        evaluation["status"]="screening_blocked"
+        evaluation["reason"]=str(exc)
+        if (out/"recognition/submission.json").exists() and not evaluation["recognition_calls"]:
+            evaluation["recognition_calls"]="unknown_after_submission"
+    _write(out/"evaluation.json",evaluation)
+    return {**report,"evaluation":evaluation}

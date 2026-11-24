@@ -17,6 +17,8 @@ This is a retrospective index, not a complete record of every historical prototy
 
 | Development after alpha 8.post3 | Initial native preview adapter; explicit one-stage preview with preflight and acoustic gate, no keep/discard or ASR. Live acceptance pending. |
 
+| Native preview screening | Optional single local ASR call after acoustic pass; exact completed preview status exemption, separate evaluation report. Live pending-preview recognition remains unverified. |
+
 ## Real-song evidence (2026-11-24)
 
 A/B/C were exploratory, not replicated causal trials. Full-mix native ASR disagreements: A 23/180 (12.78%), B 44/180 (24.44%), C 56/180 (31.11%). Human preference for music and ASR ranking can disagree. B retained as an experimental baseline, not an absolute winner. Isolated vocals did not improve the B ASR result (45 vs 44 edits). Do not repeat these runs merely to recover a report.

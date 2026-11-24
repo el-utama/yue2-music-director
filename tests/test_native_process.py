@@ -1,4 +1,5 @@
 import tempfile
+import json
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -80,7 +81,7 @@ class NativeProcessTests(unittest.TestCase):
                 return {"run":self.run}
             return self.response(name,args)
         self.client.call.side_effect=response
-        arm={"duration_seconds":5.0,"true_peak_dbtp":-1.5,"integrated_lufs":-16.0}
+        arm={"duration_seconds":5.0,"sample_rate_hz":48000,"channels":2,"true_peak_dbtp":-1.5,"integrated_lufs":-16.0}
         compare.return_value={"arms":{"A":arm,"B":arm}}
         report=preview(self.source,"test-song","naturalize",0.2,self.root/"out",
                        "http://127.0.0.1:1234/mcp",confirm=True)
@@ -95,3 +96,42 @@ class NativeProcessTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             preview(self.source,"test-song","naturalize",0.2,self.root/"out",
                     "http://127.0.0.1:1234/mcp",confirm=True)
+
+    @patch("yue2_music_director.native_process.Client")
+    @patch("yue2_music_director.native_process.compare")
+    @patch("yue2_music_director.native_process.capture")
+    @patch("yue2_music_director.native_process.shutil.which",return_value="ffmpeg")
+    def test_native_screen_regression(self,which,capture,compare,client):
+        client.return_value.connect.return_value=self.client
+        calls=[]
+        def response(name,args):
+            if name=="processing_start":
+                calls.append(name)
+                work=self.root/"processing"
+                work.mkdir()
+                (work/"preview.flac").write_bytes(b"preview")
+                return {"started":True}
+            if name=="processing_get" and calls:
+                return {"run":self.run}
+            return self.response(name,args)
+        self.client.call.side_effect=response
+        arm={"duration_seconds":5.0,"sample_rate_hz":48000,"channels":2,
+             "true_peak_dbtp":-1.5,"integrated_lufs":-16.0}
+        compare.return_value={"arms":{"A":arm,"B":arm}}
+        lyrics=self.root/"lyrics.txt"
+        lyrics.write_text("[Verse]\none two",encoding="utf-8")
+        baseline=self.root/"baseline.json"
+        baseline.write_text(json.dumps({"provider":"whisper","text":"one two"}),encoding="utf-8")
+        def recognize(audio,out,url,**kw):
+            self.assertEqual(kw["pending_processing"],self.run)
+            out.mkdir()
+            (out/"recognition.json").write_text(json.dumps({"provider":"whisper","text":"one"}),encoding="utf-8")
+            return {"recognition_calls":1}
+        capture.side_effect=recognize
+        report=preview(self.source,"test-song","naturalize",0.2,self.root/"out",
+                       "http://127.0.0.1:1234/mcp",confirm=True,lyrics=lyrics,
+                       baseline_asr=baseline,language="en",confirm_recognition=True)
+        self.assertEqual(report["evaluation"]["status"],"retain_original_asr_regression")
+        self.assertTrue(Path(report["evaluation"]["provisional_output"]).samefile(self.source))
+        self.assertEqual(calls,["processing_start"])
+        capture.assert_called_once()

@@ -11,13 +11,25 @@ BUSY_KEYS = ("song_jobs", "covers_and_karaoke", "stems", "midi", "restore",
              "preparation", "training", "processing")
 
 
-def _busy_keys(status):
-    """Only the observed successful terminal stem record is exempted."""
+def _busy_keys(status, pending_processing=None):
+    """Exempt only a successful terminal stem or an explicitly matched finished preview."""
     if not isinstance(status, dict) or not all(k in status for k in BUSY_KEYS):
         raise ValueError("Unrecognized Studio busy-state schema")
+    if pending_processing is not None:
+        if (not isinstance(pending_processing,dict)
+                or not isinstance(pending_processing.get("id"),str)
+                or not pending_processing["id"]
+                or pending_processing.get("done") is not True
+                or pending_processing.get("preview_ready") is not True
+                or "error" not in pending_processing
+                or pending_processing["error"] is not None
+                or status["processing"] != pending_processing):
+            raise ValueError("Expected completed processing preview no longer matches")
     busy = []
     for key in BUSY_KEYS:
         value = status[key]
+        if key == "processing" and pending_processing is not None:
+            continue
         if value is None or value == []:
             continue
         if (key == "stems" and isinstance(value, dict)
@@ -54,7 +66,7 @@ def _write(path, obj):
         f.write("\n")
 
 
-def capture(audio, out, url=None, *, confirm=False, language=None):
+def capture(audio, out, url=None, *, confirm=False, language=None, pending_processing=None):
     """Explicit single inference; fresh output and immutable submission marker."""
     if not confirm:
         raise ValueError("Explicit --confirm-recognition required")
@@ -79,7 +91,7 @@ def capture(audio, out, url=None, *, confirm=False, language=None):
         and m.get("installed") is True for m in models):
         raise ValueError("Installed CrisperWhisper Turbo not confirmed")
     status = unpack(client.call("studio_status", {}))
-    busy = _busy_keys(status)
+    busy = _busy_keys(status, pending_processing)
     if busy:
         raise ValueError("Studio is not idle: " + ", ".join(busy))
     out.mkdir(parents=True, exist_ok=False)
@@ -93,6 +105,10 @@ def capture(audio, out, url=None, *, confirm=False, language=None):
     raw = unpack(client.call("lyrics_recognise", args))
     _write(out/"recognition.json", raw)
     _recognition(raw)
+    if pending_processing is not None:
+        after=unpack(client.call("studio_status", {}))
+        if _busy_keys(after,pending_processing):
+            raise ValueError("Studio activity changed during preview recognition")
     if _sha(audio) != sha:
         raise ValueError("Audio changed during recognition; response retained but invalid")
     _write(out/"receipt.json", {"state":"RESPONSE_RECEIVED",

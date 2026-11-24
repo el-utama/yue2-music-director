@@ -175,6 +175,10 @@ def main(argv=None) -> int:
     np.add_argument('--out',type=Path,required=True)
     np.add_argument('--url')
     np.add_argument('--confirm-preview',action='store_true')
+    np.add_argument('--lyrics',type=Path)
+    np.add_argument('--baseline-asr',type=Path)
+    np.add_argument('--language')
+    np.add_argument('--confirm-recognition',action='store_true')
 
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
@@ -333,7 +337,8 @@ def main(argv=None) -> int:
                                        args.transcript.read_text(encoding='utf-8-sig'),args.language)
         elif args.command=='native-process-preview':
             result=native_preview(args.source,args.song_id,args.effect,args.amount,args.out,args.url,
-                                  confirm=args.confirm_preview)
+                                  confirm=args.confirm_preview,lyrics=args.lyrics,baseline_asr=args.baseline_asr,
+                                  language=args.language,confirm_recognition=args.confirm_recognition)
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
