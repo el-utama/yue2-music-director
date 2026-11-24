@@ -56,6 +56,12 @@ class MusicTests(unittest.TestCase):
         self.assertGreater(estimate_syllables('One morning walking'),2)
     def test_13_stats(self):
         self.assertGreaterEqual(repeated_pitch_fraction(parse_score(ABC)),0)
+    def test_15_short_lyric_phrases_can_change_score(self):
+        result=humanize_pitch(ABC,LYRICS,seed=42,max_edits=8)
+        self.assertGreater(result['report']['change_count'],0)
+        self.assertNotEqual(result['abc'],ABC)
+        self.assertEqual(parse_score(ABC).counts,parse_score(result['abc']).counts)
+
     def test_14_no_output_if_budget_zero(self):
         self.assertEqual(humanize_pitch(ABC,LYRICS,max_edits=0)['abc'],ABC)
 
