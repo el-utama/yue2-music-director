@@ -18,7 +18,10 @@ def observations(lyrics="candidate", music="candidate"):
 class HumanSelectionTests(unittest.TestCase):
     def test_preference_conflicts_with_asr(self):
         r = compare(ASR,observations())
-        self.assertEqual(r["provisional_preferred"],"C")
+        self.assertIsNone(r["provisional_preferred"])
+        self.assertEqual(r["provisional_lyric_preferred"],"B")
+        self.assertEqual(r["human_music_preferred"],"C")
+        self.assertEqual(r["selection_status"],"tradeoff_review_required")
         self.assertEqual(r["asr_comparison_counts"]["disagreement"],2)
         self.assertEqual(r["human_preference_counts"]["candidate"],3)
         self.assertFalse(r["automatic_acceptance"])
@@ -28,7 +31,12 @@ class HumanSelectionTests(unittest.TestCase):
 
     def test_mixed_overall_preferences_require_decision(self):
         for lyrics,music in (("baseline","candidate"),("candidate","tie"),("uncertain","candidate")):
-            self.assertIsNone(compare(ASR,observations(lyrics,music))["provisional_preferred"])
+            h = observations(lyrics,music)
+            h["lyric_evidence_policy"] = "human_reviewed"
+            if lyrics == "candidate" and music == "tie":
+                self.assertEqual(compare(ASR,h)["provisional_preferred"],"C")
+            else:
+                self.assertIsNone(compare(ASR,h)["provisional_preferred"])
 
     def test_invalid_and_duplicate_criteria(self):
         h = observations()
