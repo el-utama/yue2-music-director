@@ -271,9 +271,11 @@ def parse_score(source: str) -> Score:
 
 def section_sequence(score: Score) -> list[str]:
     out = []
+    previous = None
     for value in score.sections['Vocal']:
-        if not out or out[-1] != value:
+        if value != previous:
             out.append(value.split('#',1)[0])
+            previous = value
     return out
 
 
