@@ -10,6 +10,7 @@ This is a **working local-first Python toolkit**, not a production-ready autonom
 | Phrase-aware pitch candidates | Offline tested | Approximate lyric-line-to-bar allocation; no acoustic humanization |
 | Lyric diagnostics | Offline tested | Rough English syllable count, not phoneme alignment |
 | MIDI probe | Simulated MCP tested | Requires live local YuE2-Studio, no audio generated |
+| MIDI event A/B audit | Offline tested | SMF 0/1 PPQN only; no audio evaluation |
 | A/B runner | Simulated MCP tested | Requires explicit confirm; live Studio not accessed by CI |
 | Job receipt parser | Simulated live response shape tested | Historic v0.5 job IDs cannot be recovered |
 | Windows and Linux CI | GitHub Actions | Does not run GPU/inference |
@@ -20,6 +21,7 @@ This is a **working local-first Python toolkit**, not a production-ready autonom
 - `prosody.py`: bracketed lyric sections, estimated syllables, rough phrase density report
 - `mcp.py`: modern and legacy MCP handshake, loopback-only transport, no automatic retries
 - `midi.py`: score-to-MIDI probe and bounded MIDI header checks
+- `midi_events.py`: offline note-event comparison, pitch/timing/velocity deltas
 - `job_receipt.py`: defensive ID discovery from structuredContent/text JSON
 - `experiments.py`: offline preparation, hashed input fingerprints, journal-first one-shot job submission and manual reconciliation
 - `cli.py`: single entrypoint for local operations
