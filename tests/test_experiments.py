@@ -50,8 +50,11 @@ class ExperimentsTests(unittest.TestCase):
         self.assertEqual(FakeClient.submitted,1)
 
     def test_reject_candidate_chorus_mutation(self):
-        changed=ABC.replace('"Bb"z2BBBd2d-','"Bb"z2BABd2d-')
-        self.assertNotEqual(changed,ABC)
+        extended=ABC+'% chorus\nV: Vocal\n"Bb"B8|\nV: Ins\nZ|\n'
+        self.a.write_text(extended)
+        self.lyr.write_text(LYRICS+'[Chorus]\nI will keep my promise\n')
+        changed=extended.replace('"Bb"B8|','"Bb"D8|')
+        self.assertNotEqual(changed,extended)
         self.b.write_text(changed)
         with self.assertRaises(ValueError):
             prepare(self.a,self.b,self.lyr,self.style,self.root)
