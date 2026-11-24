@@ -17,6 +17,7 @@ from .phrase_rhythm import analyze as analyze_rhythm
 from .acoustic import compare as compare_audio
 from .native_recognition import capture as capture_recognition, review as review_recognition
 from .fidelity_gate import diagnose as diagnose_fidelity
+from .human_selection import compare as compare_human
 from .mcp import MCPError,Client,configured_endpoint,unpack
 
 
@@ -122,6 +123,11 @@ def main(argv=None) -> int:
     fg.add_argument('--observations',required=True,type=Path)
     fg.add_argument('--native-syllables',type=Path)
     fg.add_argument('--out',required=True,type=Path)
+
+    hs=sub.add_parser('human-select',help='Offline paired human preference and ASR conflict review')
+    hs.add_argument('--asr-review',required=True,type=Path)
+    hs.add_argument('--preferences',required=True,type=Path)
+    hs.add_argument('--out',required=True,type=Path)
 
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
@@ -250,6 +256,19 @@ def main(argv=None) -> int:
                 'reviewed_line_observations','total_lines','audio_jobs_created',
                 'recognition_calls','score_edits','native_syllable_lines',
                 'native_syllable_total','rough_syllable_total','syllable_count_disagreements')}}
+        elif args.command=='human-select':
+            report=compare_human(json.loads(args.asr_review.read_text(encoding='utf-8-sig')),
+                                 json.loads(args.preferences.read_text(encoding='utf-8-sig')))
+            args.out.parent.mkdir(parents=True,exist_ok=True)
+            with args.out.open('x',encoding='utf-8') as f:
+                json.dump(report,f,indent=2,ensure_ascii=False,allow_nan=False)
+                f.write('\n')
+            result={'report':str(args.out),**{k:report[k] for k in (
+                'human_preference_counts','asr_comparison_counts','asr_edit_totals',
+                'lyric_evidence_policy','asr_lyric_preferred','human_music_preferred',
+                'provisional_lyric_preferred','provisional_preferred','selection_status','absolute_fidelity_status',
+                'automatic_acceptance','automatic_regeneration','audio_jobs_created',
+                'recognition_calls','score_edits')}}
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
