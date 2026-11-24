@@ -1,6 +1,6 @@
 # YuE2 Music Director
 
-Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, focused on safe ABC score edits, lyric-section diagnostics, MIDI compatibility checks and controlled audio A/B experiments. **Current version 0.6.1 (beta)**.
+Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, focused on safe ABC score edits, lyric-section diagnostics, MIDI compatibility checks and controlled audio A/B experiments. **Current version 0.7.0a8.post3 (experimental alpha)**.
 
 > The repository is public. Never commit private audio, unpublished lyrics, local job journals, model weights or credentials.
 
@@ -15,7 +15,26 @@ py -3 -m pip install -e .
 py -3 -m unittest discover -s tests -v
 ```
 
-## One-command workflow (recommended)
+## Documentation map
+
+- [Research handbook](docs/RESEARCH_HANDBOOK.md): goals, architecture, evidence, operating rules and roadmap.
+- [Changelog and research milestones](CHANGELOG.md): retrospective history from the early prototypes.
+- [Development](DEVELOPMENT.md): architecture and validation gates.
+- [Finish existing song](docs/FINISH_EXISTING.md): integrated audio processing and ASR screening.
+- [Instrument dynamics](docs/INSTRUMENT_DYNAMICS.md) and [MIDI render QA](docs/INSTRUMENT_RENDER_QA.md): separate audio and MIDI workflows.
+- [Historical v0.6.1 acceptance protocol](docs/MUSICAL_ACCEPTANCE_V061.md): frozen score and original research design; superseded for routine human listening by the ASR-primary policy.
+
+## Finish a generated song (alpha 8)
+
+Requires FFmpeg/ffprobe, existing stems from the exact source mix, reference lyrics, baseline native ASR JSON and a ready local Studio. No new song generation or stem separation. One possible additional recognition call, explicitly authorized.
+
+```powershell
+py -3 -m yue2_music_director.cli finish-existing --mix local/mix.flac --instrumental local/ins.wav --vocals local/vocals.wav --lyrics local/lyrics.txt --baseline-asr local/recognition.json --language en --out results/finish-001 --confirm-recognition
+```
+
+Set the loopback MCP endpoint first. A non-regression candidate is provisional; no claim of improved naturalness. See the finishing guide for statuses and recovery. The command has completed on one real YuE2 song. Native Process Audio integration is planned, not implemented.
+
+## One-command score preparation workflow
 
 Put your own score, lyrics and style text in a **local ignored folder** and run:
 
@@ -44,7 +63,7 @@ yue2-director humanize local/song.abc --lyrics local/lyrics.txt --out results/v0
 yue2-director humanize local/song.abc --lyrics local/lyrics.txt --out results/v060_replay.abc --seed 42 --profile legacy
 ```
 
-The report records `proposed_change_count`, `change_count`, and `deferred_changes`. A conservative filter is only a contour heuristic; musical quality and lyric stress still require human review. The change does not modify velocity, timing or audio-generation behavior.
+The report records `proposed_change_count`, `change_count`, and `deferred_changes`. A conservative filter is only a contour heuristic; musical quality and lyric stress are not established by contour screening; routine lyric comparison uses ASR, with optional human musical judgment. The change does not modify velocity, timing or audio-generation behavior.
 
 ## MCP: only explicit local Studio endpoint
 
@@ -90,7 +109,7 @@ The output directory must be new and empty. Both arms have identical requests ex
 - Section matching does not verify syllable placement. The Bridge reuse from the earlier demo was **not** prosody-verified.
 - Identical seed does not guarantee identical audio realization, so A/B differences are not isolated solely to pitch edits.
 - MIDI conversion verifies Studio compatibility, not musical quality.
-- GitHub Actions run offline unit tests; they do **not** contact your local Studio, run inference, or prove audible improvement.
+- GitHub Actions run offline tests and actual FFmpeg synthetic-audio tests on Linux; they do **not** contact your local Studio, run inference, or prove audible improvement.
 - The repository has no access to your machine's loopback MCP address from GitHub Actions or this chat.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for quality gates and architecture.
