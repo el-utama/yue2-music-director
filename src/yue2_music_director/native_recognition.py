@@ -66,17 +66,8 @@ def _write(path, obj):
         f.write("\n")
 
 
-def capture(audio, out, url=None, *, confirm=False, language=None, pending_processing=None):
-    """Explicit single inference; fresh output and immutable submission marker."""
-    if not confirm:
-        raise ValueError("Explicit --confirm-recognition required")
-    audio, out = Path(audio).resolve(strict=True), Path(out)
-    if not audio.is_file() or audio.suffix.lower() not in (".flac", ".wav"):
-        raise ValueError("Expected a local FLAC/WAV file")
-    if out.exists():
-        raise ValueError("Recognition output already exists; never retry blindly")
-    sha = _sha(audio)
-    client = Client(configured_endpoint(url), timeout=600).connect()
+def recognition_preflight(client):
+    """Read-only readiness checks, shared by combined workflows."""
     names = {t.get("name") for t in client.tools()}
     if not {"karaoke_settings_get","studio_status","lyrics_recognise"} <= names:
         raise ValueError("Missing native recognition capability")
@@ -90,6 +81,21 @@ def capture(audio, out, url=None, *, confirm=False, language=None, pending_proce
         isinstance(m, dict) and m.get("id") == "crisperwhisper-turbo"
         and m.get("installed") is True for m in models):
         raise ValueError("Installed CrisperWhisper Turbo not confirmed")
+    return s
+
+
+def capture(audio, out, url=None, *, confirm=False, language=None, pending_processing=None):
+    """Explicit single inference; fresh output and immutable submission marker."""
+    if not confirm:
+        raise ValueError("Explicit --confirm-recognition required")
+    audio, out = Path(audio).resolve(strict=True), Path(out)
+    if not audio.is_file() or audio.suffix.lower() not in (".flac", ".wav"):
+        raise ValueError("Expected a local FLAC/WAV file")
+    if out.exists():
+        raise ValueError("Recognition output already exists; never retry blindly")
+    sha = _sha(audio)
+    client = Client(configured_endpoint(url), timeout=600).connect()
+    s = recognition_preflight(client)
     status = unpack(client.call("studio_status", {}))
     busy = _busy_keys(status, pending_processing)
     if busy:
