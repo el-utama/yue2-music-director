@@ -15,6 +15,7 @@ from .expression import plan as expression_plan
 from .lyric_fidelity import compare_lyrics
 from .phrase_rhythm import analyze as analyze_rhythm
 from .acoustic import compare as compare_audio
+from .native_recognition import capture as capture_recognition, review as review_recognition
 from .mcp import MCPError,Client,configured_endpoint,unpack
 
 
@@ -99,6 +100,19 @@ def main(argv=None) -> int:
     ac.add_argument('--a',required=True,type=Path)
     ac.add_argument('--b',required=True,type=Path)
     ac.add_argument('--out',required=True,type=Path)
+
+    nr=sub.add_parser('native-recognise',help='Explicit local Studio recognition of existing audio')
+    nr.add_argument('audio',type=Path)
+    nr.add_argument('--out',required=True,type=Path)
+    nr.add_argument('--url')
+    nr.add_argument('--language')
+    nr.add_argument('--confirm-recognition',action='store_true')
+
+    ar=sub.add_parser('asr-review',help='Offline review of existing native recognition JSONs')
+    ar.add_argument('--lyrics',required=True,type=Path)
+    ar.add_argument('--a',required=True,type=Path)
+    ar.add_argument('--b',required=True,type=Path)
+    ar.add_argument('--out',required=True,type=Path)
 
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
@@ -198,6 +212,20 @@ def main(argv=None) -> int:
             result={'report':str(args.out),'B_minus_A':report['B_minus_A'],
                     'suggested_playback_gain_db':report['suggested_playback_gain_db'],
                     'audio_jobs_created':0}
+        elif args.command=='native-recognise':
+            result=capture_recognition(args.audio,args.out,args.url,
+                                       confirm=args.confirm_recognition,language=args.language)
+        elif args.command=='asr-review':
+            report=review_recognition(args.lyrics.read_text(encoding='utf-8-sig'),
+                                      json.loads(args.a.read_text(encoding='utf-8-sig')),
+                                      json.loads(args.b.read_text(encoding='utf-8-sig')))
+            args.out.parent.mkdir(parents=True,exist_ok=True)
+            with args.out.open('x',encoding='utf-8') as f:
+                json.dump(report,f,indent=2,ensure_ascii=False,allow_nan=False)
+                f.write('\n')
+            result={'report':str(args.out),'arms':report['arms'],
+                    'quality_decision':report['quality_decision'],
+                    'human_verified':False,'audio_jobs_created':0,'recognition_calls':0}
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
