@@ -48,3 +48,6 @@ For each new PR, update the applicable command guide, changelog, status/limitati
 
 
 Native preview development: optional ASR after acoustic pass and read-only `native-process-inspect` are implemented. Live native preview and recognition remain unverified; preserve interrupted journals. The inspection command never submits or resumes work.
+
+
+Native Naturalize preview retrieval has now been verified on one real song (same duration/rate/channels); headroom gate stopped ASR. Gain-only continuation reuses captured preview rather than rerendering the native effect. Live ASR still unverified.

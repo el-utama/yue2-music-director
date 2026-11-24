@@ -13,6 +13,7 @@ from .instrument_render import run as render_instruments
 from .instrument_dynamics import process as process_dynamics
 from .finish import finish as finish_existing
 from .native_process import preview as native_preview, inspect_preview
+from .native_headroom import continue_preview
 from .multilingual_fidelity import assess as assess_multilingual
 from .midi_events import compare_files,MIDIEventError
 from .pipeline import run as run_pipeline
@@ -184,6 +185,15 @@ def main(argv=None) -> int:
     ni.add_argument('--source',type=Path,required=True)
     ni.add_argument('--out',type=Path,required=True)
 
+    nc=sub.add_parser('native-process-continue',help='Continue saved peak-only blocked preview, no native resubmission')
+    nc.add_argument('--source',type=Path,required=True)
+    nc.add_argument('--out',type=Path,required=True,help='Existing native preview transaction directory')
+    nc.add_argument('--lyrics',type=Path,required=True)
+    nc.add_argument('--baseline-asr',type=Path,required=True)
+    nc.add_argument('--language',required=True)
+    nc.add_argument('--url')
+    nc.add_argument('--confirm-recognition',action='store_true')
+
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
     args=parser.parse_args(argv)
@@ -345,6 +355,9 @@ def main(argv=None) -> int:
                                   language=args.language,confirm_recognition=args.confirm_recognition)
         elif args.command=='native-process-inspect':
             result=inspect_preview(args.out,args.source)
+        elif args.command=='native-process-continue':
+            result=continue_preview(args.source,args.out,args.lyrics,args.baseline_asr,args.language,args.url,
+                                    confirm=args.confirm_recognition)
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
