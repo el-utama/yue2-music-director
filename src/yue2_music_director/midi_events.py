@@ -56,6 +56,8 @@ def parse_midi_data(data: bytes) -> dict:
         raise MIDIEventError('Only SMF 0/1 PPQN MIDI supported')
     offset=8+hlen
     notes=[]
+    note_on_offsets={}
+    track_names={}
     tempos=[]
     signatures=[]
     sequence=0
@@ -67,6 +69,7 @@ def parse_midi_data(data: bytes) -> dict:
         end=offset+size
         if end>len(data):
             raise MIDIEventError('Truncated track chunk')
+        payload_start=offset
         payload=data[offset:end]
         offset=end
         index=0
@@ -100,6 +103,8 @@ def parse_midi_data(data: bytes) -> dict:
                 chunk=payload[index:index+length]
                 index+=length
                 status=None
+                if meta==0x03:
+                    track_names.setdefault(track,[]).append(chunk.decode('utf-8',errors='replace'))
                 if meta==0x51:
                     if length!=3:raise MIDIEventError('Invalid tempo meta')
                     tempos.append((tick,int.from_bytes(chunk,'big')))
@@ -130,6 +135,7 @@ def parse_midi_data(data: bytes) -> dict:
             b=payload[index+1] if nbytes==2 else 0
             index+=nbytes
             if kind==0x9 and b>0:
+                note_on_offsets[sequence]=payload_start+index-1
                 active[(channel,a)].append((tick,b,sequence))
                 sequence+=1
             elif kind==0x8 or (kind==0x9 and b==0):
@@ -147,7 +153,8 @@ def parse_midi_data(data: bytes) -> dict:
         raise MIDIEventError('Trailing bytes after last MIDI track')
     notes.sort(key=lambda e:(e.track,e.order))
     return {'format':fmt,'tracks':tracks,'division':division,
-            'tempos':sorted(tempos),'signatures':sorted(signatures),'notes':notes}
+            'tempos':sorted(tempos),'signatures':sorted(signatures),'notes':notes,
+            'note_on_offsets':note_on_offsets,'track_names':track_names}
 
 
 def compare_midi_data(original: bytes,candidate: bytes,allowed_pitch_tracks: list[int] | None=None) -> dict:
