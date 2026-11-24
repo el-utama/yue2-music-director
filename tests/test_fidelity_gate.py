@@ -51,3 +51,24 @@ class FidelityGateTests(unittest.TestCase):
     def test_mismatched_reference(self):
         with self.assertRaises(ValueError):
             diagnose(SCORE,LYRICS.replace("Sing now","Sing again"),ASR,{"lines":[],"transitions":[]})
+
+    def test_native_counts_preserve_exact_reference(self):
+        obs = {"lines":[], "transitions":[]}
+        native = {"lines":[{"line":"Sing now","syllables":3},
+                           {"line":"Stay here","syllables":2},
+                           {"line":"One two three four","syllables":4}]}
+        r = diagnose(SCORE, LYRICS, ASR, obs, native)
+        self.assertEqual(r["native_syllable_total"],9)
+        self.assertEqual(r["native_syllable_lines"],3)
+        self.assertEqual(r["phrases"][0]["syllable_count_source"],"studio_native")
+        self.assertEqual(r["phrases"][0]["notes_per_syllable"],2/3)
+        self.assertIsNone(r["phrases"][1]["syllables_per_sounding_quarter"])
+        fallback = diagnose(SCORE,LYRICS,ASR,obs)
+        self.assertEqual(fallback["phrases"][0]["syllable_count_source"],"rough_english")
+        self.assertIsNone(fallback["native_syllable_total"])
+        for invalid in ({"lines":native["lines"][:-1]},
+                        {"lines":list(reversed(native["lines"]))},
+                        {"lines":[{**native["lines"][0],"syllables":True},*native["lines"][1:]]},
+                        {"lines":[{**native["lines"][0],"syllables":0},*native["lines"][1:]]}):
+            with self.assertRaises(ValueError):
+                diagnose(SCORE,LYRICS,ASR,obs,invalid)

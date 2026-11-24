@@ -120,6 +120,7 @@ def main(argv=None) -> int:
     fg.add_argument('--lyrics',required=True,type=Path)
     fg.add_argument('--asr-review',required=True,type=Path)
     fg.add_argument('--observations',required=True,type=Path)
+    fg.add_argument('--native-syllables',type=Path)
     fg.add_argument('--out',required=True,type=Path)
 
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
@@ -238,7 +239,8 @@ def main(argv=None) -> int:
             report=diagnose_fidelity(args.abc.read_text(encoding='utf-8-sig'),
                                      args.lyrics.read_text(encoding='utf-8-sig'),
                                      json.loads(args.asr_review.read_text(encoding='utf-8-sig')),
-                                     json.loads(args.observations.read_text(encoding='utf-8-sig')))
+                                     json.loads(args.observations.read_text(encoding='utf-8-sig')),
+                                     native_syllables=json.loads(args.native_syllables.read_text(encoding='utf-8-sig')) if args.native_syllables else None)
             args.out.parent.mkdir(parents=True,exist_ok=True)
             with args.out.open('x',encoding='utf-8') as f:
                 json.dump(report,f,indent=2,ensure_ascii=False,allow_nan=False)
@@ -246,7 +248,8 @@ def main(argv=None) -> int:
             result={'report':str(args.out),**{k:report[k] for k in (
                 'gate','confirmed_issue_lines','confirmed_issue_transitions',
                 'reviewed_line_observations','total_lines','audio_jobs_created',
-                'recognition_calls','score_edits')}}
+                'recognition_calls','score_edits','native_syllable_lines',
+                'native_syllable_total','rough_syllable_total','syllable_count_disagreements')}}
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
