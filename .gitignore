@@ -9,10 +9,12 @@ dist/
 .env
 .env.*
 !*.env.example
-# Private local Studio output and experiments
+# Local user content and generated artifacts (public GitHub repo)
+local/
 hasil_*/
 results/
 experiments/
+*.abc
 *.flac
 *.wav
 *.mp3

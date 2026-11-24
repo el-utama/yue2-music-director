@@ -1,29 +1,45 @@
-# Development and roadmap
+# Development and validation
 
-This project is being migrated from tested local prototypes into one canonical repository.
+## Current phase: v0.6 beta
 
-## Verified in the user's local Studio
+This is a **working local-first Python toolkit**, not a production-ready autonomous music director. Migrated and integrated components:
 
-- MCP connection and score-to-MIDI conversion work on YuE2-Studio timoncool v5.0.0.
-- Original and modified ABC can be converted to four-track MIDI.
-- A/B FLACs have been rendered; this does **not** establish musical improvement.
-- The observed song_create response uses a structured job object's id. The job_receipt module parses this safely.
+| Component | Ready | Main limitations |
+|---|---|---|
+| Strict YuE2 ABC parser | Offline tested | Supports limited notation grammar |
+| Phrase-aware pitch candidates | Offline tested | Approximate lyric-line-to-bar allocation; no acoustic humanization |
+| Lyric diagnostics | Offline tested | Rough English syllable count, not phoneme alignment |
+| MIDI probe | Simulated MCP tested | Requires live local YuE2-Studio, no audio generated |
+| A/B runner | Simulated MCP tested | Requires explicit confirm; live Studio not accessed by CI |
+| Job receipt parser | Simulated live response shape tested | Historic v0.5 job IDs cannot be recovered |
+| Windows and Linux CI | GitHub Actions | Does not run GPU/inference |
 
-## What's in this bootstrap
+## Architecture
 
-- A read-only restricted ABC score guard: not a full YuE2 notation parser.
-- A defensive MCP receipt parser.
-- Python tests and CI.
+- `music.py`: strict notation parser, fixed-duration phrase variation and post-edit score safety
+- `prosody.py`: bracketed lyric sections, estimated syllables, rough phrase density report
+- `mcp.py`: modern and legacy MCP handshake, loopback-only transport, no automatic retries
+- `midi.py`: score-to-MIDI probe and bounded MIDI header checks
+- `job_receipt.py`: defensive ID discovery from structuredContent/text JSON
+- `experiments.py`: offline preparation, hashed input fingerprints, journal-first one-shot job submission and manual reconciliation
+- `cli.py`: single entrypoint for local operations
 
-## Next migration steps
+## Quality gates
 
-1. Port the previously tested full v0.1 ABC analyzer, variation engine and regression tests.
-2. Port MIDI probe, event audit, chorus alignment and v0.5.2 A/B runner in separate reviewed changes.
-3. Build phrase-aware humanization with lyric alignment and bridge prosody checks.
-4. Add safe, opt-in generation and resource-aware queueing; never duplicate pending jobs.
+- All unit tests and CLI smoke tests pass on Windows and Ubuntu for Python 3.11 and 3.13.
+- Real score is validated by `yue2-director audit` **on the user's machine**.
+- MIDI compatibility requires explicit local Studio `midi-probe`.
+- Real audio requires human-confirmed Studio idle and explicit `ab-submit`; it is never run by CI.
+- Human listening is essential. No pitch edit or identical seed proves a more natural or more expressive vocal.
 
-## Privacy and safety
+## Porting note
 
-- No fixed MCP endpoint; use configuration or CLI.
-- Do not check in private lyrics, audio renders, local reports, or model weights.
-- Never automatically re-submit a generation on a transport timeout.
+Earlier v0.1/v0.5.2 stand-alone prototypes were developed and tested in another environment. This repository contains a **restructured implementation** of their key workflows, not a byte-for-byte import of every historical script. Keep old experiment journals and FLAC renders locally. Do not resubmit historical arms A/B or assume they can be imported automatically.
+
+## Future work
+
+- Verified lyric-to-note and phoneme alignment, to support safe rhythm changes.
+- Bridge recomposition rather than recycling a pre-chorus.
+- Instrument performance expression and optional audio analysis, based on robust objective + human ratings.
+- More real-world scores across keys, meters, and unusual ABC tokens.
+- Resource manager / resume-safe orchestration and optional LLM integrations.
