@@ -50,12 +50,16 @@ class ExperimentsTests(unittest.TestCase):
         self.assertEqual(FakeClient.submitted,1)
 
     def test_reject_candidate_chorus_mutation(self):
-        self.b.write_text(ABC.replace('"Bb"z2BBBd2d-','"Bb"z2BBBc2c-'))
+        changed=ABC.replace('"Bb"z2BBBd2d-','"Bb"z2BABd2d-')
+        self.assertNotEqual(changed,ABC)
+        self.b.write_text(changed)
         with self.assertRaises(ValueError):
             prepare(self.a,self.b,self.lyr,self.style,self.root)
 
     def test_reject_candidate_instrument_mutation(self):
-        self.b.write_text(ABC.replace('V: Ins\\nZ4|','V: Ins\\nF8|Z3|'))
+        changed=ABC.replace('V: Ins\nZ4|','V: Ins\nF8|Z3|')
+        self.assertNotEqual(changed,ABC)
+        self.b.write_text(changed)
         with self.assertRaises(ValueError):
             prepare(self.a,self.b,self.lyr,self.style,self.root)
 
