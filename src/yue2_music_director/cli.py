@@ -11,6 +11,8 @@ from .midi import probe
 from .instrument_velocity import write as humanize_instruments
 from .instrument_render import run as render_instruments
 from .instrument_dynamics import process as process_dynamics
+from .finish import finish as finish_existing
+from .multilingual_fidelity import assess as assess_multilingual
 from .midi_events import compare_files,MIDIEventError
 from .pipeline import run as run_pipeline
 from .experiments import prepare,submit,reconcile,status
@@ -150,6 +152,19 @@ def main(argv=None) -> int:
     dy.add_argument('--vocals',required=True,type=Path)
     dy.add_argument('--out',required=True,type=Path)
     dy.add_argument('--max-db',type=float,default=2.0)
+
+    fin=sub.add_parser('finish-existing',help='One bounded existing-song dynamics and native ASR workflow')
+    for key in ('mix','instrumental','vocals','lyrics','baseline-asr','out'):
+        fin.add_argument('--'+key,type=Path,required=True)
+    fin.add_argument('--language',required=True,help='Reference scoring language (e.g. en, id, ja)')
+    fin.add_argument('--url')
+    fin.add_argument('--confirm-recognition',action='store_true')
+    fin.add_argument('--max-db',type=float,default=2.0)
+
+    ml=sub.add_parser('multilingual-score',help='Score existing transcript text offline')
+    ml.add_argument('--lyrics',type=Path,required=True)
+    ml.add_argument('--transcript',type=Path,required=True)
+    ml.add_argument('--language',required=True)
 
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
@@ -299,6 +314,13 @@ def main(argv=None) -> int:
         elif args.command=='instrument-dynamics':
             report=process_dynamics(args.mix,args.instrumental,args.vocals,args.out,args.max_db)
             result={'report':str(args.out/'report.json'),**{k:v for k,v in report.items() if k not in ('edits','acoustic','source_sha256')}}
+        elif args.command=='finish-existing':
+            result=finish_existing(args.mix,args.instrumental,args.vocals,args.lyrics,
+                                   args.baseline_asr,args.out,args.language,url=args.url,
+                                   confirm=args.confirm_recognition,max_db=args.max_db)
+        elif args.command=='multilingual-score':
+            result=assess_multilingual(args.lyrics.read_text(encoding='utf-8-sig'),
+                                       args.transcript.read_text(encoding='utf-8-sig'),args.language)
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
