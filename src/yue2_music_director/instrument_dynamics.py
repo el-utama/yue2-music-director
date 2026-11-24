@@ -34,7 +34,7 @@ def residual_budget(residual_db, requested_db):
     if not math.isfinite(residual_db) or residual_db > -20:
         return 0.0
     fraction = min(1-10**(-requested_db/20), 10**((-40-residual_db)/20))
-    return -20*math.log10(1-fraction)
+    return min(requested_db,-20*math.log10(1-fraction))
 
 
 def envelope(energies, max_db=2.0):
@@ -235,7 +235,7 @@ def process(mix, instrumental, vocals, out, max_db=2.0):
                     f.write(_bytes(values))
                     previous=gains[i]
             report["candidate_sample_peak"]=peak
-            if peak>1:
+            if peak>=1:
                 report["status"]="blocked_sample_peak"
             else:
                 target=work/"candidate.flac"
