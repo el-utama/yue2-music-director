@@ -22,6 +22,7 @@ py -3 -m unittest discover -s tests -v
 - [Development](DEVELOPMENT.md): architecture and validation gates.
 - [Finish existing song](docs/FINISH_EXISTING.md): integrated audio processing and ASR screening.
 - [Instrument dynamics](docs/INSTRUMENT_DYNAMICS.md) and [MIDI render QA](docs/INSTRUMENT_RENDER_QA.md): separate audio and MIDI workflows.
+- [Offline finishing selection](docs/FINISHING_SELECTION.md): compare completed evidence without new processing.
 - [Native Process Audio integration contract](docs/NATIVE_PROCESS_AUDIO.md): source audit, transaction design and outstanding blockers.
 - [Historical v0.6.1 acceptance protocol](docs/MUSICAL_ACCEPTANCE_V061.md): frozen score and original research design; superseded for routine human listening by the ASR-primary policy.
 
