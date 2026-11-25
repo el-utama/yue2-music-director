@@ -74,3 +74,49 @@ class TemporalEvidenceTests(unittest.TestCase):
                      {"id":"song","metadata":{"has_karaoke":True}}):
             with self.subTest(data=data),self.assertRaises(ValueError):
                 karaoke_metadata(data,"song",detailed=True)
+
+
+    @patch("yue2_music_director.temporal_evidence.native_song_read")
+    @patch("yue2_music_director.temporal_evidence.Client")
+    def test_incomplete_mcp_uses_native_read_once(self,factory,native):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            source=root/"audio.flac"
+            source.write_bytes(b"fixture")
+            lyrics=root/"lyrics.txt"
+            lyrics.write_text("[Verse]\none two",encoding="utf-8")
+            baseline=root/"baseline.json"
+            _write(baseline,{"provider":"whisper","text":"one"})
+            client=factory.return_value.connect.return_value
+            client.tools.return_value=[{"name":"library_song_get"},{"name":"library_song_files"}]
+            client.call.side_effect=[{"audio":str(source.resolve())},
+                {"content":[{"type":"text","text":"truncated"}]},
+                {"audio":str(source.resolve())}]
+            native.return_value={"id":"song","metadata":{"lrc":"[00:01.00]one two"}}
+            url="http://127.0.0.1:1234/mcp"
+            result=inspect_timing(source,"song",lyrics,baseline,"en",5,root/"timing.json",url)
+            native.assert_called_once_with(url,"song")
+            self.assertEqual(result["metadata_transport"],"native_http_get")
+            self.assertEqual(result["status"],"karaoke_display_anchors_only")
+            self.assertFalse(result["correction_allowed"])
+            self.assertEqual(result["recognition_calls"],0)
+
+    def test_native_read_uses_exact_loopback_get_and_rejects_remote(self):
+        from yue2_music_director.temporal_evidence import native_song_read
+        from email.message import Message
+        with patch("yue2_music_director.temporal_evidence.build_opener") as opener:
+            response=opener.return_value.open.return_value.__enter__.return_value
+            headers=Message()
+            headers["Content-Type"]="application/json"
+            response.headers=headers
+            response.read.return_value=b'{"id":"fixture","metadata":null}'
+            result=native_song_read("http://127.0.0.1:1234/mcp","fixture")
+            self.assertIsNone(result["metadata"])
+            request=opener.return_value.open.call_args.args[0]
+            self.assertEqual(request.full_url,"http://127.0.0.1:1234/v1/library/songs/fixture")
+            self.assertEqual(request.get_method(),"GET")
+            with self.assertRaises(ValueError):
+                native_song_read("http://example.com/mcp","fixture")
+            with self.assertRaises(ValueError):
+                native_song_read("http://127.0.0.1:1234/other","fixture")
+            opener.return_value.open.assert_called_once()
