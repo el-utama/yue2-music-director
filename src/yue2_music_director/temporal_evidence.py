@@ -133,6 +133,35 @@ def karaoke_metadata(song,song_id,*,detailed=False):
     return _NEED_DETAIL
 
 
+def match_display_lines(rows,expected):
+    """Map exact text in order; upstream may omit unplaced lines.
+
+    Earliest and latest feasible subsequence matches bound every possible
+    assignment. Only indices equal in both are uniquely identified.
+    """
+    target=[" ".join(e[3].split()) for e in expected]
+    observed=[" ".join(row["text"].split()) for row in rows]
+    earliest=[]
+    cursor=0
+    for text in observed:
+        while cursor<len(target) and target[cursor]!=text:
+            cursor+=1
+        if cursor==len(target):
+            raise ValueError("Karaoke text/order is not a subsequence of frozen reference")
+        earliest.append(cursor)
+        cursor+=1
+    latest=[]
+    cursor=len(target)-1
+    for text in reversed(observed):
+        while cursor>=0 and target[cursor]!=text:
+            cursor-=1
+        if cursor<0:
+            raise ValueError("Karaoke text/order is not a subsequence of frozen reference")
+        latest.append(cursor)
+        cursor-=1
+    return [(row,expected[a]) for row,a,z in zip(rows,earliest,reversed(latest)) if a==z]
+
+
 def inspect_timing(source, song_id, lyrics, baseline_asr, language, duration, out, url=None):
     """Read existing library metadata only; no karaoke_make or recognition."""
     source,lyrics,baseline_asr=[Path(p).resolve(strict=True) for p in (source,lyrics,baseline_asr)]
@@ -179,22 +208,29 @@ def inspect_timing(source, song_id, lyrics, baseline_asr, language, duration, ou
             rows=parse_lrc(lrc,duration)
             expected=[(g["name"],g["occurrence"],i,line) for g in parse_lyrics(reference)
                       for i,line in enumerate(g["lines"],1)]
-            if len(rows)!=len(expected) or any(" ".join(row["text"].split())!=" ".join(e[3].split()) for row,e in zip(rows,expected)):
-                raise ValueError("Karaoke text/order differs from frozen reference")
+            result["reference_line_count"]=len(expected)
+            result["parsed_display_line_count"]=len(rows)
+            matched=match_display_lines(rows,expected)
+            result["ambiguous_display_line_count"]=len(rows)-len(matched)
+            result["unmapped_reference_line_count"]=len(expected)-len(matched)
+            if not matched:
+                raise ValueError("No uniquely mapped karaoke display lines")
             localization=None
             if language=="en":
                 mapped=review(reference,raw,raw)
                 localization={(p["section"],p["line_index"]):p["A_count"] for p in mapped["reference_lines"]}
-            for row,(name,occ,i,_) in zip(rows,expected):
+            for row,(name,occ,i,_) in matched:
                 section=f"{name}#{occ}"
                 result["lines"].append({"section":section,"line_index":i,
                     "start_seconds":row["start_seconds"],"word_anchor_count":len(row["word_anchors"]),
                     "word_start_seconds":[w["start_seconds"] for w in row["word_anchors"]],
                     "asr_line_edits":localization[(section,i)] if localization is not None else None,
                     "timing_evidence":"unverified_karaoke_display_anchor"})
-            result["status"]="karaoke_display_anchors_only"
+            result["status"]=("karaoke_display_anchors_only" if len(matched)==len(expected)
+                              else "partial_karaoke_display_anchors_only")
         except ValueError as exc:
             result["status"]="karaoke_evidence_blocked"
+            result["lines"]=[]
             result["reason"]=str(exc)
     _source_file(unpack(client.call("library_song_files",{"song_id":song_id})),source)
     if [_sha(p) for p in (source,lyrics,baseline_asr)]!=hashes:
