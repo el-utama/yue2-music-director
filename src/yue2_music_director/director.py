@@ -72,7 +72,38 @@ def direct(source, lyrics, baseline_asr, language, out, *, custom=None, native=N
     # No evidence here can establish actual vocal naturalness, timing, or note dynamics.
     status=selection["status"]
     chosen=selection["provisional_output"]
-    result={"schema":"director-diagnosis-v1","source_sha256":hashes[0],"lyrics_sha256":hashes[1],
+    # Separate a usable technical candidate from the next musical intervention.
+    # Native-first: a file already in hand is preferable to another render.
+    selected=next((row for row in selection["candidates"]
+                   if row["eligible"] and row.get("path")==chosen),None)
+    actions=[{"priority":1,"action":"use_existing_provisional_file" if selected else "retain_source",
+              "reason":"existing_evidence","execution":"available_now",
+              "method":selected["method"] if selected else "source",
+              "requires_new_audio":False}]
+    if baseline[primary]["edits"]:
+        # Existing lyric evidence may be adequate for localization, not cause.
+        # Do not trigger training, a new ASR pass or external alignment by default.
+        worst=sorted((localization or {}).get("lines",[]),
+                     key=lambda line:-line["edits"])
+        actions.append({"priority":2,"action":"inspect_existing_native_timing",
+                        "tool_candidates":["library_song_get","library_song_files"],
+                        "director_command":"timing-evidence",
+                        "requires_new_audio":False,
+                        "execution":"requires_matching_library_song_and_existing_lrc",
+                        "review_cues":[line for line in worst if line["edits"]][:5],
+                        "limitation":"Display anchors are not observed phonemes; no lyric or score mutation"})
+    if not selected and any(row.get("reason")=="insufficient_headroom" for row in selection["candidates"]):
+        actions.append({"priority":len(actions)+1,"action":"consider_native_export_for_library_source",
+                        "tool_candidates":["song_export","song_export_get"],
+                        "execution":"requires_explicit_delivery_goal_and_verified_library_source",
+                        "limitation":"Fixed gain only; not an export of an uncommitted external candidate",
+                        "requires_new_audio":False})
+    if any(row.get("reason")=="evidence_invalid" for row in selection["candidates"]):
+        actions.append({"priority":len(actions)+1,"action":"inspect_existing_transaction",
+                        "execution":"offline_evidence_recovery_only",
+                        "requires_new_audio":False})
+    result={"schema":"director-diagnosis-v1","native_first_actions":actions,
+            "model_change_recommended":False,"training_recommended":False,,"source_sha256":hashes[0],"lyrics_sha256":hashes[1],
             "baseline_asr_sha256":hashes[2],"score_sha256":hashes[3] if abc is not None else None,
             "status":status,"provisional_output":chosen,"baseline":baseline,"findings":findings,
             "lyric_localization":localization,"score_rhythm":rhythm,
