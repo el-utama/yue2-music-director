@@ -60,6 +60,16 @@ def create_journal(path,journal):
         os.fsync(f.fileno())
 
 
+def verify_completed_settings(job,brief):
+    # Upstream yue_request_from only inserts adapters for a non-empty
+    # request; compact_job serializes the missing field as JSON null.
+    for key in ("seed","lm_seed"):
+        if type(job.get(key)) is not int or job[key]!=brief["seed"]:
+            raise ValueError("Completed job seed mismatch: "+key+"="+repr(job.get(key)))
+    if "adapters" not in job or job["adapters"] not in (None,[]):
+        raise ValueError("Completed job does not confirm disabled adapters")
+
+
 def execute(brief,root,url,*,max_waits=20,restore_stock=False):
     request=request_for(brief)
     request_sha=digest(_canonical(request))
@@ -130,9 +140,7 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False):
         if state not in ("queued","running") or attempt==max_waits:
             raise ValueError("Job not completed in bounded wait; retain journal, resume only known job")
         client.call("studio_wait",{"job_id":job_id,"seconds":45})
-    if (job.get("seed")!=brief["seed"] or job.get("lm_seed")!=brief["seed"]
-            or job.get("adapters")!=[]):
-        raise ValueError("Completed job does not confirm requested seeds and disabled adapters")
+    verify_completed_settings(job,brief)
     songs=job.get("songs")
     if (not isinstance(songs,list) or len(songs)!=1 or not isinstance(songs[0],dict)
             or not isinstance(songs[0].get("id"),str) or not songs[0]["id"]):
