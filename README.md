@@ -19,7 +19,7 @@ Do not add a feature until native and reusable alternatives have been checked. D
 
 YuE2 Music Director adalah agent pendamping YuE2 Studio yang bertugas memahami tujuan musik, memilih fitur native yang sesuai, mengelola eksperimen secara aman, menilai hasil berdasarkan bukti, dan menentukan apakah kandidat perlu dipertahankan atau ditolak. Agent ini bukan pengganti generator, trainer LoRA, DAW, maupun antarmuka Studio.
 
-**Status:** masih dalam tahap riset alpha. Beberapa eksperimen audio native telah berhasil, tetapi kualitas musikal, koreksi fonetik otomatis, integrasi evaluator resmi, dan orkestrasi menyeluruh belum tervalidasi. Dokumentasi teknis berbahasa Inggris merupakan sumber utama.
+**Status:** masih dalam tahap riset alpha. Evaluasi AudioBox, review gabungan dan inspeksi timing native telah berhasil pada satu perbandingan audio nyata. Kualitas musikal, koreksi fonetik otomatis, dan orkestrasi produksi lagu baru belum tervalidasi. Dokumentasi teknis berbahasa Inggris merupakan sumber utama.
 
 **Kebijakan:** utamakan fitur bawaan YuE2, skill resmi, model dan adapter komunitas yang kompatibel serta berlisensi sesuai penggunaan. Gunakan eksperimen yang sudah ada sebelum meminta pengguna menjalankan inferensi lagi. Jangan mengunduh model, melatih LoRA, mengubah pengaturan, atau menghapus hasil tanpa izin.
 
@@ -49,6 +49,10 @@ py -3 -m unittest discover -s tests -v
 - [Native Process Audio integration contract](docs/NATIVE_PROCESS_AUDIO.md): source audit, transaction design and outstanding blockers.
 - [Historical v0.6.1 acceptance protocol](docs/MUSICAL_ACCEPTANCE_V061.md): frozen score and original research design; superseded for routine human listening by the ASR-primary policy.
 
+## Native song draft (experimental)
+
+See [Native Song Draft](docs/NATIVE_DRAFT.md). A private six-field brief and one explicit authorization drive one native stock reference generation and one local recognition, with a resumable journal, technical QA and automatic TXT handoff. No optional evaluator is required. Combined live validation is pending.
+
 ## Finish a generated song (alpha 8)
 
 Requires FFmpeg/ffprobe, existing stems from the exact source mix, reference lyrics, baseline native ASR JSON and a ready local Studio. No new song generation or stem separation. One possible additional recognition call, explicitly authorized.
@@ -65,7 +69,7 @@ Set the loopback MCP endpoint first. A non-regression candidate is provisional; 
 py -3 -m yue2_music_director.cli director-diagnose --source local/mix.flac --lyrics local/lyrics.txt --baseline-asr local/recognition.json --language en --custom results/finish-001 --native results/native-001 --out results/diagnosis-001
 ```
 
-Provide at least one completed experiment directory, and optionally a matching `--abc`. Native selection currently supports the headroom-continuation record shape. This reports provisional selection and diagnostic cues, not a correction loop. The integrated real-song diagnosis has not yet been run. No extra audio or ASR.
+Provide at least one completed experiment directory, and optionally a matching `--abc`. Native selection currently supports the headroom-continuation record shape. This reports provisional selection and diagnostic cues, not a correction loop. The integrated real-song diagnosis has passed on Windows with cached AudioBox evidence; native timing inspection also passed. No extra audio or ASR.
 
 ## One-command score preparation workflow
 

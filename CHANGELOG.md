@@ -57,3 +57,5 @@ Native Naturalize continuation succeeded on real audio: -0.60 dB fixed attenuati
 - Director diagnosis: support screened direct native previews as well as headroom continuations; rank existing provisional output and native timing/export routes ahead of new inference. Regression test uses real preview/recognition writer functions with mocked Studio and acoustic measurements. Real combined retained-song validation remains pending.
 
 - Optional offline AudioBox evaluator path uses the official predictor, pinned verified safetensors, CPU-only local scoring and separate CE/CU/PC/PQ evidence. No automatic acceptance. SongEval/MuQ and SongBench usage restrictions documented. Actual checkpoint inference remains unverified.
+
+- Retained review, AudioBox inference and native HTTP partial timing succeeded on Windows. No artistic winner or phonetic verification. Optional independent phone observation is research only. Added native single-brief draft workflow with one authorized generation and recognition, durable journal and technical QA; actual combined production validation pending.
