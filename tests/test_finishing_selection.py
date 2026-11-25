@@ -175,3 +175,57 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(result["recognition_calls"],0)
         self.assertEqual(client.call.call_count,count)
         self.assertTrue(Path(result["provisional_output"]).samefile(d/"preview.flac"))
+
+
+    def quality_report(self, custom, native):
+        from yue2_music_director.audiobox_eval import MODEL_REVISION, WEIGHTS_SHA256
+        hashes=[self.sh,_sha(custom/"dynamics/candidate.flac"),
+                _sha(native/"headroom-continuation/candidate.flac")]
+        return {"schema":"audiobox-evaluation-v1","model":"facebook/audiobox-aesthetics",
+                "model_revision":MODEL_REVISION,"weights_sha256":WEIGHTS_SHA256,
+                "device":"cpu","automatic_acceptance":False,"versions":{"audiobox":"0.0.4"},
+                "rows":[{"arm":i,"audio_sha256":h,"scores":{"CE":5+i,"CU":6,"PC":3,"PQ":6+i}}
+                        for i,h in enumerate(hashes,1)]}
+
+    def test_quality_does_not_override_headroom_or_establish_winner(self):
+        custom,native=self.custom(0),self.native()
+        quality=self.quality_report(custom,native)
+        quality["rows"][1]["scores"]["PQ"]=10.0
+        result=direct(self.source,self.lyrics,self.baseline,"en",self.root/"director",
+                      custom=custom,native=native,quality=quality)
+        self.assertEqual(result["quality_evidence"]["status"],"matched_descriptive_estimates")
+        self.assertFalse(result["quality_evidence"]["candidates"][0]["technical_eligible"])
+        self.assertEqual(result["native_first_actions"][0]["method"],"native_headroom")
+        self.assertIsNone(result["artistic_winner"])
+        self.assertFalse(result["custom_dynamics_default"])
+        self.assertFalse(result["automatic_acceptance"])
+
+    def test_retained_review_integrates_existing_reports_without_inference(self):
+        from unittest.mock import patch
+        from yue2_music_director.retained_evaluation import review_retained
+        results=self.root/"results"
+        results.mkdir()
+        custom,native=self.custom(0),self.native()
+        quality=self.quality_report(custom,native)
+        custom.rename(results/"custom")
+        native.rename(results/"native")
+        manifest=results/"manifest.json"
+        _write(manifest,{"inputs":{"lyrics":{"path":str(self.lyrics),"sha256":self.lh}}})
+        (results/"recognition.json").write_bytes(self.baseline.read_bytes())
+        _write(results/"audiobox-fixture.json",quality)
+        with patch("yue2_music_director.retained_evaluation.source_audio",return_value=self.source), \
+             patch("yue2_music_director.retained_evaluation.evaluate") as evaluate:
+            report=review_retained(self.root,"unused")
+            evaluate.assert_not_called()
+        self.assertEqual(report["quality_evidence"]["status"],"matched_descriptive_estimates")
+        self.assertEqual(report["recognition_calls"],0)
+        self.assertEqual(report["native_first_actions"][0]["method"],"native_headroom")
+
+    def test_mismatched_quality_is_not_used(self):
+        custom,native=self.custom(-1.1),self.native()
+        quality=self.quality_report(custom,native)
+        quality["rows"][0]["audio_sha256"]="a"*64
+        result=direct(self.source,self.lyrics,self.baseline,"en",self.root/"director",
+                      custom=custom,native=native,quality=quality)
+        self.assertEqual(result["quality_evidence"]["status"],"evidence_invalid_or_incomplete")
+        self.assertIsNone(result["artistic_winner"])
