@@ -18,6 +18,7 @@ from .finishing_selection import select as select_finishing
 from .director import direct
 from .temporal_evidence import inspect_timing
 from .alignment_backend import preflight as alignment_preflight
+from .alignment_benchmark import benchmark as alignment_benchmark
 from .multilingual_fidelity import assess as assess_multilingual
 from .midi_events import compare_files,MIDIEventError
 from .pipeline import run as run_pipeline
@@ -232,6 +233,12 @@ def main(argv=None) -> int:
     ap.add_argument('--out',type=Path,required=True)
     ap.add_argument('--url',default='http://127.0.0.1:8765')
 
+    abm=sub.add_parser('alignment-benchmark',help='Compare existing HTK phoneme intervals offline')
+    abm.add_argument('--audio',type=Path,required=True)
+    abm.add_argument('--reference',type=Path,required=True)
+    abm.add_argument('--candidate',type=Path,required=True)
+    abm.add_argument('--out',type=Path,required=True)
+
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
     args=parser.parse_args(argv)
@@ -407,6 +414,8 @@ def main(argv=None) -> int:
                                   args.duration,args.out,args.url)
         elif args.command=='alignment-preflight':
             result=alignment_preflight(args.language,args.out,args.url)
+        elif args.command=='alignment-benchmark':
+            result=alignment_benchmark(args.audio,args.reference,args.candidate,args.out)
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}

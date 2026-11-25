@@ -63,3 +63,5 @@ Real native continuation and ASR with matching pending preview succeeded. See [o
 [Temporal evidence](TEMPORAL_EVIDENCE.md): native karaoke timing is partly interpolated. Read existing metadata only and keep display anchors separate from measured phonetic evidence. Phonetic/temporal correction remains blocked pending suitable raw timing contract.
 
 [Optional singing alignment backend](ALIGNMENT_BACKEND.md): mVocalToolkit + HubertFA research preference with bounded read-only preflight. Model-specific language support, provenance, license, accuracy and runtime are not yet validated. No new model downloads or audio inference.
+
+Alignment research: [pinned candidate audit and offline benchmark](ALIGNMENT_BACKEND.md) document the exact source revision, catalog/engine license discrepancy and HTK boundary metrics. No automatic model installation or verified phonetic correction. Real annotated benchmark pending.

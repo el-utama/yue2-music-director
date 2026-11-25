@@ -37,3 +37,5 @@ Native Naturalize continuation succeeded on real audio: -0.60 dB fixed attenuati
 - Temporal evidence: audited native karaoke interpolation and added read-only existing-LRC inspection, with strict reference and duration checks. No inferred phoneme timing or correction authorization; live metadata lookup pending.
 
 - Optional alignment backend: compare SOFA, HubertFA, SoulX and mVocalToolkit; add loopback read-only backend discovery, no automatic downloads or alignment. Runtime/model/license validation remains open.
+
+- Alignment benchmark: offline HTK sequence and boundary-error metrics; upstream engine license discrepancy and release-language ambiguity recorded. Checkpoint rights, digest, runtime/VRAM and real-song accuracy remain unverified.
