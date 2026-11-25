@@ -166,3 +166,7 @@ See [local Studio configuration and compatibility](docs/LOCAL_STUDIO_CONFIGURATI
 See [public LoRA research](docs/knowledge/LORA_RESEARCH.md) and the [39-entry native catalog index](docs/knowledge/LORA_CATALOG_INDEX.md). Stock YuE2-trained LoRA is not automatically compatible with RS-TW/FW; retain the selected model and require verified adapter provenance before activation.
 
 **Kompatibilitas LoRA:** model Ruach TW/FW bukan bobot YuE2 original. Jangan langsung menumpuk LoRA yang dilatih pada model original; periksa model dasar, decoder, companion, dan lisensi. Lihat riset di atas sebelum mengunduh atau melatih adapter baru.
+
+For the 8 GB CUDA tier, the recommended development reference is stock YuE2 Balanced Q6_K with stock VAE, no optional LoRA, and explicit companion off. See [configuration guide](docs/LOCAL_STUDIO_CONFIGURATION.md). This is a controlled reference, not a quality ranking. Native training's documented minimum is 11 GB VRAM.
+
+**Baseline pengembangan 8 GB:** YuE2 original Balanced Q6_K, VAE original, LoRA tambahan nonaktif dan companion off. Fine-tune dan LoRA hanyalah pilihan untuk kebutuhan spesifik, bukan kewajiban. Jangan menghapus file model atau menjalankan training untuk menyiapkan baseline.
