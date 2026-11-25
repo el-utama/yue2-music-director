@@ -1,0 +1,17 @@
+# Native song draft
+
+The first unified production path uses native YuE2 composition and rendering. It does not depend on experimental phoneme recognition, external alignment, AudioBox, LoRA, stem separation, custom ABC changes or manual listening.
+
+## Input and authorization
+
+Prepare a private `local/brief.json` using the six fields in [the example](../examples/song-brief.json). Specify English style text, tagged vocal lyrics, the intended language, title, seed and a 30–240 s generation cap. Instrumentals are outside this first workflow. From the Windows repository, `draft.cmd` checks the brief and shows the plan without Studio calls. `draft.cmd --confirm-run` explicitly authorizes one native song job and one local Whisper recognition. Do not run the example just to test installation. The current stock reference guard requires a ready Balanced Q6_K configuration, stock VAE, no community backbone, CUDA, Q8 cache, flash attention and an idle Studio. No setting changes or downloads are made. The stock policy is for this reference workflow only; support for other configurations requires separate validation.
+
+## Execution and recovery
+
+The launcher uses base Python and existing FFmpeg/ffprobe, not the optional evaluator venv. It saves a local TXT summary to `results/draft-output.txt`. The brief digest identifies the retained run directory. Identical brief and seed reuse the same run rather than creating another song. A changed brief/seed is a different run and must be explicitly approved. The job attempt is persisted before submission; a missing or ambiguous receipt blocks automatic resubmission. A known job is polled with bounded native waits. Repeat the confirmed command only to resume that known job, not to generate another. An interrupted or unknown ASR transaction also blocks automatic repetition. A still-busy Studio can prevent recognition before it starts; retain the completed song and resume when idle. Never discard unrelated previews or delete journals to bypass a guard. The local launcher lock prevents concurrent launcher sessions; it does not lock the Studio UI or other MCP clients. Use exclusive Studio operation during a run. If a process is killed and leaves a lock, inspect the job/recognition journal before manual recovery; do not blindly clear it.
+
+The runner verifies the completed job identity, seed and adapter fields, finds its one local FLAC, measures audio, and captures at most one native Whisper recognition. It scores lyric disagreement with the configured language metric. Technical review is required when measured peak exceeds -1 dBTP, loudness is unusable, or duration exceeds the requested cap by more than 2 s. A provisional draft is not a release-ready or musically accepted song. No automatic repair, regeneration, export, model training or final acceptance. The language metric is not proof of recognizer accuracy. No audio leaves the PC through this runner. A successfully cached result is reused without new Studio calls; private reports and audio paths stay local. 
+
+## Acceptance status
+
+This is the first single-brief integration, with mocked end-to-end and interrupted-transaction tests. Live stock generation and recognition in this combined path are not yet verified. Earlier real-song evaluation and timing are already complete; do not repeat them. The next genuine validation is one new user-intended song after CI passes and its actual brief is provided. A prior successful component test is not proof of combined production readiness.
