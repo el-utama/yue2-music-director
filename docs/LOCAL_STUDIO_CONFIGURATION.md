@@ -42,3 +42,7 @@ The read-only handler contracts were checked in pinned Studio source ca37d2d. Th
 ### Observed local inventory and LoRA response limits
 
 First real run: 339 advertised tools; 12 of 13 reads succeeded; detailed `lora_list` failed result validation. The pinned Studio MCP source caps serialized replies at 60,000 bytes and omits structuredContent when truncating; a large multilingual detailed catalog is a plausible cause, not confirmed from the discarded raw reply. Use `response_format: concise` (installed/catalog, slots, trigger, scales, download status) for inventory. Validate both installed and catalog arrays; never interpret a cut response as an empty adapter list. If concise also fails, leave LoRA availability unknown. No new inference or settings changes in the observed run.
+
+## Community adapter compatibility
+
+The real concise LoRA inventory succeeded after the detailed response failure. Preserve private inventory locally. The RS-FW/TW author explicitly warns against assuming stock-trained LoRA transfer; see [public LoRA research](knowledge/LORA_RESEARCH.md). Do not switch the active model automatically. A separate stock reference may be used only if installed and approved. Training and listening packs reported installed are readiness observations, not proof that a specific model, trainer base or alignment output is suitable. The pre-operation compatibility gate remains to be implemented.
