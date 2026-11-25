@@ -115,3 +115,5 @@ The output directory must be new and empty. Both arms have identical requests ex
 - The repository has no access to your machine's loopback MCP address from GitHub Actions or this chat.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for quality gates and architecture.
+
+See [offline director diagnosis](docs/DIRECTOR_DIAGNOSIS.md) for the combined evidence-selection and diagnosis workflow.
