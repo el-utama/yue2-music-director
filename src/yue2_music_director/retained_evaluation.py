@@ -240,11 +240,16 @@ def timing_retained(repo,url):
     report=inspect_timing(source,song,lyrics,baseline,language,duration,out,url)
     print("Metadata transport:",report["metadata_transport"])
     print("Timing evidence:",report["status"])
+    if report.get("reason"):
+        print("Timing rejection reason:",report["reason"])
+    for field in ("reference_line_count","parsed_display_line_count","ambiguous_display_line_count","unmapped_reference_line_count"):
+        if field in report:
+            print(field+":",report[field])
     print("Matched display lines:",len(report["lines"]))
     print("Enhanced word anchors:",sum(row["word_anchor_count"] for row in report["lines"]))
     print("Phonetic alignment: not verified")
     print("Automatic lyric/score correction: blocked")
-    if report["status"]=="karaoke_display_anchors_only":
+    if report["status"] in ("karaoke_display_anchors_only","partial_karaoke_display_anchors_only"):
         cues=sorted((row for row in report["lines"] if row["asr_line_edits"]),
                     key=lambda row:-row["asr_line_edits"])[:5]
         for i,row in enumerate(cues,1):
