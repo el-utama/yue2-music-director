@@ -129,3 +129,5 @@ See [offline director diagnosis](docs/DIRECTOR_DIAGNOSIS.md) for the combined ev
 See [temporal evidence](docs/TEMPORAL_EVIDENCE.md) for read-only inspection of existing karaoke anchors and alignment limitations.
 
 See [optional singing alignment backend research](docs/ALIGNMENT_BACKEND.md) for the discovery-only command and model validation gates.
+
+The optional `alignment-benchmark` command evaluates existing HTK phoneme labels against independent reference annotations without inference; see [alignment research and benchmark](docs/ALIGNMENT_BACKEND.md).
