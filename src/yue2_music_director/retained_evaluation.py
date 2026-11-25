@@ -11,6 +11,7 @@ from .audiobox_eval import AXES, MODEL_REVISION, WEIGHTS_SHA256, evaluate
 from .native_recognition import _sha
 from .mcp import Client, configured_endpoint, unpack
 from .native_process import _source_file
+from .director import direct
 
 
 def read(path):
@@ -139,14 +140,80 @@ def run(repo, weights, url):
     return report
 
 
+def reference_inputs(results, custom):
+    """Recover the exact frozen text inputs from retained manifests and ASR reports."""
+    report=read(custom/"report.json")
+    hashes=report["source_sha256"]
+    lyrics=[]
+    for manifest in results.rglob("manifest.json"):
+        try:
+            entry=read(manifest)["inputs"]["lyrics"]
+            if entry["sha256"]!=hashes["lyrics"]:
+                continue
+            path=Path(entry["path"])
+            if path.is_absolute() and path.is_file() and _sha(path)==hashes["lyrics"]:
+                lyrics.append(path.resolve())
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+    baselines=[]
+    for path in results.rglob("recognition.json"):
+        if path.is_file() and _sha(path)==hashes["baseline_asr"]:
+            baselines.append(path.resolve())
+    # Byte-identical copies are equivalent, not an ambiguous choice.
+    if not lyrics or not baselines:
+        raise ValueError("Exact retained lyrics or baseline ASR not found; no new recognition requested")
+    return sorted(set(lyrics))[0], sorted(set(baselines))[0],report["language"]
+
+
+def review_retained(repo,url):
+    """Read-only library lookup and offline decision; never evaluate again."""
+    results=repo/"results"
+    print("Checking completed comparison and saved evaluation...",flush=True)
+    song,custom_audio,native_audio,hashes=discover(results)
+    quality=cached(results,hashes)
+    if quality is None:
+        raise ValueError("Matching saved AudioBox evaluation unavailable; review does not run inference")
+    custom=custom_audio.parent.parent
+    native=native_audio.parent.parent
+    lyrics,baseline,language=reference_inputs(results,custom)
+    source=source_audio(song,hashes[0],url)
+    out=results/("director-review-"+datetime.now().strftime("%Y%m%d-%H%M%S-%f"))
+    result=direct(source,lyrics,baseline,language,out,custom=custom,native=native,quality=quality)
+    print("Decision:",result["status"])
+    print("Provisional method:",result["native_first_actions"][0]["method"])
+    print("AudioBox evidence:",result["quality_evidence"]["status"])
+    print("Artistic winner: not established")
+    print("Default custom dynamics: disabled")
+    from .finishing_selection import read as read_selection
+    selection=read_selection(out/"selection.json")
+    for row in selection["candidates"]:
+        print(f"{row['method']}: "+("technical pass" if row["eligible"] else row["reason"]))
+        if "lyric_screen" in row:
+            screen=row["lyric_screen"]
+            key=screen["primary_metric"]
+            print(f"  {key} edits: {screen['arms']['source'][key]['edits']} -> {screen['arms']['candidate'][key]['edits']}")
+            print(f"  true peak: {row['true_peak_dbtp']:.2f} dBTP")
+    if result["quality_evidence"]["status"]=="matched_descriptive_estimates":
+        for row in result["quality_evidence"]["candidates"]:
+            print(row["method"]+" score deltas: "+" ".join(f"{a}={row['delta_from_source'][a]:+.4f}" for a in AXES))
+    print("New generation/ASR/evaluator inference: 0")
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo",type=Path,required=True)
-    parser.add_argument("--weights",type=Path,required=True)
+    parser.add_argument("--weights",type=Path)
+    parser.add_argument("--review",action="store_true")
     parser.add_argument("--url",required=True)
     args = parser.parse_args()
     try:
-        run(args.repo.resolve(),args.weights.resolve(),args.url)
+        if args.review:
+            review_retained(args.repo.resolve(),args.url)
+        elif args.weights is not None:
+            run(args.repo.resolve(),args.weights.resolve(),args.url)
+        else:
+            raise ValueError("--weights required outside review mode")
     except (ValueError,OSError,KeyError,TypeError,RuntimeError) as exc:
         print(f"ERROR: {exc}",file=sys.stderr)
         return 2

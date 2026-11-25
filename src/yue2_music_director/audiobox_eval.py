@@ -119,3 +119,46 @@ def evaluate(audio, weights, out, *, confirm=False, progress=None):
     out.parent.mkdir(parents=True,exist_ok=True)
     _write(out,result)
     return result
+
+
+def summarize_evidence(report, selection):
+    """Join saved estimates to technically screened files by digest, never by rank."""
+    if report is None:
+        return {"status":"not_supplied","artistic_winner":None}
+    try:
+        if (report["schema"]!="audiobox-evaluation-v1"
+            or report["model"]!="facebook/audiobox-aesthetics"
+            or report["model_revision"]!=MODEL_REVISION
+            or report["weights_sha256"]!=WEIGHTS_SHA256
+            or report["device"]!="cpu" or report["automatic_acceptance"] is not False
+            or report["versions"]["audiobox"]!="0.0.4"):
+            raise ValueError("Evaluator identity differs")
+        rows=report["rows"]
+        if not isinstance(rows,list) or not 1<=len(rows)<=4:
+            raise ValueError("Invalid evaluator row count")
+        index={}
+        for i,row in enumerate(rows,1):
+            digest=row["audio_sha256"]
+            if (type(row["arm"]) is not int or row["arm"]!=i
+                or not isinstance(digest,str) or len(digest)!=64
+                or any(c not in "0123456789abcdef" for c in digest)
+                or digest in index or set(row["scores"])!=set(AXES)
+                or any(type(v) not in (int,float) or not math.isfinite(v) for v in row["scores"].values())):
+                raise ValueError("Invalid evaluator row")
+            index[digest]=row["scores"]
+        baseline=index[selection["source_sha256"]]
+        candidates=[]
+        for candidate in selection["candidates"]:
+            if candidate.get("reason")=="evidence_invalid":
+                continue
+            scores=index[candidate["sha256"]]
+            candidates.append({"method":candidate["method"],"scores":scores,
+                               "delta_from_source":{axis:round(scores[axis]-baseline[axis],6) for axis in AXES},
+                               "technical_eligible":candidate["eligible"]})
+        if not candidates:
+            raise ValueError("No matching screened candidate")
+        return {"status":"matched_descriptive_estimates","source_scores":baseline,
+                "candidates":candidates,"artistic_winner":None,"calibrated_threshold":None,
+                "warning":"No calibrated significance or acceptance threshold; PC is not a maximize target. Scores do not override technical gates."}
+    except (ValueError,KeyError,TypeError,OverflowError):
+        return {"status":"evidence_invalid_or_incomplete","artistic_winner":None}
