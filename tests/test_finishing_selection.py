@@ -174,4 +174,4 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(result["candidates"][0]["method"],"native_direct_preview")
         self.assertEqual(result["recognition_calls"],0)
         self.assertEqual(client.call.call_count,count)
-        self.assertEqual(Path(result["provisional_output"]),d/"preview.flac")
+        self.assertTrue(Path(result["provisional_output"]).samefile(d/"preview.flac"))
