@@ -152,7 +152,7 @@ def reference_configuration(client, status, request, defaults, capabilities):
             or models.get("selected_profile_id")!="balanced"
             or "selected_component_ids" not in models or models["selected_component_ids"] not in (None,[])
             or "active" not in models or models["active"] is not None
-            or models.get("preset") is not None):
+            or "preset" not in models or models["preset"] is not None):
         raise ValueError("Expected ready stock Balanced profile, no custom components or active download")
     installed=models.get("installed_components")
     if not isinstance(installed,list) or not {"backbone-q6","vae-f32"} <= set(installed):
@@ -163,7 +163,10 @@ def reference_configuration(client, status, request, defaults, capabilities):
     if (not isinstance(opts,dict) or not isinstance(effective,dict) or not isinstance(cache,dict)
             or opts.get("backend")!="cuda" or opts.get("kv_cache")!="q8"
             or cache.get("q8") is not True or effective.get("flash_attention") is not True
-            or effective!=status.get("engine")
+            or not isinstance(status.get("engine"),dict)
+            or any(effective.get(k)!=status["engine"].get(k) for k in
+                   ("max_seq","max_seq_reason","flash_attention","nar_chunk_seconds"))
+            or type(effective.get("max_seq")) is not int or effective["max_seq"]<=0
             or opts.get("extra_args") not in (None,"",[])
             or opts.get("engine_bin") not in (None,"")):
         raise ValueError("Expected consistent CUDA/Q8 reference engine, flash attention and no custom executable/flags")
