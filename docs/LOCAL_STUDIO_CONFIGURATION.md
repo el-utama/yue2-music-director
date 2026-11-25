@@ -38,3 +38,7 @@ Future orchestration must recheck relevant values immediately before submission 
 ## Evidence status
 
 The read-only handler contracts were checked in pinned Studio source ca37d2d. The profile has mocked regression tests; current installed Studio runtime and actual response completeness have not yet been verified. No new inference, downloads or settings changes are needed to perform inventory.
+
+### Observed local inventory and LoRA response limits
+
+First real run: 339 advertised tools; 12 of 13 reads succeeded; detailed `lora_list` failed result validation. The pinned Studio MCP source caps serialized replies at 60,000 bytes and omits structuredContent when truncating; a large multilingual detailed catalog is a plausible cause, not confirmed from the discarded raw reply. Use `response_format: concise` (installed/catalog, slots, trigger, scales, download status) for inventory. Validate both installed and catalog arrays; never interpret a cut response as an empty adapter list. If concise also fails, leave LoRA availability unknown. No new inference or settings changes in the observed run.
