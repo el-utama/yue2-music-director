@@ -17,6 +17,7 @@ from .native_headroom import continue_preview
 from .finishing_selection import select as select_finishing
 from .director import direct
 from .temporal_evidence import inspect_timing
+from .alignment_backend import preflight as alignment_preflight
 from .multilingual_fidelity import assess as assess_multilingual
 from .midi_events import compare_files,MIDIEventError
 from .pipeline import run as run_pipeline
@@ -226,6 +227,11 @@ def main(argv=None) -> int:
     te.add_argument('--out',type=Path,required=True)
     te.add_argument('--url')
 
+    ap=sub.add_parser('alignment-preflight',help='Discover an optional local singing alignment backend without downloads')
+    ap.add_argument('--language',required=True)
+    ap.add_argument('--out',type=Path,required=True)
+    ap.add_argument('--url',default='http://127.0.0.1:8765')
+
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
     args=parser.parse_args(argv)
@@ -399,6 +405,8 @@ def main(argv=None) -> int:
         elif args.command=='timing-evidence':
             result=inspect_timing(args.source,args.song_id,args.lyrics,args.baseline_asr,args.language,
                                   args.duration,args.out,args.url)
+        elif args.command=='alignment-preflight':
+            result=alignment_preflight(args.language,args.out,args.url)
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}

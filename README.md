@@ -1,12 +1,12 @@
 # YuE2 Music Director
 
-Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, focused on safe ABC score edits, lyric-section diagnostics, MIDI compatibility checks and controlled audio A/B experiments. **Current version 0.7.0a8.post3 (experimental alpha)**.
+Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, focused on safe ABC score edits, lyric-section diagnostics, MIDI compatibility checks and controlled audio A/B experiments. **Development build: experimental alpha; package version 0.7.0a8.post3. Identify unreleased builds by Git commit, not the unchanged package version.**
 
 > The repository is public. Never commit private audio, unpublished lyrics, local job journals, model weights or credentials.
 
 ## Setup
 
-Requires Python 3.10+; no third-party runtime dependencies.
+Requires Python 3.10+; no mandatory third-party Python runtime dependencies. Audio commands require installed FFmpeg/ffprobe, Studio commands require local Studio, and optional MIDI render QA requires FluidSynth and a SoundFont. Optional alignment discovery does not install a backend.
 
 ```powershell
 git clone https://github.com/el-utama/yue2-music-director.git
@@ -34,7 +34,15 @@ Requires FFmpeg/ffprobe, existing stems from the exact source mix, reference lyr
 py -3 -m yue2_music_director.cli finish-existing --mix local/mix.flac --instrumental local/ins.wav --vocals local/vocals.wav --lyrics local/lyrics.txt --baseline-asr local/recognition.json --language en --out results/finish-001 --confirm-recognition
 ```
 
-Set the loopback MCP endpoint first. A non-regression candidate is provisional; no claim of improved naturalness. See the finishing guide for statuses and recovery. The command has completed on one real YuE2 song. Initial native Process Audio preview adapter is under development; live compatibility and ASR screening are not yet verified.
+Set the loopback MCP endpoint first. A non-regression candidate is provisional; no claim of improved naturalness. See the finishing guide for statuses and recovery. The command has completed on one real YuE2 song. Native Naturalize preview capture, headroom continuation and recognition with a matching pending preview have also completed on one real song. Direct-pass ASR, other native effects, and general compatibility remain unverified.
+
+## Diagnose completed finishing experiments without new inference
+
+```powershell
+py -3 -m yue2_music_director.cli director-diagnose --source local/mix.flac --lyrics local/lyrics.txt --baseline-asr local/recognition.json --language en --custom results/finish-001 --native results/native-001 --out results/diagnosis-001
+```
+
+Provide at least one completed experiment directory, and optionally a matching `--abc`. Native selection currently supports the headroom-continuation record shape. This reports provisional selection and diagnostic cues, not a correction loop. The integrated real-song diagnosis has not yet been run. No extra audio or ASR.
 
 ## One-command score preparation workflow
 
@@ -119,3 +127,5 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for quality gates and architecture.
 See [offline director diagnosis](docs/DIRECTOR_DIAGNOSIS.md) for the combined evidence-selection and diagnosis workflow.
 
 See [temporal evidence](docs/TEMPORAL_EVIDENCE.md) for read-only inspection of existing karaoke anchors and alignment limitations.
+
+See [optional singing alignment backend research](docs/ALIGNMENT_BACKEND.md) for the discovery-only command and model validation gates.
