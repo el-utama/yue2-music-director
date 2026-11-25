@@ -68,10 +68,15 @@ def parse_lrc(lrc,duration):
     return rows
 
 
+_NEED_DETAIL=object()
+
+
 def karaoke_metadata(song,song_id,*,detailed=False):
     """Studio Song.metadata is nullable JSON; concise exposes has_karaoke."""
     if not isinstance(song,dict):
         raise ValueError("Unrecognized library response type: "+type(song).__name__)
+    if "content" in song and "id" not in song:
+        raise ValueError("Library response was not decoded as complete JSON; possible upstream response-size limit")
     if song.get("id")!=song_id:
         raise ValueError("Library response identity mismatch or missing id; object fields="+str(len(song)))
     if "metadata" not in song:
@@ -88,11 +93,11 @@ def karaoke_metadata(song,song_id,*,detailed=False):
     if metadata.get("has_karaoke") is False and "lrc" not in metadata:
         return None
     if metadata.get("has_karaoke") is True:
-        return True
+        return _NEED_DETAIL
     if "lrc" in metadata:
         return metadata["lrc"]
     # Older concise implementations may omit the flag. Verify with detailed.
-    return True
+    return _NEED_DETAIL
 
 
 def inspect_timing(source, song_id, lyrics, baseline_asr, language, duration, out, url=None):
@@ -115,7 +120,7 @@ def inspect_timing(source, song_id, lyrics, baseline_asr, language, duration, ou
     _source_file(unpack(client.call("library_song_files",{"song_id":song_id})),source)
     song=unpack(client.call("library_song_get",{"song_id":song_id,"response_format":"concise"}))
     lrc=karaoke_metadata(song,song_id)
-    if lrc is True:
+    if lrc is _NEED_DETAIL:
         song=unpack(client.call("library_song_get",{"song_id":song_id,"response_format":"detailed"}))
         lrc=karaoke_metadata(song,song_id,detailed=True)
         if lrc is None or lrc=="":
