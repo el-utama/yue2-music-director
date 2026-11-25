@@ -3,7 +3,7 @@ from yue2_music_director.outro_repair import patch_outro,prepare_replay,CHORDS
 from yue2_music_director.music import parse_score
 
 SCORE=("X:1\nT:Test\nM:4/4\nL:1/16\nQ:1/4=120\nK:D\n% chorus\nV: Vocal\n"
-       "D8B8|"*8+"\nV: Ins\nZ8|\n% outro\nV: Vocal\n"+
+       +"D8B8|"*8+"\nV: Ins\nZ8|\n% outro\nV: Vocal\n"+
        "".join('"'+c+'"z16|' for c in CHORDS[:4])+"\nV: Ins\nZ4|\nV: Vocal\n"+
        "".join('"'+c+'"z16|' for c in CHORDS[4:])+"\nV: Ins\nZ5|\n")
 
