@@ -2,6 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from yue2_music_director.finishing_selection import select
+from yue2_music_director.director import direct
 from yue2_music_director.native_recognition import _sha,_write
 from yue2_music_director.multilingual_fidelity import compare
 from yue2_music_director.native_process import effect_request
@@ -93,3 +94,26 @@ class SelectionTests(unittest.TestCase):
         result=self.run_selection(d)
         self.assertEqual(result["status"],"retain_original_no_eligible_candidate")
         self.assertEqual(result["candidates"][0]["reason"],"evidence_invalid")
+
+
+    def test_director_preserves_verified_technical_candidate_and_stops(self):
+        result=direct(self.source,self.lyrics,self.baseline,"en",self.root/"director",
+                      custom=self.custom(0),native=self.native())
+        self.assertEqual(result["status"],"provisional_candidate")
+        self.assertEqual(result["next_action"],"preserve_provisional_and_stop")
+        self.assertEqual(result["execution_budget"],{"audio_jobs":0,"native_processing":0,"recognition":0,"score_edits":0})
+        self.assertEqual(result["findings"][0]["issue"],"lyric_disagreement")
+        self.assertEqual(result["findings"][0]["execution"],"blocked_missing_verified_alignment")
+        self.assertEqual(result["findings"][1]["issue"],"insufficient_headroom")
+        self.assertFalse(result["lyric_localization"]["audio_timestamps_verified"])
+        self.assertEqual(result["lyric_localization"]["lines"][0]["edits"],1)
+        self.assertTrue((self.root/"director/selection.json").is_file())
+        self.assertTrue((self.root/"director/report.json").is_file())
+
+    def test_director_never_forces_another_candidate(self):
+        result=direct(self.source,self.lyrics,self.baseline,"en",self.root/"director",
+                      custom=self.custom(0))
+        self.assertEqual(result["next_action"],"retain_original_and_stop")
+        self.assertEqual(Path(result["provisional_output"]),self.source.resolve())
+        self.assertEqual(result["recognition_calls"],0)
+        self.assertFalse(result["automatic_acceptance"])

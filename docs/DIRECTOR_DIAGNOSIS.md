@@ -1,0 +1,9 @@
+# Offline director diagnosis
+
+`director-diagnose --source ORIGINAL.flac --lyrics LYRICS.txt --baseline-asr BASELINE.json --language en --custom CUSTOM_RUN_DIR --native NATIVE_RUN_DIR --out NEW_DIRECTOR_DIR`
+
+At least one existing finishing experiment is required. Optional `--abc` must be the matching source score supplied by the operator. One invocation writes selection.json and report.json. The director checks source/reference/baseline fingerprints, reuses the finishing selector and reports lyric disagreement, English line-level minimum-edit localization and optional approximate score-rhythm cues. Headroom failures are marked for possible gain-only continuation; ASR regressions are rejected, invalid evidence requires verification. Existing eligible output is preserved provisionally, otherwise original is retained. No forced new candidate.
+
+Execution budget is zero generation, native processing, ASR and score edits. The command cannot prove pronunciation or prosody from transcript edits, or infer causal timing from equal bar partitions. No verified phoneme alignment, no automatic lyric correction and no automatic library cleanup. Non-English global metrics follow multilingual_fidelity; English-only localization and word-density score analysis are not applied to other languages. This is a bounded diagnosis/planning component, not a complete execution loop. Native selection currently supports headroom-continuation records only.
+
+Do not repeat old experiments for this command. Real-song diagnosis and combined evidence selection have not yet been exercised together locally. CI tests use synthetic local evidence. Reports must remain private; aggregate findings only belong in public research notes.
