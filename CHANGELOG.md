@@ -47,3 +47,5 @@ Native Naturalize continuation succeeded on real audio: -0.60 dB fixed attenuati
 - Native-first knowledge audit: indexed 339 static MCP definitions at upstream ca37d2d; consolidated UI/engine/native workflows, official YuE2 agent skill and evaluation protocols, public adapters/fine-tunes, native export and training/voice-conversion reuse. Superseded alignment-first implementation sequence with evidence-gated roadmap. README includes Indonesian overview; all new knowledge docs in English. Source audit only; no runtime installs, generation, ASR or training.
 
 - Added read-only local Studio profile inventory, advertised schema fingerprints, private observations and partial/unknown states. No automatic model switches, inference, or compatibility authorization. Live validation pending.
+
+- Studio profile real local run: 339 advertised tools, 12/13 reads successful, zero operation counters. Fix LoRA inventory to request concise catalog and reject incomplete/truncated results. Live verification of the fix pending.
