@@ -148,7 +148,7 @@ def observe(audio, weights, vocab, out, *, reference=None, confirm=False):
                           "CTC emission frames are not observed acoustic phone boundaries.",
                           "No language-specific accuracy claim, diagnosis or correction."]}
     if expected is not None:
-        edits = distance(expected, predicted)
+        edits = distance(expected, predicted)["edits"] if predicted else len(expected)
         report["reference_comparison"] = {
             "reference_sha256":hashes[3], "reference_tokens":len(expected),
             "observed_tokens":len(predicted), "token_edits":edits,
