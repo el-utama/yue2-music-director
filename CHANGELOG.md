@@ -40,3 +40,5 @@ Native Naturalize continuation succeeded on real audio: -0.60 dB fixed attenuati
 - Offline director diagnosis: reuse completed finishing selection, ASR-text localization and optional approximate score cues; explicit stop decision, zero new inference or score edits. Real integrated diagnosis pending.
 
 - Temporal evidence: audited native karaoke interpolation and added read-only existing-LRC inspection, with strict reference and duration checks. No inferred phoneme timing or correction authorization; live metadata lookup pending.
+
+- Optional alignment backend: compare SOFA, HubertFA, SoulX and mVocalToolkit; add loopback read-only backend discovery, no automatic downloads or alignment. Runtime/model/license validation remains open.
