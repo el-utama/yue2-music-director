@@ -41,3 +41,5 @@ Native Naturalize continuation succeeded on real audio: -0.60 dB fixed attenuati
 - Alignment benchmark: offline HTK sequence and boundary-error metrics; upstream engine license discrepancy and release-language ambiguity recorded. Checkpoint rights, digest, runtime/VRAM and real-song accuracy remain unverified.
 
 - Alignment reference preparation: sample-accurate PCM WAV excerpt and explicit seconds/HTK annotation conversion, source fingerprints, no inference. Documented NUS-48E, GTSinger and PJS reference candidates and restrictions; no dataset or checkpoint bundled.
+
+- Native LoRA audit: discovered optional MMS forced-alignment training stage, base-matched presets disable timing, and separate composition/sound adapter strengths. Native alignment reuse now takes research priority over optional external checkpoint; no training or downloads performed.

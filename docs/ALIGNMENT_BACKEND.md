@@ -37,3 +37,7 @@ Do not ask the operator to repeatedly listen to their own song to calibrate alig
 `alignment-reference --audio ANNOTATED.wav --annotation ORIGINAL.txt --unit seconds --first 1 --last 20 --out NEW_EXCERPT_DIR`
 
 Use `--unit htk` for integer 100 ns labels. Explicit one-based inclusive interval range; selected labels must be contiguous, positive duration, nonoverlapping, and within actual PCM WAV frames. Up to 10 minutes input, 60 seconds excerpt. Copies exact PCM frames (nearest sample cuts), preserves channel/rate/bit depth, shifts boundaries into excerpt time, snaps outer endpoints to the cut, retains phone inventory, outputs excerpt.wav, reference.lab, phones.txt and a fingerprint report. No downloads, inference, resampling, or library changes. Reject unsupported/zero-length labels rather than silently normalize. No assertion that the chosen labels are ground truth, licensed, or independent from training data; caller must verify those properties. No corpus files are bundled. Tests use synthetic PCM fixtures. Checkpoint license/digest and runtime remain blocked; preparing reference evidence alone does not authorize a correction.
+
+## Updated research priority
+
+Native Studio training has an optional MMS forced-alignment stage; investigate reusing that independently of training before installing a third-party aligner. See [native LoRA and MMS audit](NATIVE_LORA_TRAINING.md). HubertFA remains an optional research fallback, not an approved installation or correction path. No model benchmark yet.

@@ -133,3 +133,5 @@ See [optional singing alignment backend research](docs/ALIGNMENT_BACKEND.md) for
 The optional `alignment-benchmark` command evaluates existing HTK phoneme labels against independent reference annotations without inference; see [alignment research and benchmark](docs/ALIGNMENT_BACKEND.md).
 
 Use `alignment-reference` to prepare a short excerpt from independently annotated PCM WAV for the offline benchmark. See [reference data and limits](docs/ALIGNMENT_BACKEND.md); no dataset or model is downloaded automatically.
+
+See [native LoRA training and MMS alignment audit](docs/NATIVE_LORA_TRAINING.md) for the separate training research track and revised native-first alignment priority. No training job is implemented or authorized by this documentation.
