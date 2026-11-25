@@ -60,6 +60,14 @@ class DraftTests(unittest.TestCase):
             capture.assert_called_once()
             factory.assert_called_once()
 
+    def test_native_empty_adapters_are_null_in_compact_job(self):
+        for adapters in (None,[]):
+            nd.verify_completed_settings({"seed":42,"lm_seed":42,"adapters":adapters},self.brief)
+        for job in ({"seed":42,"lm_seed":42}, {"seed":42,"lm_seed":42,"adapters":["unexpected"]},
+                    {"seed":42,"lm_seed":43,"adapters":None}):
+            with self.assertRaises(ValueError):
+                nd.verify_completed_settings(job,self.brief)
+
     def test_unknown_submission_never_retries(self):
         with patch.object(nd,"Client") as factory,patch.object(nd,"reference_configuration",return_value={}), \
              patch.object(nd,"recognition_preflight"),patch.object(nd.shutil,"which",return_value="fixture"):
