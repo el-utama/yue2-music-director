@@ -1,10 +1,8 @@
 """Optional AudioBox inference using the upstream model and predictor, never Studio generation."""
-import hashlib
 import importlib.metadata
 import json
 import math
 from pathlib import Path
-from types import SimpleNamespace
 
 from .native_recognition import _sha, _write
 
@@ -73,10 +71,11 @@ def evaluate(audio, weights, out, *, confirm=False):
         raise ValueError("ffprobe required")
     durations = []
     for p in paths:
-        raw = _run([ffprobe,"-v","error","-select_streams","a",
+        raw = _run([ffprobe,"-v","error","-f",p.suffix.lower()[1:],
+                    "-protocol_whitelist","file","-select_streams","a",
                     "-show_entries","stream=duration,channels,sample_rate",
                     "-of","json",str(p)],30)
-        info = json.loads(raw)
+        info = json.loads(raw.stdout)
         streams = info["streams"]
         if len(streams) != 1:
             raise ValueError("Exactly one audio stream required")
@@ -86,11 +85,17 @@ def evaluate(audio, weights, out, *, confirm=False):
             raise ValueError("Audio outside bounded evaluation format/duration")
         durations.append(duration)
     hashes = [_sha(p) for p in paths]
-    predictor, versions = _predictor(weights)
+    try:
+        predictor, versions = _predictor(weights)
+    except (RuntimeError, OSError) as exc:
+        raise ValueError("Local AudioBox checkpoint/runtime could not be loaded") from exc
     rows = []
     for p, digest, seconds in zip(paths, hashes, durations):
         # One song per forward; upstream uses weighted 10 s mono windows.
-        scores = predictor.forward([{"path":str(p)}])
+        try:
+            scores = predictor.forward([{"path":str(p)}])
+        except (RuntimeError, OSError) as exc:
+            raise ValueError("Local AudioBox inference failed; no score recorded") from exc
         if not isinstance(scores,list) or len(scores)!=1 or not isinstance(scores[0],dict) or set(scores[0])!=set(AXES):
             raise ValueError("Unexpected evaluator output")
         if any(type(v) not in (int,float) or not math.isfinite(v) for v in scores[0].values()):
