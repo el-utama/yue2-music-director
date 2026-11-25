@@ -15,6 +15,7 @@ from .finish import finish as finish_existing
 from .native_process import preview as native_preview, inspect_preview
 from .native_headroom import continue_preview
 from .finishing_selection import select as select_finishing
+from .director import direct
 from .multilingual_fidelity import assess as assess_multilingual
 from .midi_events import compare_files,MIDIEventError
 from .pipeline import run as run_pipeline
@@ -204,6 +205,16 @@ def main(argv=None) -> int:
     fs.add_argument('--native',type=Path)
     fs.add_argument('--out',type=Path,required=True)
 
+    dr=sub.add_parser('director-diagnose',help='Offline diagnosis and provisional finishing decision from existing evidence')
+    dr.add_argument('--source',type=Path,required=True)
+    dr.add_argument('--lyrics',type=Path,required=True)
+    dr.add_argument('--baseline-asr',type=Path,required=True)
+    dr.add_argument('--language',required=True)
+    dr.add_argument('--custom',type=Path)
+    dr.add_argument('--native',type=Path)
+    dr.add_argument('--abc',type=Path)
+    dr.add_argument('--out',type=Path,required=True)
+
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
     args=parser.parse_args(argv)
@@ -371,6 +382,9 @@ def main(argv=None) -> int:
         elif args.command=='finishing-select':
             result=select_finishing(args.source,args.lyrics,args.baseline_asr,args.language,args.out,
                                     custom=args.custom,native=args.native)
+        elif args.command=='director-diagnose':
+            result=direct(args.source,args.lyrics,args.baseline_asr,args.language,args.out,
+                          custom=args.custom,native=args.native,abc=args.abc)
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
