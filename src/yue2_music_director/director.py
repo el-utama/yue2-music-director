@@ -97,13 +97,13 @@ def direct(source, lyrics, baseline_asr, language, out, *, custom=None, native=N
                         "tool_candidates":["song_export","song_export_get"],
                         "execution":"requires_explicit_delivery_goal_and_verified_library_source",
                         "limitation":"Fixed gain only; not an export of an uncommitted external candidate",
-                        "requires_new_audio":False})
+                        "requires_new_audio":False,"requires_new_export":True})
     if any(row.get("reason")=="evidence_invalid" for row in selection["candidates"]):
         actions.append({"priority":len(actions)+1,"action":"inspect_existing_transaction",
                         "execution":"offline_evidence_recovery_only",
                         "requires_new_audio":False})
     result={"schema":"director-diagnosis-v1","native_first_actions":actions,
-            "model_change_recommended":False,"training_recommended":False,,"source_sha256":hashes[0],"lyrics_sha256":hashes[1],
+            "model_change_recommended":False,"training_recommended":False,"source_sha256":hashes[0],"lyrics_sha256":hashes[1],
             "baseline_asr_sha256":hashes[2],"score_sha256":hashes[3] if abc is not None else None,
             "status":status,"provisional_output":chosen,"baseline":baseline,"findings":findings,
             "lyric_localization":localization,"score_rhythm":rhythm,
