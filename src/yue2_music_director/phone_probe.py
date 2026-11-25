@@ -1,7 +1,6 @@
 """Independent CTC phoneme hypotheses; not forced alignment or a correction gate."""
 import argparse
 import json
-import math
 from pathlib import Path
 import wave
 
@@ -46,7 +45,7 @@ def compare_phones(reference,hypothesis,vocab):
     if (not reference or len(reference)>2000
             or any(p not in vocab.values() or p in ("<pad>","<s>","</s>","<unk>") for p in reference)):
         raise ValueError("Reference requires independently annotated tokens in exact model inventory")
-    edits=distance(reference,hypothesis)
+    edits=distance(reference,hypothesis)["edits"] if hypothesis else len(reference)
     return {"reference_tokens":len(reference),"hypothesis_tokens":len(hypothesis),
             "edits":edits,"token_disagreement_rate":edits/len(reference),
             "reference_independence_verified":False,"pronunciation_verified":False}
@@ -104,7 +103,7 @@ def probe(audio,weights,vocab_path,out,reference=None,*,confirm=False):
     out=Path(out).resolve()
     if out.exists() or len({audio,weights,vocab_path})!=3:
         raise ValueError("Distinct local inputs and fresh output required")
-    if weights.suffix.lower()!=".onnx" or _sha(weights)!=WEIGHTS_SHA256:
+    if weights.suffix.lower()!=".onnx":
         raise ValueError("Pinned FP32 ONNX checksum mismatch")
     inputs=[audio,weights,vocab_path]
     if reference is not None:
@@ -114,7 +113,7 @@ def probe(audio,weights,vocab_path,out,reference=None,*,confirm=False):
         inputs.append(reference)
     digests=[_sha(p) for p in inputs]
     if digests[1]!=WEIGHTS_SHA256:
-        raise ValueError("Model bytes changed")
+        raise ValueError("Pinned FP32 ONNX checksum mismatch")
     vocab=vocabulary(vocab_path)
     raw,frames=read_pcm(audio)
     expected=None
