@@ -229,3 +229,42 @@ class SelectionTests(unittest.TestCase):
                       custom=custom,native=native,quality=quality)
         self.assertEqual(result["quality_evidence"]["status"],"evidence_invalid_or_incomplete")
         self.assertIsNone(result["artistic_winner"])
+
+
+    def test_retained_timing_action_only_reads_native_metadata(self):
+        from unittest.mock import patch
+        from yue2_music_director.retained_evaluation import review_retained,timing_retained
+        results=self.root/"results"
+        results.mkdir()
+        custom,native=self.custom(0),self.native()
+        quality=self.quality_report(custom,native)
+        for row in quality["rows"]:
+            row["duration_seconds"]=5.0
+        custom.rename(results/"custom")
+        native.rename(results/"native")
+        _write(results/"manifest.json",{"inputs":{"lyrics":{"path":str(self.lyrics),"sha256":self.lh}}})
+        (results/"recognition.json").write_bytes(self.baseline.read_bytes())
+        _write(results/"audiobox-fixture.json",quality)
+        with patch("yue2_music_director.retained_evaluation.source_audio",return_value=self.source), \
+             patch("yue2_music_director.retained_evaluation.evaluate") as evaluate, \
+             patch("yue2_music_director.temporal_evidence.Client") as factory:
+            client=factory.return_value.connect.return_value
+            client.tools.return_value=[{"name":"library_song_get"},{"name":"library_song_files"}]
+            def respond(name,args):
+                if name=="library_song_files":
+                    return {"audio":str(self.source.resolve())}
+                if name=="library_song_get":
+                    return {"id":"song","metadata":{"lrc":"[00:01.00]one two three"}}
+                raise AssertionError("Unexpected native action: "+name)
+            client.call.side_effect=respond
+            with self.assertRaisesRegex(ValueError,"No matching completed Director timing recommendation"):
+                timing_retained(self.root,"unused")
+            review_retained(self.root,"unused")
+            report=timing_retained(self.root,"unused")
+            self.assertEqual(report["status"],"karaoke_display_anchors_only")
+            self.assertEqual(report["lines"][0]["asr_line_edits"],1)
+            self.assertFalse(report["correction_allowed"])
+            self.assertEqual([call.args[0] for call in client.call.call_args_list],
+                             ["library_song_files","library_song_get","library_song_files"])
+            evaluate.assert_not_called()
+            self.assertEqual(report["recognition_calls"],0)
