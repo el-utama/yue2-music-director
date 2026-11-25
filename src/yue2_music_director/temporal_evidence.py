@@ -1,9 +1,13 @@
 """Read existing karaoke anchors; never generate, edit or mistake interpolation for ASR."""
 import math
+import json
+from urllib.parse import urlsplit, urlunsplit, quote
+from urllib.request import Request, build_opener, ProxyHandler
+from urllib.error import URLError
 import re
 from pathlib import Path
 
-from .mcp import Client, configured_endpoint, unpack
+from .mcp import Client, configured_endpoint, unpack, _NoRedirect
 from .native_process import _source_file
 from .native_recognition import _sha, _write, _recognition, review
 from .finishing_selection import read
@@ -71,12 +75,41 @@ def parse_lrc(lrc,duration):
 _NEED_DETAIL=object()
 
 
+class IncompleteLibraryResponse(ValueError):
+    pass
+
+
+def native_song_read(url,song_id):
+    """Same Studio router as MCP, without the tool's text truncation."""
+    endpoint=urlsplit(configured_endpoint(url))
+    if endpoint.path!="/mcp":
+        raise ValueError("Native read fallback requires the standard /mcp endpoint")
+    path="/v1/library/songs/"+quote(song_id,safe="")
+    target=urlunsplit((endpoint.scheme,endpoint.netloc,path,"",""))
+    request=Request(target,headers={"Accept":"application/json"},method="GET")
+    opener=build_opener(ProxyHandler({}),_NoRedirect())
+    try:
+        with opener.open(request,timeout=30) as response:
+            if response.headers.get_content_type()!="application/json":
+                raise ValueError("Native library route did not return JSON")
+            raw=response.read(16_777_217)
+    except URLError as exc:
+        raise ValueError("Native library read failed: "+type(exc).__name__) from None
+    if len(raw)>16_777_216:
+        raise ValueError("Native library response exceeds 16 MiB safety limit")
+    try:
+        return json.loads(raw)
+    except (ValueError,UnicodeError):
+        raise ValueError("Native library route returned invalid JSON") from None
+
+
+
 def karaoke_metadata(song,song_id,*,detailed=False):
     """Studio Song.metadata is nullable JSON; concise exposes has_karaoke."""
     if not isinstance(song,dict):
         raise ValueError("Unrecognized library response type: "+type(song).__name__)
     if "content" in song and "id" not in song:
-        raise ValueError("Library response was not decoded as complete JSON; possible upstream response-size limit")
+        raise IncompleteLibraryResponse("Library response was not decoded as complete JSON; possible upstream response-size limit")
     if song.get("id")!=song_id:
         raise ValueError("Library response identity mismatch or missing id; object fields="+str(len(song)))
     if "metadata" not in song:
@@ -118,15 +151,22 @@ def inspect_timing(source, song_id, lyrics, baseline_asr, language, duration, ou
     if not {"library_song_get","library_song_files"}<={t.get("name") for t in client.tools()}:
         raise ValueError("Required read-only Studio tools missing")
     _source_file(unpack(client.call("library_song_files",{"song_id":song_id})),source)
-    song=unpack(client.call("library_song_get",{"song_id":song_id,"response_format":"concise"}))
-    lrc=karaoke_metadata(song,song_id)
-    if lrc is _NEED_DETAIL:
-        song=unpack(client.call("library_song_get",{"song_id":song_id,"response_format":"detailed"}))
-        lrc=karaoke_metadata(song,song_id,detailed=True)
-        if lrc is None or lrc=="":
-            raise ValueError("Detailed response lacks expected karaoke; cannot verify availability")
+    transport="mcp"
+    try:
+        song=unpack(client.call("library_song_get",{"song_id":song_id,"response_format":"concise"}))
+        lrc=karaoke_metadata(song,song_id)
+        if lrc is _NEED_DETAIL:
+            song=unpack(client.call("library_song_get",{"song_id":song_id,"response_format":"detailed"}))
+            lrc=karaoke_metadata(song,song_id,detailed=True)
+    except IncompleteLibraryResponse:
+        # Do not parse partial JSON or query the database directly.
+        # The same loopback Studio service exposes the native GET route.
+        lrc=karaoke_metadata(native_song_read(url,song_id),song_id,detailed=True)
+        transport="native_http_get"
+
     result={"schema":"temporal-evidence-v1","source_sha256":hashes[0],"lyrics_sha256":hashes[1],
             "baseline_asr_sha256":hashes[2],"duration_seconds_operator_supplied":duration,
+            "metadata_transport":transport,
             "status":"no_existing_karaoke","lines":[],"phonetic_alignment_verified":False,
             "audio_timestamps_verified":False,"correction_allowed":False,
             "recognition_calls":0,"audio_jobs_created":0,"processing_calls":0,"library_mutations":0,
