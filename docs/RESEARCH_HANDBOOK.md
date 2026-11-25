@@ -57,3 +57,5 @@ Real native continuation and ASR with matching pending preview succeeded. See [o
 [Offline director diagnosis](DIRECTOR_DIAGNOSIS.md) consolidates selection, text disagreement localization and optional score-rhythm cues into one report and bounded stop decision. Phonetic alignment and autonomous correction execution remain open. Real integrated diagnosis not yet verified.
 
 [Temporal evidence](TEMPORAL_EVIDENCE.md): native karaoke timing is partly interpolated. Read existing metadata only and keep display anchors separate from measured phonetic evidence. Phonetic/temporal correction remains blocked pending suitable raw timing contract.
+
+[Optional singing alignment backend](ALIGNMENT_BACKEND.md): mVocalToolkit + HubertFA research preference with bounded read-only preflight. Model-specific language support, provenance, license, accuracy and runtime are not yet validated. No new model downloads or audio inference.
