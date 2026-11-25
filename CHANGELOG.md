@@ -45,3 +45,5 @@ Native Naturalize continuation succeeded on real audio: -0.60 dB fixed attenuati
 - Native LoRA audit: discovered optional MMS forced-alignment training stage, base-matched presets disable timing, and separate composition/sound adapter strengths. Native alignment reuse now takes research priority over optional external checkpoint; no training or downloads performed.
 
 - Native-first knowledge audit: indexed 339 static MCP definitions at upstream ca37d2d; consolidated UI/engine/native workflows, official YuE2 agent skill and evaluation protocols, public adapters/fine-tunes, native export and training/voice-conversion reuse. Superseded alignment-first implementation sequence with evidence-gated roadmap. README includes Indonesian overview; all new knowledge docs in English. Source audit only; no runtime installs, generation, ASR or training.
+
+- Added read-only local Studio profile inventory, advertised schema fingerprints, private observations and partial/unknown states. No automatic model switches, inference, or compatibility authorization. Live validation pending.

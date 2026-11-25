@@ -158,3 +158,7 @@ The optional `alignment-benchmark` command evaluates existing HTK phoneme labels
 Use `alignment-reference` to prepare a short excerpt from independently annotated PCM WAV for the offline benchmark. See [reference data and limits](docs/ALIGNMENT_BACKEND.md); no dataset or model is downloaded automatically.
 
 See [native LoRA training and MMS alignment audit](docs/NATIVE_LORA_TRAINING.md) for the separate training research track and revised native-first alignment priority. No training job is implemented or authorized by this documentation.
+
+See [local Studio configuration and compatibility](docs/LOCAL_STUDIO_CONFIGURATION.md) for the read-only `studio-profile` command. Original YuE2 weights are not mandatory; keep a compatible existing fine-tune and record effective settings.
+
+**Panduan konfigurasi lokal:** jangan mengganti model, VAE, LoRA atau pengaturan engine hanya untuk menyesuaikan agent. Gunakan inventaris read-only `studio-profile` sesuai [panduan konfigurasi](docs/LOCAL_STUDIO_CONFIGURATION.md), simpan hasil secara lokal, dan jangan unggah laporan mentah ke repository publik. Inventaris belum merupakan sertifikasi kompatibilitas.
