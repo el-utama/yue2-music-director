@@ -1,8 +1,10 @@
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
+from email.message import Message
 from pathlib import Path
-from yue2_music_director.experiments import prepare, submit, reconcile, status
+from yue2_music_director.experiments import prepare, submit, reconcile, status, confirm_stock_backbone
 
 ABC='X:1\nT:test\nM:2/4\nL:1/16\nK:Bb\n% verse\nV: Vocal\n"Bb"z2B,F2F2F-|"Bb"F2DD3CC-|"Eb"CB,z6|"Eb"z8|\nV: Ins\nZ4|\n'
 LYRICS='[Verse 1]\nYou left me waiting\n'
@@ -41,6 +43,14 @@ class FakeClient:
 
 class ExperimentsTests(unittest.TestCase):
     def setUp(self):
+        opener=patch("yue2_music_director.experiments.build_opener")
+        self.opener=opener.start()
+        self.addCleanup(opener.stop)
+        self.response=self.opener.return_value.open.return_value.__enter__.return_value
+        headers=Message()
+        headers["Content-Type"]="application/json"
+        self.response.headers=headers
+        self.response.read.return_value=b'{"selected":null,"missing":false,"download":null}'
         self.tmp=tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         d=Path(self.tmp.name)
@@ -122,6 +132,27 @@ class ExperimentsTests(unittest.TestCase):
             submit(self.root,'B','http://localhost:8791/mcp',True,True,client_factory=FakeClient)
         self.assertEqual(FakeClient.submitted,1)
         self.assertFalse((self.root/'journal_B.json').exists())
+
+
+    def test_missing_summary_uses_native_authoritative_selection(self):
+        client=FakeClient("http://127.0.0.1:8791/mcp")
+        self.assertEqual(confirm_stock_backbone(client,{}),"native_selection")
+        request=self.opener.return_value.open.call_args.args[0]
+        self.assertEqual(request.full_url,"http://127.0.0.1:8791/setup/own-model")
+        self.assertEqual(request.get_method(),"GET")
+
+    def test_native_override_or_unknown_never_passes(self):
+        client=FakeClient("http://127.0.0.1:8791/mcp")
+        for payload in (b'{"selected":"custom.gguf","missing":false,"download":null}',
+                        b'{"missing":false,"download":null}',
+                        b'{"selected":null,"missing":false,"download":{}}'):
+            self.response.read.return_value=payload
+            with self.assertRaises(ValueError):
+                confirm_stock_backbone(client,{"own_model":None})
+        with self.assertRaises(ValueError):
+            confirm_stock_backbone(client,{"own_model":"custom.gguf"})
+        with self.assertRaises(ValueError):
+            confirm_stock_backbone(FakeClient("http://example.com/mcp"),{})
 
 
 if __name__=='__main__':

@@ -8,11 +8,13 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import os
+from urllib.parse import urlsplit, urlunsplit
+from urllib.request import Request, build_opener, ProxyHandler
 from pathlib import Path
 from .job_receipt import extract_song_job_id, AmbiguousJobReceipt
 from .music import parse_score, section_sequence
 from .prosody import parse_lyrics, alignment
-from .mcp import Client, configured_endpoint, unpack
+from .mcp import Client, configured_endpoint, unpack, _NoRedirect
 from .native_recognition import _busy_keys
 
 MAX_SOURCE = 512_000
@@ -134,6 +136,33 @@ def _load_journal(root: Path,arm: str) -> dict:
     return json.loads((root/f'journal_{arm}.json').read_text(encoding='utf-8'))
 
 
+def confirm_stock_backbone(client,status):
+    # A missing field is not a null selection. Older summaries may omit it.
+    # The same native service exposes the authoritative selection directly.
+    summary_present="own_model" in status
+    if summary_present and status["own_model"] is not None:
+        raise ValueError("Studio reports an active own-model override; stock reference blocked")
+    endpoint=urlsplit(configured_endpoint(client.url))
+    if endpoint.path!="/mcp":
+        raise ValueError("Stock verification requires the standard /mcp endpoint")
+    target=urlunsplit((endpoint.scheme,endpoint.netloc,"/setup/own-model","",""))
+    opener=build_opener(ProxyHandler({}),_NoRedirect())
+    with opener.open(Request(target,headers={"Accept":"application/json"},method="GET"),timeout=15) as response:
+        if response.headers.get_content_type()!="application/json":
+            raise ValueError("Own-model endpoint did not return JSON")
+        raw=response.read(2_097_153)
+    if len(raw)>2_097_152:
+        raise ValueError("Own-model response exceeded read limit")
+    own=json.loads(raw)
+    if not isinstance(own,dict) or "selected" not in own or "download" not in own:
+        raise ValueError("Native own-model selection unknown; stock reference blocked")
+    if own["selected"] is not None:
+        raise ValueError("Native endpoint reports an active own-model override; stock reference blocked")
+    if own.get("missing") is not False or own["download"] is not None:
+        raise ValueError("Own-model missing/download status is not clear")
+    return "summary_and_native" if summary_present else "native_selection"
+
+
 def reference_configuration(client, status, request, defaults, capabilities):
     """Strict stock reference, not a claim of file-byte or waveform identity."""
     if request.get("adapters") != [] or type(request.get("companion_scale")) not in (int,float) or request["companion_scale"] != 0:
@@ -142,8 +171,7 @@ def reference_configuration(client, status, request, defaults, capabilities):
         raise ValueError("Reference requires one composition and synthesis track")
     if _busy_keys(status):
         raise ValueError("Studio is not idle; do not discard existing work automatically")
-    if "own_model" not in status or status["own_model"] is not None:
-        raise ValueError("Stock backbone not confirmed; check own model selection")
+    confirm_stock_backbone(client,status)
     models=unpack(client.call("models_status",{}))
     options=unpack(client.call("engine_options_get",{}))
     if not isinstance(models,dict) or not isinstance(options,dict):
@@ -153,7 +181,7 @@ def reference_configuration(client, status, request, defaults, capabilities):
             or "selected_component_ids" not in models or models["selected_component_ids"] not in (None,[])
             or "active" not in models or models["active"] is not None
             or "preset" not in models or models["preset"] is not None):
-        raise ValueError("Expected ready stock Balanced profile, no custom components or active download")
+        raise ValueError("Stock profile check failed: "+", ".join(k for k,ok in {"ready":models.get("ready") is True,"engine_ready":models.get("engine_ready") is True,"balanced":models.get("selected_profile_id")=="balanced","stock_components":"selected_component_ids" in models and models["selected_component_ids"] in (None,[]),"no_download":"active" in models and models["active"] is None,"no_preset":"preset" in models and models["preset"] is None}.items() if not ok))
     installed=models.get("installed_components")
     if not isinstance(installed,list) or not {"backbone-q6","vae-f32"} <= set(installed):
         raise ValueError("Stock backbone and VAE installation not confirmed")
