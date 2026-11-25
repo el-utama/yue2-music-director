@@ -20,7 +20,7 @@ READS = (
     ("models_own_list", {}),
     ("studio_system", {}),
     ("system_gpus", {}),
-    ("lora_list", {"response_format": "detailed"}),
+    ("lora_list", {"response_format": "concise"}),
     ("karaoke_settings_get", {"response_format": "concise"}),
     ("separator_status", {}),
     ("training_status", {"response_format": "concise"}),
@@ -53,6 +53,10 @@ def capture_profile(out, url=None):
             if not isinstance(data, (dict, list)) or (isinstance(data, dict) and
                     ("content" in data or "structuredContent" in data or data.get("error") is not None)):
                 raise ValueError("Unrecognized native result")
+            if name == "lora_list" and (not isinstance(data, dict) or
+                    not isinstance(data.get("installed"), list) or
+                    not isinstance(data.get("catalog"), list)):
+                raise ValueError("Unrecognized concise LoRA inventory")
             observations[name] = data
         except (MCPError, OSError, ValueError, TypeError, KeyError) as exc:
             errors[name] = type(exc).__name__
