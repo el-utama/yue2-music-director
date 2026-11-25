@@ -1,6 +1,6 @@
 """Explicitly restore the installed stock Balanced backbone using Studio's native tool."""
 import time
-from .experiments import read_own_model, model_selection_label
+from .experiments import read_own_model, model_selection_label, stock_profile_checks
 from .mcp import unpack
 from .native_recognition import _busy_keys
 
@@ -16,12 +16,15 @@ def select_stock(client, tools, *, max_waits=60, sleep=time.sleep):
     own=read_own_model(client)
     if _busy_keys(status):
         raise ValueError("Studio has active work; no model change made")
-    if (not isinstance(models,dict) or models.get("selected_profile_id")!="balanced"
-            or "selected_component_ids" not in models or models["selected_component_ids"] not in (None,[])
-            or not isinstance(models.get("installed_components"),list)
-            or not {"backbone-q6","vae-f32"}<=set(models["installed_components"])
-            or "active" not in models or models["active"] is not None):
-        raise ValueError("Installed stock Balanced components are not confirmed; no model change made")
+    if not isinstance(models,dict):
+        raise ValueError("Unrecognized models status; no model change made")
+    checks=stock_profile_checks(models)
+    print("Stock profile checks:",", ".join(k+"="+str(v) for k,v in checks.items()),flush=True)
+    active=models.get("active")
+    if isinstance(active,dict):
+        print("Download receipt:",model_selection_label(active,"status"),flush=True)
+    if not all(checks.values()):
+        raise ValueError("Stock profile check failed: "+", ".join(k for k,ok in checks.items() if not ok)+"; no model change made")
     if ("selected" not in own or "download" not in own or own["download"] is not None
             or own.get("missing") is not False or "own_model" not in status or "own_model" not in models
             or status["own_model"]!=own["selected"] or models["own_model"]!=own["selected"]):
