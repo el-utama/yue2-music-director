@@ -20,6 +20,7 @@ from .temporal_evidence import inspect_timing
 from .alignment_backend import preflight as alignment_preflight
 from .alignment_benchmark import benchmark as alignment_benchmark
 from .alignment_reference import prepare as prepare_alignment_reference
+from .phoneme_observation import observe as observe_phones
 from .multilingual_fidelity import assess as assess_multilingual
 from .midi_events import compare_files,MIDIEventError
 from .pipeline import run as run_pipeline
@@ -250,6 +251,14 @@ def main(argv=None) -> int:
     arx.add_argument('--last',type=int,required=True)
     arx.add_argument('--out',type=Path,required=True)
 
+    po=sub.add_parser('phoneme-observe',help='Research-only unforced phoneme recognition on a short PCM excerpt')
+    po.add_argument('--audio',type=Path,required=True)
+    po.add_argument('--weights',type=Path,required=True)
+    po.add_argument('--vocab',type=Path,required=True)
+    po.add_argument('--reference',type=Path)
+    po.add_argument('--out',type=Path,required=True)
+    po.add_argument('--confirm-evaluation',action='store_true')
+
     aes=sub.add_parser('audiobox-evaluate',help='Evaluate existing audio using optional official local AudioBox model')
     aes.add_argument('audio',type=Path,nargs='+')
     aes.add_argument('--weights',type=Path,required=True)
@@ -439,6 +448,9 @@ def main(argv=None) -> int:
             result=alignment_benchmark(args.audio,args.reference,args.candidate,args.out)
         elif args.command=='alignment-reference':
             result=prepare_alignment_reference(args.audio,args.annotation,args.unit,args.first,args.last,args.out)
+        elif args.command=='phoneme-observe':
+            result=observe_phones(args.audio,args.weights,args.vocab,args.out,
+                                  reference=args.reference,confirm=args.confirm_evaluation)
         elif args.command=='audiobox-evaluate':
             result=evaluate_audiobox(args.audio,args.weights,args.out,confirm=args.confirm_evaluation)
         elif args.command=='studio-profile':
