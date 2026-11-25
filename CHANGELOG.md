@@ -39,3 +39,5 @@ Native Naturalize continuation succeeded on real audio: -0.60 dB fixed attenuati
 - Optional alignment backend: compare SOFA, HubertFA, SoulX and mVocalToolkit; add loopback read-only backend discovery, no automatic downloads or alignment. Runtime/model/license validation remains open.
 
 - Alignment benchmark: offline HTK sequence and boundary-error metrics; upstream engine license discrepancy and release-language ambiguity recorded. Checkpoint rights, digest, runtime/VRAM and real-song accuracy remain unverified.
+
+- Alignment reference preparation: sample-accurate PCM WAV excerpt and explicit seconds/HTK annotation conversion, source fingerprints, no inference. Documented NUS-48E, GTSinger and PJS reference candidates and restrictions; no dataset or checkpoint bundled.
