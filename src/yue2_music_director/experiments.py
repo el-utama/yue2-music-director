@@ -136,17 +136,29 @@ def _load_journal(root: Path,arm: str) -> dict:
     return json.loads((root/f'journal_{arm}.json').read_text(encoding='utf-8'))
 
 
-def confirm_stock_backbone(client,status):
-    # A missing field is not a null selection. Older summaries may omit it.
-    # The same native service exposes the authoritative selection directly.
+def model_selection_label(obj,key):
+    if key not in obj:
+        return "<missing>"
+    value=obj[key]
+    if value is None:
+        return "null"
+    if isinstance(value,str):
+        # Report only the final file/name component, not a full local path.
+        return repr(value.replace(chr(92),"/").split("/")[-1][:160])
+    return "<"+type(value).__name__+">"
+
+
+def confirm_stock_backbone(client,status,models=None):
+    # Read both native sources BEFORE rejecting a non-null summary.
     summary_present="own_model" in status
-    if summary_present and status["own_model"] is not None:
-        raise ValueError("Studio reports an active own-model override; stock reference blocked")
     endpoint=urlsplit(configured_endpoint(client.url))
     if endpoint.path!="/mcp":
         raise ValueError("Stock verification requires the standard /mcp endpoint")
     target=urlunsplit((endpoint.scheme,endpoint.netloc,"/setup/own-model","",""))
     opener=build_opener(ProxyHandler({}),_NoRedirect())
+    print("MCP own_model:",model_selection_label(status,"own_model"),flush=True)
+    if models is not None:
+        print("Models own_model:",model_selection_label(models,"own_model"),flush=True)
     with opener.open(Request(target,headers={"Accept":"application/json"},method="GET"),timeout=15) as response:
         if response.headers.get_content_type()!="application/json":
             raise ValueError("Own-model endpoint did not return JSON")
@@ -154,10 +166,20 @@ def confirm_stock_backbone(client,status):
     if len(raw)>2_097_152:
         raise ValueError("Own-model response exceeded read limit")
     own=json.loads(raw)
-    if not isinstance(own,dict) or "selected" not in own or "download" not in own:
+    if not isinstance(own,dict):
+        raise ValueError("Native own-model selection unknown; stock reference blocked")
+    print("Native selected:",model_selection_label(own,"selected"),flush=True)
+    print("Native selected_name:",model_selection_label(own,"selected_name"),flush=True)
+    print("Native missing:",own.get("missing") if type(own.get("missing")) is bool else "unknown",flush=True)
+    print("Native download:", "idle" if "download" in own and own["download"] is None else "active or unknown",flush=True)
+    if "selected" not in own or "download" not in own:
         raise ValueError("Native own-model selection unknown; stock reference blocked")
     if own["selected"] is not None:
-        raise ValueError("Native endpoint reports an active own-model override; stock reference blocked")
+        raise ValueError("Native endpoint reports a selected own-model override; stock reference blocked")
+    if summary_present and status["own_model"] is not None:
+        raise ValueError("MCP summary conflicts with native null selection; stock reference blocked")
+    if models is not None and "own_model" in models and models["own_model"] is not None:
+        raise ValueError("Models status conflicts with native null selection; stock reference blocked")
     if own.get("missing") is not False or own["download"] is not None:
         raise ValueError("Own-model missing/download status is not clear")
     return "summary_and_native" if summary_present else "native_selection"
@@ -171,11 +193,25 @@ def reference_configuration(client, status, request, defaults, capabilities):
         raise ValueError("Reference requires one composition and synthesis track")
     if _busy_keys(status):
         raise ValueError("Studio is not idle; do not discard existing work automatically")
-    confirm_stock_backbone(client,status)
     models=unpack(client.call("models_status",{}))
     options=unpack(client.call("engine_options_get",{}))
     if not isinstance(models,dict) or not isinstance(options,dict):
         raise ValueError("Unrecognized model or engine status")
+    print("Selected profile:",model_selection_label(models,"selected_profile_id"),flush=True)
+    print("Engine ready:",models.get("engine_ready") is True,flush=True)
+    print("Selection matches engine:",models.get("selection_matches_engine") if type(models.get("selection_matches_engine")) is bool else "unknown",flush=True)
+    opts=options.get("options")
+    effective=options.get("in_effect")
+    cache=options.get("kv_cache_now")
+    if isinstance(opts,dict):
+        print("Configured backend/cache:",model_selection_label(opts,"backend"),model_selection_label(opts,"kv_cache"),flush=True)
+    if isinstance(effective,dict):
+        print("Effective flash attention:",effective.get("flash_attention") is True,flush=True)
+    if isinstance(cache,dict):
+        print("Effective Q8 cache:",cache.get("q8") is True,flush=True)
+    confirm_stock_backbone(client,status,models)
+    if models.get("selection_matches_engine") is False:
+        raise ValueError("Running engine does not match selected model files")
     if (models.get("ready") is not True or models.get("engine_ready") is not True
             or models.get("selected_profile_id")!="balanced"
             or "selected_component_ids" not in models or models["selected_component_ids"] not in (None,[])
