@@ -14,6 +14,7 @@ from .mcp import Client, configured_endpoint, unpack, MCPError
 from .multilingual_fidelity import SUPPORTED, assess
 from .native_recognition import _sha, _recognition, capture, recognition_preflight
 from .prosody import parse_lyrics
+from .stock_selection import select_stock
 
 
 def read(path):
@@ -59,7 +60,7 @@ def create_journal(path,journal):
         os.fsync(f.fileno())
 
 
-def execute(brief,root,url,*,max_waits=20):
+def execute(brief,root,url,*,max_waits=20,restore_stock=False):
     request=request_for(brief)
     request_sha=digest(_canonical(request))
     brief_sha=digest(_canonical(brief))
@@ -100,6 +101,8 @@ def execute(brief,root,url,*,max_waits=20):
         if not set(request)<=set(schema.get("properties",{})) or not set(schema.get("required",[]))<=set(request):
             raise ValueError("Song request does not fit advertised schema")
         recognition_preflight(client)
+        if restore_stock:
+            select_stock(client,tools)
         defaults=unpack(client.call("song_defaults",{}))
         capabilities=unpack(client.call("studio_capabilities",{}))
         status=unpack(client.call("studio_status",{}))
@@ -189,7 +192,7 @@ def execute(brief,root,url,*,max_waits=20):
             "warnings":["Single take, no musical winner or validated pronunciation.",
                         "Duration is a generation cap, not guaranteed song length.",
                         "Reference policy is stock Balanced only, not a universal model preference.",
-                        "No automatic regeneration, finishing, export, or model changes."]}
+                        "No automatic regeneration, finishing, export, or further model changes."]}
     atomic_write(report_path,report)
     return report
 
@@ -199,11 +202,14 @@ def main():
     parser.add_argument("--repo",type=Path,required=True)
     parser.add_argument("--url",required=True)
     parser.add_argument("--confirm-run",action="store_true")
+    parser.add_argument("--select-stock",action="store_true",help="Explicitly clear own-model override before a new draft")
     args=parser.parse_args()
     try:
         repo=args.repo.resolve()
         brief=load_brief(repo/"local/brief.json")
         key=digest(_canonical(brief))
+        if args.select_stock and not args.confirm_run:
+            raise ValueError("Stock selection requires explicit --confirm-run")
         if not args.confirm_run:
             print("Plan only: one native stock Balanced draft, one local Whisper recognition.")
             print("No GPU job authorized. Use --confirm-run only to approve both operations.")
@@ -214,7 +220,7 @@ def main():
         fd=os.open(lock,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
         os.close(fd)
         try:
-            report=execute(brief,drafts/key,args.url)
+            report=execute(brief,drafts/key,args.url,restore_stock=args.select_stock)
         finally:
             lock.unlink()
         metric=report["lyric_screen"]["primary_metric"]
