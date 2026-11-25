@@ -60,6 +60,11 @@ class TemporalEvidenceTests(unittest.TestCase):
             self.assertEqual(result["status"],"karaoke_display_anchors_only")
             self.assertEqual(result["lines"][0]["asr_line_edits"],1)
             self.assertFalse(result["audio_timestamps_verified"])
+            partial=check("[00:03.00]three","partial")
+            self.assertEqual(partial["status"],"partial_karaoke_display_anchors_only")
+            self.assertEqual(partial["lines"][0]["line_index"],2)
+            self.assertEqual(partial["unmapped_reference_line_count"],1)
+            self.assertFalse(partial["correction_allowed"])
             self.assertEqual(check(None,"missing")["status"],"no_existing_karaoke")
             self.assertEqual(check(None,"null",nullable=True)["status"],"no_existing_karaoke")
             self.assertEqual(check("[00:01.00]wrong words\n[00:03.00]three","wrong")["status"],
@@ -120,3 +125,17 @@ class TemporalEvidenceTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 native_song_read("http://127.0.0.1:1234/other","fixture")
             opener.return_value.open.assert_called_once()
+
+
+    def test_partial_match_does_not_assign_ambiguous_repeated_lyrics(self):
+        from yue2_music_director.temporal_evidence import match_display_lines
+        expected=[("verse",1,1,"one"),("chorus",1,1,"hook"),
+                  ("verse",2,1,"two"),("chorus",2,1,"hook")]
+        observed=[{"text":"one"},{"text":"hook"}]
+        matched=match_display_lines(observed,expected)
+        self.assertEqual(matched,[(observed[0],expected[0])])
+        observed=[{"text":"two"},{"text":"hook"}]
+        self.assertEqual(match_display_lines(observed,expected),
+                         [(observed[0],expected[2]),(observed[1],expected[3])])
+        with self.assertRaisesRegex(ValueError,"not a subsequence"):
+            match_display_lines([{"text":"two"},{"text":"one"}],expected)
