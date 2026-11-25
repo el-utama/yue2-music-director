@@ -53,3 +53,5 @@ Native preview development: optional ASR after acoustic pass and read-only `nati
 Native Naturalize preview retrieval has now been verified on one real song (same duration/rate/channels); headroom gate stopped ASR. Gain-only continuation reuses captured preview rather than rerendering the native effect. Live ASR still unverified.
 
 Real native continuation and ASR with matching pending preview succeeded. See [offline finishing selection](FINISHING_SELECTION.md) for evidence-based provisional ranking; not a final quality or naturalness decision.
+
+[Offline director diagnosis](DIRECTOR_DIAGNOSIS.md) consolidates selection, text disagreement localization and optional score-rhythm cues into one report and bounded stop decision. Phonetic alignment and autonomous correction execution remain open. Real integrated diagnosis not yet verified.
