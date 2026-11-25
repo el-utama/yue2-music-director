@@ -35,11 +35,13 @@ class TemporalEvidenceTests(unittest.TestCase):
             _write(baseline,{"provider":"whisper","text":"one three"})
             client=factory.return_value.connect.return_value
             client.tools.return_value=[{"name":"library_song_get"},{"name":"library_song_files"}]
-            def check(lrc,name):
+            def check(lrc,name,nullable=False):
                 def respond(tool,args):
                     if tool=="library_song_files":
                         return {"audio":str(source.resolve())}
                     if tool=="library_song_get":
+                        if args["response_format"]=="concise":
+                            return {"id":"song","metadata":None if nullable else {"has_karaoke":bool(lrc)}}
                         self.assertEqual(args["response_format"],"detailed")
                         return {"id":"song","metadata":{"lrc":lrc}}
                     raise AssertionError("Unexpected mutation: "+tool)
@@ -51,12 +53,24 @@ class TemporalEvidenceTests(unittest.TestCase):
                 self.assertFalse(result["phonetic_alignment_verified"])
                 self.assertEqual(result["recognition_calls"],0)
                 self.assertEqual([c.args[0] for c in client.call.call_args_list],
-                                 ["library_song_files","library_song_get","library_song_files"])
+                                 (["library_song_files","library_song_get","library_song_get","library_song_files"] if lrc else
+                                  ["library_song_files","library_song_get","library_song_files"]))
                 return result
             result=check("[00:01.00]<00:01.00>one <00:01.50>two\n[00:03.00]three","valid")
             self.assertEqual(result["status"],"karaoke_display_anchors_only")
             self.assertEqual(result["lines"][0]["asr_line_edits"],1)
             self.assertFalse(result["audio_timestamps_verified"])
             self.assertEqual(check(None,"missing")["status"],"no_existing_karaoke")
+            self.assertEqual(check(None,"null",nullable=True)["status"],"no_existing_karaoke")
             self.assertEqual(check("[00:01.00]wrong words\n[00:03.00]three","wrong")["status"],
                              "karaoke_evidence_blocked")
+
+
+    def test_unreadable_metadata_never_claims_absence(self):
+        from yue2_music_director.temporal_evidence import karaoke_metadata
+        for data in ({"content":[{"type":"text","text":"truncated"}]},
+                     {"id":"wrong","metadata":None},{"id":"song"},
+                     {"id":"song","metadata":[]},
+                     {"id":"song","metadata":{"has_karaoke":True}}):
+            with self.subTest(data=data),self.assertRaises(ValueError):
+                karaoke_metadata(data,"song",detailed=True)
