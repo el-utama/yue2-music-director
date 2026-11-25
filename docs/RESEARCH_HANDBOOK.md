@@ -4,7 +4,7 @@ Status: experimental alpha 8.post3, 2026-11-25. This handbook consolidates the a
 
 ## Current authoritative roadmap
 
-The 2026-11-25 [native-first development audit](knowledge/DEVELOPMENT_AUDIT.md) supersedes the sequencing of earlier plans below. Review [Studio capabilities](knowledge/STUDIO_CAPABILITIES.md), [MCP inventory](knowledge/MCP_TOOL_INDEX.md) and [community/evaluation research](knowledge/COMMUNITY_AND_EVALUATION.md) before proposing new implementation. The installed runtime inventory is still pending. Historical experimental evidence remains valid within its original scope.
+The 2026-11-25 [native-first development audit](knowledge/DEVELOPMENT_AUDIT.md) supersedes the sequencing of earlier plans below. Review [Studio capabilities](knowledge/STUDIO_CAPABILITIES.md), [MCP inventory](knowledge/MCP_TOOL_INDEX.md) and [community/evaluation research](knowledge/COMMUNITY_AND_EVALUATION.md) before proposing new implementation. The installed runtime inventory was read locally; stock configuration must still be checked before a new generation. Historical experimental evidence remains valid within its original scope.
 
 ## Goal and scope
 
@@ -20,8 +20,8 @@ Build a local-first music director that diagnoses score, lyric, performance and 
 | Lyric evidence | lyric_fidelity, native_recognition, fidelity_gate, human_selection, multilingual_fidelity | ASR-primary text disagreement; line alignment not timestamps; basic WER/CER, not phonetic alignment |
 | Audio finishing | acoustic, instrument_dynamics, finish | FFmpeg measurements, stem-delta gain, one bounded ASR check; completed real B run |
 | Native effects | native_process, native_headroom | One real Naturalize preview, fixed gain continuation, ASR with matching pending run; other stages unverified |
-| Candidate decisions | finishing_selection, director | Fixture-tested offline provisional selection, diagnosis and stop policy; combined real-song run pending |
-| Timing evidence | temporal_evidence | Fixture-tested read-only LRC inspection; interpolation uncertainty; live lookup pending |
+| Candidate decisions | finishing_selection, director | Real Windows combined provisional selection with saved AudioBox evidence; no artistic winner |
+| Timing evidence | temporal_evidence | Real Windows read-only partial LRC mapping through native HTTP; display anchors only |
 | Optional alignment | alignment_backend | Discovery only; external runtime/model/license/accuracy unvalidated |
 
 ### Entry points
@@ -44,7 +44,8 @@ Read [changelog](../CHANGELOG.md) and [Issue #4](https://github.com/el-utama/yue
 ## Roadmap and exit criteria
 
 - Native Process Audio: one Naturalize preview and continuation verified locally; preserve its evidence. Other effects and installed versions remain unverified. No automatic keep/discard until ownership and semantics are verified.
-- Validate combined offline director diagnosis on existing evidence without repeating inference.
+- Completed real combined review, AudioBox and native timing validation. Do not repeat.
+- [Native song draft](NATIVE_DRAFT.md): one bounded production path, awaiting combined live validation.
 - Improve provenance and calibrated signal metrics; explicitly distinguish technical pass, lyric non-regression and unverified musical outcome.
 - Verified phoneme/time alignment and safe correction planner; no guessed mapping or invented model controls.
 - Unified local agent orchestration: budgeted, resumable decisions across score, generation, recognition, finishing; stop when blocked, no loop of repeated user manual checks.
