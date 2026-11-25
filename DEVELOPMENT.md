@@ -1,8 +1,18 @@
 # Development and validation
 
-## Current phase: v0.7.0a8.post3 (experimental)
+## Current phase: post-alpha 8.post3 development (experimental)
 
-See [research handbook](docs/RESEARCH_HANDBOOK.md) for current architecture, module status and decisions, and [changelog](CHANGELOG.md) for history. The following describes the earlier v0.6.1 foundation.
+See [research handbook](docs/RESEARCH_HANDBOOK.md) for current architecture, module status and decisions, and [changelog](CHANGELOG.md) for history. The foundation table below describes earlier v0.6.1 components. Current additions are listed separately.
+
+| Current addition | Evidence |
+|---|---|
+| Native recognition and custom finishing | Real-song execution complete |
+| Native Naturalize and headroom continuation | Real-song execution complete; -1.05 dBTP; unchanged ASR |
+| Selection and diagnosis | Offline fixtures, integrated real-song run pending |
+| Temporal evidence | Read-only LRC inspection; live metadata lookup pending |
+| Optional alignment | Discovery only; no engine or model validated |
+
+Unreleased development commits share package version 0.7.0a8.post3; record the Git commit for reproducibility. No production release claim.
 
 This is a **working local-first Python toolkit**, not a production-ready autonomous music director. Migrated and integrated components:
 
