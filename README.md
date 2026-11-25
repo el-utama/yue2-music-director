@@ -119,3 +119,5 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for quality gates and architecture.
 See [offline director diagnosis](docs/DIRECTOR_DIAGNOSIS.md) for the combined evidence-selection and diagnosis workflow.
 
 See [temporal evidence](docs/TEMPORAL_EVIDENCE.md) for read-only inspection of existing karaoke anchors and alignment limitations.
+
+See [optional singing alignment backend research](docs/ALIGNMENT_BACKEND.md) for the discovery-only command and model validation gates.
