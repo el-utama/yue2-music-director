@@ -16,6 +16,7 @@ from .native_process import preview as native_preview, inspect_preview
 from .native_headroom import continue_preview
 from .finishing_selection import select as select_finishing
 from .director import direct
+from .temporal_evidence import inspect_timing
 from .multilingual_fidelity import assess as assess_multilingual
 from .midi_events import compare_files,MIDIEventError
 from .pipeline import run as run_pipeline
@@ -215,6 +216,16 @@ def main(argv=None) -> int:
     dr.add_argument('--abc',type=Path)
     dr.add_argument('--out',type=Path,required=True)
 
+    te=sub.add_parser('timing-evidence',help='Read existing Studio karaoke anchors without generating timings')
+    te.add_argument('--source',type=Path,required=True)
+    te.add_argument('--song-id',required=True)
+    te.add_argument('--lyrics',type=Path,required=True)
+    te.add_argument('--baseline-asr',type=Path,required=True)
+    te.add_argument('--language',required=True)
+    te.add_argument('--duration',type=float,required=True)
+    te.add_argument('--out',type=Path,required=True)
+    te.add_argument('--url')
+
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
     args=parser.parse_args(argv)
@@ -385,6 +396,9 @@ def main(argv=None) -> int:
         elif args.command=='director-diagnose':
             result=direct(args.source,args.lyrics,args.baseline_asr,args.language,args.out,
                           custom=args.custom,native=args.native,abc=args.abc)
+        elif args.command=='timing-evidence':
+            result=inspect_timing(args.source,args.song_id,args.lyrics,args.baseline_asr,args.language,
+                                  args.duration,args.out,args.url)
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}

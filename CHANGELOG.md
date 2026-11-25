@@ -38,3 +38,5 @@ Historical evidence is based on retained experiment reports and recorded issue c
 Native Naturalize continuation succeeded on real audio: -0.60 dB fixed attenuation, measured -1.05 dBTP, -17.67 LUFS, same duration/rate/channels/LRA; WER 44/180 and CER 141/712 unchanged. One ASR, no additional native processing or library mutation. See Issue #4. Naturalness unverified.
 
 - Offline director diagnosis: reuse completed finishing selection, ASR-text localization and optional approximate score cues; explicit stop decision, zero new inference or score edits. Real integrated diagnosis pending.
+
+- Temporal evidence: audited native karaoke interpolation and added read-only existing-LRC inspection, with strict reference and duration checks. No inferred phoneme timing or correction authorization; live metadata lookup pending.
