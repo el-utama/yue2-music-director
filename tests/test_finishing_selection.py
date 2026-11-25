@@ -258,9 +258,9 @@ class SelectionTests(unittest.TestCase):
                 raise AssertionError("Unexpected native action: "+name)
             client.call.side_effect=respond
             with self.assertRaisesRegex(ValueError,"No matching completed Director timing recommendation"):
-                timing_retained(self.root,"unused")
+                timing_retained(self.root,"http://127.0.0.1:1234/mcp")
             review_retained(self.root,"unused")
-            report=timing_retained(self.root,"unused")
+            report=timing_retained(self.root,"http://127.0.0.1:1234/mcp")
             self.assertEqual(report["status"],"karaoke_display_anchors_only")
             self.assertEqual(report["lines"][0]["asr_line_edits"],1)
             self.assertFalse(report["correction_allowed"])
