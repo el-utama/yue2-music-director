@@ -45,3 +45,5 @@ Gate A implementation: [local Studio profile](../LOCAL_STUDIO_CONFIGURATION.md) 
 ## Reference-model decision update
 
 For the 8 GB CUDA tier, stock YuE2-3B Balanced Q6_K with stock VAE and no optional adapters is the initial reference, not a permanent production-model lock. Quality Q8_0 and community fine-tunes are optional comparison candidates. Native training requires at least 11 GB VRAM according to pinned upstream guide; do not prioritize training on this tier. See [configuration decision and intentional switch](../LOCAL_STUDIO_CONFIGURATION.md). Native capabilities first; adapters only for measured unmet requirements. No obligation to preserve or test all installed adapters. Do not delete assets or change model without authority.
+
+The controlled A/B submission path now has an explicit stock-reference configuration gate. This is a narrow execution safeguard, not the complete decision/orchestration layer. Existing finishing diagnosis remains independent of active generation model; retained fine-tune results must not be treated as stock-model controls. No additional song generation needed for historical evidence validation.

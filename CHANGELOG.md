@@ -51,3 +51,5 @@ Native Naturalize continuation succeeded on real audio: -0.60 dB fixed attenuati
 - Studio profile real local run: 339 advertised tools, 12/13 reads successful, zero operation counters. Fix LoRA inventory to request concise catalog and reject incomplete/truncated results. Live verification of the fix pending.
 
 - Public LoRA research: real concise inventory read succeeded; indexed all 39 public native catalog entries and examined external candidates, stock/RS base mismatch, KTO stage-specific evidence, prosody conditioning and license distinctions. No downloads, training, rendering or model changes. Compatibility gate remains pending.
+
+- Controlled reference A/B now explicitly disables optional adapters and decoder companion, validates live stock Balanced CUDA/Q8 setup and idle state before submit, and fingerprints effective configuration across arms. Old manifests are not eligible for new submission; retained historical evidence remains usable. Regression fixtures only; local gate validation pending.
