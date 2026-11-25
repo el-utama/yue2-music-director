@@ -148,17 +148,12 @@ def model_selection_label(obj,key):
     return "<"+type(value).__name__+">"
 
 
-def confirm_stock_backbone(client,status,models=None):
-    # Read both native sources BEFORE rejecting a non-null summary.
-    summary_present="own_model" in status
+def read_own_model(client):
     endpoint=urlsplit(configured_endpoint(client.url))
     if endpoint.path!="/mcp":
         raise ValueError("Stock verification requires the standard /mcp endpoint")
     target=urlunsplit((endpoint.scheme,endpoint.netloc,"/setup/own-model","",""))
     opener=build_opener(ProxyHandler({}),_NoRedirect())
-    print("MCP own_model:",model_selection_label(status,"own_model"),flush=True)
-    if models is not None:
-        print("Models own_model:",model_selection_label(models,"own_model"),flush=True)
     with opener.open(Request(target,headers={"Accept":"application/json"},method="GET"),timeout=15) as response:
         if response.headers.get_content_type()!="application/json":
             raise ValueError("Own-model endpoint did not return JSON")
@@ -168,6 +163,16 @@ def confirm_stock_backbone(client,status,models=None):
     own=json.loads(raw)
     if not isinstance(own,dict):
         raise ValueError("Native own-model selection unknown; stock reference blocked")
+    return own
+
+
+def confirm_stock_backbone(client,status,models=None):
+    # Read both native sources BEFORE rejecting a non-null summary.
+    summary_present="own_model" in status
+    print("MCP own_model:",model_selection_label(status,"own_model"),flush=True)
+    if models is not None:
+        print("Models own_model:",model_selection_label(models,"own_model"),flush=True)
+    own=read_own_model(client)
     print("Native selected:",model_selection_label(own,"selected"),flush=True)
     print("Native selected_name:",model_selection_label(own,"selected_name"),flush=True)
     print("Native missing:",own.get("missing") if type(own.get("missing")) is bool else "unknown",flush=True)
