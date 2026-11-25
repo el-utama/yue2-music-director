@@ -43,3 +43,5 @@ Native Naturalize continuation succeeded on real audio: -0.60 dB fixed attenuati
 - Alignment reference preparation: sample-accurate PCM WAV excerpt and explicit seconds/HTK annotation conversion, source fingerprints, no inference. Documented NUS-48E, GTSinger and PJS reference candidates and restrictions; no dataset or checkpoint bundled.
 
 - Native LoRA audit: discovered optional MMS forced-alignment training stage, base-matched presets disable timing, and separate composition/sound adapter strengths. Native alignment reuse now takes research priority over optional external checkpoint; no training or downloads performed.
+
+- Native-first knowledge audit: indexed 339 static MCP definitions at upstream ca37d2d; consolidated UI/engine/native workflows, official YuE2 agent skill and evaluation protocols, public adapters/fine-tunes, native export and training/voice-conversion reuse. Superseded alignment-first implementation sequence with evidence-gated roadmap. README includes Indonesian overview; all new knowledge docs in English. Source audit only; no runtime installs, generation, ASR or training.

@@ -4,6 +4,29 @@ Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, focused on safe
 
 > The repository is public. Never commit private audio, unpublished lyrics, local job journals, model weights or credentials.
 
+## Native-first development policy
+
+Music Director is an evidence-driven decision and orchestration layer for YuE2 Studio, not a replacement generator, trainer, DAW or Studio UI. The current development audit supersedes earlier alignment-first planning.
+
+- [Studio capability knowledge](docs/knowledge/STUDIO_CAPABILITIES.md): native workflows, requirements, side effects, limits and reuse decisions.
+- [MCP tool index](docs/knowledge/MCP_TOOL_INDEX.md): 339 static definitions at the audited upstream revision; not live availability.
+- [Community and official evaluation research](docs/knowledge/COMMUNITY_AND_EVALUATION.md): existing agent skill, model/LoRA prior art, evaluator protocols and license gates.
+- [Development audit and revised roadmap](docs/knowledge/DEVELOPMENT_AUDIT.md): overlap analysis, priorities and evidence gates.
+
+Do not add a feature until native and reusable alternatives have been checked. Do not install or train models simply to test a capability. Existing research modules remain available but do not imply production-ready autonomous correction.
+
+## Ringkasan bahasa Indonesia
+
+YuE2 Music Director adalah agent pendamping YuE2 Studio yang bertugas memahami tujuan musik, memilih fitur native yang sesuai, mengelola eksperimen secara aman, menilai hasil berdasarkan bukti, dan menentukan apakah kandidat perlu dipertahankan atau ditolak. Agent ini bukan pengganti generator, trainer LoRA, DAW, maupun antarmuka Studio.
+
+**Status:** masih dalam tahap riset alpha. Beberapa eksperimen audio native telah berhasil, tetapi kualitas musikal, koreksi fonetik otomatis, integrasi evaluator resmi, dan orkestrasi menyeluruh belum tervalidasi. Dokumentasi teknis berbahasa Inggris merupakan sumber utama.
+
+**Kebijakan:** utamakan fitur bawaan YuE2, skill resmi, model dan adapter komunitas yang kompatibel serta berlisensi sesuai penggunaan. Gunakan eksperimen yang sudah ada sebelum meminta pengguna menjalankan inferensi lagi. Jangan mengunduh model, melatih LoRA, mengubah pengaturan, atau menghapus hasil tanpa izin.
+
+**Penggunaan dasar:** Python 3.10+ dan Git diperlukan. Untuk instalasi editable dan tes offline, ikuti bagian Setup. Jalankan `py -3 -m yue2_music_director.cli --help` untuk melihat perintah aktual. FFmpeg dan Studio lokal diperlukan hanya untuk operasi terkait. Jangan mengulang eksperimen yang sudah selesai; periksa laporan dan jurnal lokal terlebih dahulu. Jangan unggah audio, lirik, dataset atau konfigurasi pribadi ke repository publik.
+
+**Rencana terkini:** baca [audit pengembangan](docs/knowledge/DEVELOPMENT_AUDIT.md). Inventaris kemampuan Studio yang benar-benar terpasang, validasi laporan eksperimen lama, audit evaluator resmi dan kompatibilitas adapter, baru tentukan kebutuhan implementasi baru.
+
 ## Setup
 
 Requires Python 3.10+; no mandatory third-party Python runtime dependencies. Audio commands require installed FFmpeg/ffprobe, Studio commands require local Studio, and optional MIDI render QA requires FluidSynth and a SoundFont. Optional alignment discovery does not install a backend.
