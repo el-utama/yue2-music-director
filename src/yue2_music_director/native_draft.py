@@ -36,7 +36,7 @@ def load_brief(path):
         raise ValueError("Seed must be a nonnegative 31-bit integer")
     if type(brief["duration_seconds"]) is not int or not 30<=brief["duration_seconds"]<=240:
         raise ValueError("Draft generation cap must be 30–240 seconds")
-    if not parse_lyrics(brief["lyrics"]):
+    if not any(group["lines"] for group in parse_lyrics(brief["lyrics"])):
         raise ValueError("Tagged vocal lyrics required")
     return brief
 
@@ -127,6 +127,9 @@ def execute(brief,root,url,*,max_waits=20):
         if state not in ("queued","running") or attempt==max_waits:
             raise ValueError("Job not completed in bounded wait; retain journal, resume only known job")
         client.call("studio_wait",{"job_id":job_id,"seconds":45})
+    if (job.get("seed")!=brief["seed"] or job.get("lm_seed")!=brief["seed"]
+            or job.get("adapters")!=[]):
+        raise ValueError("Completed job does not confirm requested seeds and disabled adapters")
     songs=job.get("songs")
     if (not isinstance(songs,list) or len(songs)!=1 or not isinstance(songs[0],dict)
             or not isinstance(songs[0].get("id"),str) or not songs[0]["id"]):
@@ -174,10 +177,12 @@ def execute(brief,root,url,*,max_waits=20):
                and type(loudness) in (int,float) and math.isfinite(loudness) and loudness>-70)
     if _sha(audio)!=audio_sha:
         raise ValueError("Audio changed during draft QA")
-    report={"schema":"native-draft-v1","status":"provisional_draft" if peak_pass else "technical_review_required",
+    duration=acoustic.get("duration_seconds")
+    duration_pass=type(duration) in (int,float) and math.isfinite(duration) and 0<duration<=brief["duration_seconds"]+2
+    report={"schema":"native-draft-v1","status":"provisional_draft" if peak_pass and duration_pass else "technical_review_required",
             "brief_sha256":brief_sha,"request_sha256":request_sha,"audio":str(audio),
             "audio_sha256":audio_sha,"job_id":job_id,"song_id":song_id,
-            "acoustic":acoustic,"lyric_screen":screen,"headroom_pass":peak_pass,
+            "acoustic":acoustic,"lyric_screen":screen,"headroom_pass":peak_pass,"duration_cap_screen_pass":duration_pass,
             "budget":{"song_jobs":1,"recognition_calls":1},
             "automatic_acceptance":False,"naturalness_verified":False,
             "phonetic_alignment_verified":False,"next_action":"retain_draft_and_stop",
