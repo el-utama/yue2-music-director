@@ -62,7 +62,7 @@ class SelectionTests(unittest.TestCase):
         _write(d/"submission.json",{"state":"SUBMITTING","source_sha256":self.sh,"request":request,"screening":screening})
         _write(d/"run_identity.json",{"run_id":"r","request":request})
         _write(d/"report.json",{"status":"preview_acoustic_blocked","source_sha256":self.sh,
-            "preview_sha256":rh,"run_id":"r","request":request})
+            "preview_sha256":rh,"run_id":"r","request":request,"acoustic":{"arms":{"A":self.a,"B":{**self.a,"sha256":rh,"integrated_lufs":-17.07,"true_peak_dbtp":-0.45}}}})
         _write(c/"plan.json",{"gain_db":-0.6,"source_sha256":self.sh,"raw_preview_sha256":rh,
             "run_id":"r","screening":screening})
         before={"arms":{"A":self.a,"B":{**self.a,"sha256":rh,"integrated_lufs":-17.07,"true_peak_dbtp":-0.45}}}
@@ -105,6 +105,9 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(result["findings"][0]["issue"],"lyric_disagreement")
         self.assertEqual(result["findings"][0]["execution"],"blocked_missing_verified_alignment")
         self.assertEqual(result["findings"][1]["issue"],"insufficient_headroom")
+        self.assertEqual(result["native_first_actions"][0]["action"],"use_existing_provisional_file")
+        self.assertEqual(result["native_first_actions"][1]["director_command"],"timing-evidence")
+        self.assertFalse(result["training_recommended"])
         self.assertFalse(result["lyric_localization"]["audio_timestamps_verified"])
         self.assertEqual(result["lyric_localization"]["lines"][0]["edits"],1)
         self.assertTrue((self.root/"director/selection.json").is_file())
@@ -114,6 +117,61 @@ class SelectionTests(unittest.TestCase):
         result=direct(self.source,self.lyrics,self.baseline,"en",self.root/"director",
                       custom=self.custom(0))
         self.assertEqual(result["next_action"],"retain_original_and_stop")
+        self.assertTrue(any(a["action"]=="consider_native_export_for_library_source" for a in result["native_first_actions"]))
         self.assertEqual(Path(result["provisional_output"]),self.source.resolve())
         self.assertEqual(result["recognition_calls"],0)
         self.assertFalse(result["automatic_acceptance"])
+
+
+    def test_direct_native_pass_uses_actual_writer_contract(self):
+        from unittest.mock import patch, Mock
+        from yue2_music_director.native_process import preview
+        from yue2_music_director.native_recognition import BUSY_KEYS
+        client=Mock()
+        request=effect_request("fixture","naturalize",0.2)
+        run={"id":"r","song_id":"fixture","stages":["naturalize"],
+             "request":{"naturalize":request["naturalize"]},"done":True,
+             "preview_ready":True,"error":None}
+        names=("studio_status","library_song_files","processing_get","processing_start",
+               "karaoke_settings_get","lyrics_recognise")
+        client.tools.return_value=[{"name":n,"inputSchema":{"properties":{"song_id":{},"naturalize":{}}}} for n in names]
+        submitted=[]
+        def call(name,args):
+            if name=="processing_start":
+                submitted.append(name)
+                work=self.root/"processing"
+                work.mkdir()
+                (work/"preview.flac").write_bytes(b"native preview")
+                return {"started":True}
+            if name=="processing_get":
+                return {"run":run if submitted else None}
+            if name=="studio_status":
+                return {**dict.fromkeys(BUSY_KEYS),"processing":run if submitted else None}
+            if name=="library_song_files":
+                return {"audio":str(self.source)}
+            if name=="karaoke_settings_get":
+                return {"provider":"whisper","enabled":True,"ready":True,"download":None,
+                        "models":[{"id":"crisperwhisper-turbo","installed":True}]}
+            if name=="lyrics_recognise":
+                return {"provider":"whisper","text":"one two three"}
+            raise AssertionError(name)
+        client.call.side_effect=call
+        def acoustic(source,target):
+            return {"arms":{"A":self.a,"B":{**self.a,"sha256":_sha(target),
+                       "integrated_lufs":-17.0,"true_peak_dbtp":-1.2}}}
+        d=self.root/"direct-native"
+        with patch("yue2_music_director.native_process.Client") as process_client, \
+             patch("yue2_music_director.native_recognition.Client") as recognition_client, \
+             patch("yue2_music_director.native_process.compare",side_effect=acoustic), \
+             patch("yue2_music_director.native_process.shutil.which",return_value="ffmpeg"):
+            process_client.return_value.connect.return_value=client
+            recognition_client.return_value.connect.return_value=client
+            preview(self.source,"fixture","naturalize",0.2,d,"http://127.0.0.1:1234/mcp",
+                    confirm=True,lyrics=self.lyrics,baseline_asr=self.baseline,language="en",confirm_recognition=True)
+        count=client.call.call_count
+        result=self.run_selection(native=d)
+        self.assertEqual(result["status"],"provisional_candidate")
+        self.assertEqual(result["candidates"][0]["method"],"native_direct_preview")
+        self.assertEqual(result["recognition_calls"],0)
+        self.assertEqual(client.call.call_count,count)
+        self.assertTrue(Path(result["provisional_output"]).samefile(d/"preview.flac"))

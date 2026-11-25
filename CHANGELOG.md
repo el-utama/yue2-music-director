@@ -53,3 +53,5 @@ Native Naturalize continuation succeeded on real audio: -0.60 dB fixed attenuati
 - Public LoRA research: real concise inventory read succeeded; indexed all 39 public native catalog entries and examined external candidates, stock/RS base mismatch, KTO stage-specific evidence, prosody conditioning and license distinctions. No downloads, training, rendering or model changes. Compatibility gate remains pending.
 
 - Controlled reference A/B now explicitly disables optional adapters and decoder companion, validates live stock Balanced CUDA/Q8 setup and idle state before submit, and fingerprints effective configuration across arms. Old manifests are not eligible for new submission; retained historical evidence remains usable. Regression fixtures only; local gate validation pending.
+
+- Director diagnosis: support screened direct native previews as well as headroom continuations; rank existing provisional output and native timing/export routes ahead of new inference. Regression test uses real preview/recognition writer functions with mocked Studio and acoustic measurements. Real combined retained-song validation remains pending.
