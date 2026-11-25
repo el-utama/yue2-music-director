@@ -12,6 +12,8 @@ from .native_recognition import _sha
 from .mcp import Client, configured_endpoint, unpack
 from .native_process import _source_file
 from .director import direct
+from .temporal_evidence import inspect_timing
+from .audiobox_eval import summarize_evidence
 
 
 def read(path):
@@ -200,15 +202,72 @@ def review_retained(repo,url):
     return result
 
 
+def timing_retained(repo,url):
+    """Execute the read-only timing action from the completed Director review."""
+    results=repo/"results"
+    song,custom_audio,native_audio,hashes=discover(results)
+    quality=cached(results,hashes)
+    if quality is None:
+        raise ValueError("Saved matching evaluation required; no inference requested")
+    lyrics,baseline,language=reference_inputs(results,custom_audio.parent.parent)
+    reference_hashes=[_sha(lyrics),_sha(baseline)]
+    selected=None
+    for folder in sorted(results.glob("director-review-*"),reverse=True):
+        try:
+            report=read(folder/"report.json")
+            selection=read(folder/"selection.json")
+            if (report["schema"]!="director-diagnosis-v1"
+                or selection["schema"]!="finishing-selection-v1"
+                or any([doc["source_sha256"],doc["lyrics_sha256"],doc["baseline_asr_sha256"]]
+                       !=[hashes[0],*reference_hashes] for doc in (report,selection))
+                or {row.get("sha256") for row in selection["candidates"]}!=set(hashes[1:])
+                or report["quality_evidence"]!=summarize_evidence(quality,selection)
+                or report["quality_evidence"]["status"]!="matched_descriptive_estimates"
+                or not any(a["action"]=="inspect_existing_native_timing" for a in report["native_first_actions"])):
+                continue
+            selected=folder
+            break
+        except (OSError,ValueError,KeyError,TypeError):
+            continue
+    if selected is None:
+        raise ValueError("No matching completed Director timing recommendation")
+    duration=quality["rows"][0]["duration_seconds"]
+    if type(duration) not in (float,int) or not math.isfinite(duration) or not 1<=duration<=360:
+        raise ValueError("Recorded measured source duration invalid")
+    print("Inspecting existing Studio karaoke metadata (read-only)...",flush=True)
+    source=source_audio(song,hashes[0],url)
+    out=selected/("timing-"+datetime.now().strftime("%Y%m%d-%H%M%S-%f")+".json")
+    report=inspect_timing(source,song,lyrics,baseline,language,duration,out,url)
+    print("Timing evidence:",report["status"])
+    print("Matched display lines:",len(report["lines"]))
+    print("Enhanced word anchors:",sum(row["word_anchor_count"] for row in report["lines"]))
+    print("Phonetic alignment: not verified")
+    print("Automatic lyric/score correction: blocked")
+    if report["status"]=="karaoke_display_anchors_only":
+        cues=sorted((row for row in report["lines"] if row["asr_line_edits"]),
+                    key=lambda row:-row["asr_line_edits"])[:5]
+        for i,row in enumerate(cues,1):
+            print(f"Review cue {i}: line {row['line_index']}, display anchor {row['start_seconds']:.2f}s, ASR edits {row['asr_line_edits']}")
+        print("Next action: retain candidate; display anchors cannot authorize phonetic edits")
+    else:
+        print("Next action: retain candidate; no usable existing timing evidence")
+    print("New generation/ASR/evaluator inference: 0")
+    return report
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo",type=Path,required=True)
     parser.add_argument("--weights",type=Path)
-    parser.add_argument("--review",action="store_true")
+    mode=parser.add_mutually_exclusive_group()
+    mode.add_argument("--review",action="store_true")
+    mode.add_argument("--timing",action="store_true")
     parser.add_argument("--url",required=True)
     args = parser.parse_args()
     try:
-        if args.review:
+        if args.timing:
+            timing_retained(args.repo.resolve(),args.url)
+        elif args.review:
             review_retained(args.repo.resolve(),args.url)
         elif args.weights is not None:
             run(args.repo.resolve(),args.weights.resolve(),args.url)
