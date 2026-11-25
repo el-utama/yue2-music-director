@@ -63,3 +63,22 @@ class PhonemeObservationTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     po.observe(self.audio,self.weights,self.vocab,self.out,confirm=confirm)
             infer.assert_not_called()
+
+
+    def test_all_blank_output_is_not_successful_recognition(self):
+        with patch.object(po,"WEIGHTS_SHA",_sha(self.weights)), \
+             patch.object(po,"infer",return_value=([0,0,0],"fixture")):
+            result=po.observe(self.audio,self.weights,self.vocab,self.out,
+                              reference=self.reference,confirm=True)
+            self.assertEqual(result["reference_comparison"]["token_edits"],2)
+            self.assertEqual(result["reference_comparison"]["token_disagreement_rate"],1.0)
+            self.assertEqual(result["observed_tokens"],[])
+            self.assertFalse(result["automatic_acceptance"])
+
+    def test_nonzero_edit_count(self):
+        with patch.object(po,"WEIGHTS_SHA",_sha(self.weights)), \
+             patch.object(po,"infer",return_value=([4,0,4],"fixture")):
+            result=po.observe(self.audio,self.weights,self.vocab,self.out,
+                              reference=self.reference,confirm=True)
+            self.assertEqual(result["reference_comparison"]["token_edits"],1)
+            self.assertEqual(result["reference_comparison"]["token_disagreement_rate"],0.5)
