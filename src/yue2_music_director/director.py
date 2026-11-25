@@ -5,9 +5,10 @@ from .finishing_selection import select, read
 from .native_recognition import _sha, _write, _recognition, review
 from .phrase_rhythm import analyze
 from .multilingual_fidelity import assess
+from .audiobox_eval import summarize_evidence
 
 
-def direct(source, lyrics, baseline_asr, language, out, *, custom=None, native=None, abc=None):
+def direct(source, lyrics, baseline_asr, language, out, *, custom=None, native=None, abc=None, quality=None):
     source,lyrics,baseline_asr=[Path(p).resolve(strict=True) for p in (source,lyrics,baseline_asr)]
     out=Path(out).resolve()
     if out.exists():
@@ -25,6 +26,7 @@ def direct(source, lyrics, baseline_asr, language, out, *, custom=None, native=N
                      custom=custom,native=native)
     if [selection[k] for k in ("source_sha256","lyrics_sha256","baseline_asr_sha256")]!=hashes[:3]:
         raise ValueError("Selection inputs changed")
+    quality_evidence=summarize_evidence(quality,selection)
     findings=[]
     primary=baseline["primary_metric"]
     if baseline[primary]["edits"]:
@@ -103,7 +105,9 @@ def direct(source, lyrics, baseline_asr, language, out, *, custom=None, native=N
                         "execution":"offline_evidence_recovery_only",
                         "requires_new_audio":False})
     result={"schema":"director-diagnosis-v1","native_first_actions":actions,
-            "model_change_recommended":False,"training_recommended":False,"source_sha256":hashes[0],"lyrics_sha256":hashes[1],
+            "model_change_recommended":False,"training_recommended":False,
+            "quality_evidence":quality_evidence,"custom_dynamics_default":False,
+            "artistic_winner":None,"source_sha256":hashes[0],"lyrics_sha256":hashes[1],
             "baseline_asr_sha256":hashes[2],"score_sha256":hashes[3] if abc is not None else None,
             "status":status,"provisional_output":chosen,"baseline":baseline,"findings":findings,
             "lyric_localization":localization,"score_rhythm":rhythm,
