@@ -67,3 +67,5 @@ Real native continuation and ASR with matching pending preview succeeded. See [o
 Alignment research: [pinned candidate audit and offline benchmark](ALIGNMENT_BACKEND.md) document the exact source revision, catalog/engine license discrepancy and HTK boundary metrics. No automatic model installation or verified phonetic correction. Real annotated benchmark pending.
 
 Alignment evaluation now includes bounded reference-excerpt preparation from preannotated PCM WAV, with explicit label units and source fingerprints. Public research corpus candidates avoid repeated operator listening; rights and train/test independence must be checked. Real model benchmark remains pending.
+
+Native LoRA capability discovered: [training and MMS alignment audit](NATIVE_LORA_TRAINING.md). Investigate native alignment output before external backend installation; training is a separate possible cross-song improvement path, not frozen-audio correction. No training or alignment inference validated.
