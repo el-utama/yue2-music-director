@@ -105,6 +105,9 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(result["findings"][0]["issue"],"lyric_disagreement")
         self.assertEqual(result["findings"][0]["execution"],"blocked_missing_verified_alignment")
         self.assertEqual(result["findings"][1]["issue"],"insufficient_headroom")
+        self.assertEqual(result["native_first_actions"][0]["action"],"use_existing_provisional_file")
+        self.assertEqual(result["native_first_actions"][1]["director_command"],"timing-evidence")
+        self.assertFalse(result["training_recommended"])
         self.assertFalse(result["lyric_localization"]["audio_timestamps_verified"])
         self.assertEqual(result["lyric_localization"]["lines"][0]["edits"],1)
         self.assertTrue((self.root/"director/selection.json").is_file())
@@ -114,6 +117,7 @@ class SelectionTests(unittest.TestCase):
         result=direct(self.source,self.lyrics,self.baseline,"en",self.root/"director",
                       custom=self.custom(0))
         self.assertEqual(result["next_action"],"retain_original_and_stop")
+        self.assertTrue(any(a["action"]=="consider_native_export_for_library_source" for a in result["native_first_actions"]))
         self.assertEqual(Path(result["provisional_output"]),self.source.resolve())
         self.assertEqual(result["recognition_calls"],0)
         self.assertFalse(result["automatic_acceptance"])
