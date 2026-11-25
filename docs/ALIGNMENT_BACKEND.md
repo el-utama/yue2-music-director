@@ -1,5 +1,7 @@
 # Optional singing alignment backend research
 
+**Research priority superseded:** see [native-first development audit](knowledge/DEVELOPMENT_AUDIT.md) and [community/evaluation research](knowledge/COMMUNITY_AND_EVALUATION.md). Native MMS/related HOT-Step timing and official evaluation are investigated before optional external alignment; no model approved for installation. Historical benchmark and reference tools remain research utilities.
+
 Decision: investigate local mVocalToolkit + HubertFA first; no mandatory dependency, no automatic installation, no new inference yet.
 
 Sources (reviewed 2026-11-25):
