@@ -1,5 +1,7 @@
 # Development and validation
 
+**Current policy (2026-11-25):** follow [native-first audit and gates](docs/knowledge/DEVELOPMENT_AUDIT.md), [Studio capabilities](docs/knowledge/STUDIO_CAPABILITIES.md), and [community prior art](docs/knowledge/COMMUNITY_AND_EVALUATION.md). No new implementation without an identified gap and acceptance criteria. All technical documentation in English; README also includes Indonesian overview. The foundation and historical milestones below are not an active implementation backlog.
+
 ## Current phase: post-alpha 8.post3 development (experimental)
 
 See [research handbook](docs/RESEARCH_HANDBOOK.md) for current architecture, module status and decisions, and [changelog](CHANGELOG.md) for history. The foundation table below describes earlier v0.6.1 components. Current additions are listed separately.
