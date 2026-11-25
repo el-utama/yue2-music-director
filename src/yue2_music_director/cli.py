@@ -33,6 +33,7 @@ from .fidelity_gate import diagnose as diagnose_fidelity
 from .human_selection import compare as compare_human
 from .mcp import MCPError,Client,configured_endpoint,unpack
 from .studio_profile import capture_profile
+from .audiobox_eval import evaluate as evaluate_audiobox
 
 
 def main(argv=None) -> int:
@@ -249,6 +250,12 @@ def main(argv=None) -> int:
     arx.add_argument('--last',type=int,required=True)
     arx.add_argument('--out',type=Path,required=True)
 
+    aes=sub.add_parser('audiobox-evaluate',help='Evaluate existing audio using optional official local AudioBox model')
+    aes.add_argument('audio',type=Path,nargs='+')
+    aes.add_argument('--weights',type=Path,required=True)
+    aes.add_argument('--out',type=Path,required=True)
+    aes.add_argument('--confirm-evaluation',action='store_true')
+
     prof=sub.add_parser('studio-profile',help='Capture private read-only installed Studio capability inventory')
     prof.add_argument('--out',type=Path,required=True)
     prof.add_argument('--url')
@@ -432,6 +439,8 @@ def main(argv=None) -> int:
             result=alignment_benchmark(args.audio,args.reference,args.candidate,args.out)
         elif args.command=='alignment-reference':
             result=prepare_alignment_reference(args.audio,args.annotation,args.unit,args.first,args.last,args.out)
+        elif args.command=='audiobox-evaluate':
+            result=evaluate_audiobox(args.audio,args.weights,args.out,confirm=args.confirm_evaluation)
         elif args.command=='studio-profile':
             result=capture_profile(args.out,args.url)
         elif args.command=='studio-check':
