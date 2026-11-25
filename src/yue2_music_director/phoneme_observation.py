@@ -1,6 +1,5 @@
 """Research-only, unforced phoneme recognition on bounded PCM excerpts."""
 import json
-import math
 import shutil
 import subprocess
 import wave
@@ -108,11 +107,14 @@ def observe(audio, weights, vocab, out, *, reference=None, confirm=False):
         inputs.append(reference)
     if len(set(inputs)) != len(inputs) or out.exists() or audio.suffix.lower() != ".wav":
         raise ValueError("Distinct inputs, PCM WAV and fresh output required")
-    if weights.suffix.lower() != ".onnx" or _sha(weights) != WEIGHTS_SHA:
-        raise ValueError("Expected pinned published quantized ONNX checkpoint")
-    seconds = pcm_duration(audio)
-    tokens = vocabulary(vocab)
     hashes = [_sha(p) for p in inputs]
+    if weights.suffix.lower() != ".onnx" or hashes[1] != WEIGHTS_SHA:
+        raise ValueError("Expected pinned published quantized ONNX checkpoint")
+    try:
+        seconds = pcm_duration(audio)
+    except (wave.Error, EOFError) as exc:
+        raise ValueError('Invalid PCM WAV') from exc
+    tokens = vocabulary(vocab)
     expected = None
     if reference is not None:
         if reference.stat().st_size > 256000:
@@ -124,7 +126,10 @@ def observe(audio, weights, vocab, out, *, reference=None, confirm=False):
         if any(p not in tokens.values() or p in ("<pad>","<s>","</s>","<unk>") for p in expected):
             raise ValueError("Reference labels must already match model inventory; no implicit mapping or silence removal")
     # Only audio enters the model. The optional reference is used after inference.
-    ids, version = infer(audio, weights, seconds)
+    try:
+        ids, version = infer(audio, weights, seconds)
+    except (RuntimeError, subprocess.SubprocessError) as exc:
+        raise ValueError(f'Local phoneme inference failed: {exc}') from exc
     rows = collapse_ctc(ids, tokens)
     predicted = [row["token"] for row in rows]
     if [_sha(p) for p in inputs] != hashes:
