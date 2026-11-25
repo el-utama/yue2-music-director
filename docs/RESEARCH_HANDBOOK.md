@@ -2,6 +2,10 @@
 
 Status: experimental alpha 8.post3, 2026-11-25. This handbook consolidates the accessible project record; not a verbatim archive of all conversations or older local prototypes.
 
+## Current authoritative roadmap
+
+The 2026-11-25 [native-first development audit](knowledge/DEVELOPMENT_AUDIT.md) supersedes the sequencing of earlier plans below. Review [Studio capabilities](knowledge/STUDIO_CAPABILITIES.md), [MCP inventory](knowledge/MCP_TOOL_INDEX.md) and [community/evaluation research](knowledge/COMMUNITY_AND_EVALUATION.md) before proposing new implementation. The installed runtime inventory is still pending. Historical experimental evidence remains valid within its original scope.
+
 ## Goal and scope
 
 Build a local-first music director that diagnoses score, lyric, performance and audio issues, chooses supported interventions, creates bounded candidates, evaluates evidence and keeps or rejects candidates without mandatory routine manual listening. Respect the user's intended melody, hook, arrangement, lyrics and style. Never claim that a text score or successful MIDI conversion proves natural performance. Human musical preference remains separate from automatic lyric screening. ASR is the default diagnostic for languages the operator may not speak; it is fallible and does not measure phonemes or verified sung errors.
