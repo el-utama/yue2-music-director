@@ -162,3 +162,7 @@ See [native LoRA training and MMS alignment audit](docs/NATIVE_LORA_TRAINING.md)
 See [local Studio configuration and compatibility](docs/LOCAL_STUDIO_CONFIGURATION.md) for the read-only `studio-profile` command. Original YuE2 weights are not mandatory; keep a compatible existing fine-tune and record effective settings.
 
 **Panduan konfigurasi lokal:** jangan mengganti model, VAE, LoRA atau pengaturan engine hanya untuk menyesuaikan agent. Gunakan inventaris read-only `studio-profile` sesuai [panduan konfigurasi](docs/LOCAL_STUDIO_CONFIGURATION.md), simpan hasil secara lokal, dan jangan unggah laporan mentah ke repository publik. Inventaris belum merupakan sertifikasi kompatibilitas.
+
+See [public LoRA research](docs/knowledge/LORA_RESEARCH.md) and the [39-entry native catalog index](docs/knowledge/LORA_CATALOG_INDEX.md). Stock YuE2-trained LoRA is not automatically compatible with RS-TW/FW; retain the selected model and require verified adapter provenance before activation.
+
+**Kompatibilitas LoRA:** model Ruach TW/FW bukan bobot YuE2 original. Jangan langsung menumpuk LoRA yang dilatih pada model original; periksa model dasar, decoder, companion, dan lisensi. Lihat riset di atas sebelum mengunduh atau melatih adapter baru.

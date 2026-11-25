@@ -49,3 +49,5 @@ Native Naturalize continuation succeeded on real audio: -0.60 dB fixed attenuati
 - Added read-only local Studio profile inventory, advertised schema fingerprints, private observations and partial/unknown states. No automatic model switches, inference, or compatibility authorization. Live validation pending.
 
 - Studio profile real local run: 339 advertised tools, 12/13 reads successful, zero operation counters. Fix LoRA inventory to request concise catalog and reject incomplete/truncated results. Live verification of the fix pending.
+
+- Public LoRA research: real concise inventory read succeeded; indexed all 39 public native catalog entries and examined external candidates, stock/RS base mismatch, KTO stage-specific evidence, prosody conditioning and license distinctions. No downloads, training, rendering or model changes. Compatibility gate remains pending.
