@@ -238,6 +238,7 @@ def timing_retained(repo,url):
     source=source_audio(song,hashes[0],url)
     out=selected/("timing-"+datetime.now().strftime("%Y%m%d-%H%M%S-%f")+".json")
     report=inspect_timing(source,song,lyrics,baseline,language,duration,out,url)
+    print("Metadata transport:",report["metadata_transport"])
     print("Timing evidence:",report["status"])
     print("Matched display lines:",len(report["lines"]))
     print("Enhanced word anchors:",sum(row["word_anchor_count"] for row in report["lines"]))
