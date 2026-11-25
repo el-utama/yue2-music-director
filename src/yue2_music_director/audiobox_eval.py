@@ -31,7 +31,7 @@ def _predictor(weights):
         from audiobox_aesthetics.infer import AesPredictor
         from audiobox_aesthetics.model.aes import AesMultiOutput, Normalize
     except ImportError as exc:
-        raise ValueError("Optional AudioBox environment missing; see docs/QUALITY_EVALUATION.md") from exc
+        raise ValueError(f"AudioBox import failed: {type(exc).__name__}: {exc}; see docs/QUALITY_EVALUATION.md") from exc
     version = importlib.metadata.version("audiobox-aesthetics")
     if version != "0.0.4":
         raise ValueError("Expected audited AudioBox 0.0.4 API")
