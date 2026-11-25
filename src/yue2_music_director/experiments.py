@@ -13,6 +13,7 @@ from .job_receipt import extract_song_job_id, AmbiguousJobReceipt
 from .music import parse_score, section_sequence
 from .prosody import parse_lyrics, alignment
 from .mcp import Client, configured_endpoint, unpack
+from .native_recognition import _busy_keys
 
 MAX_SOURCE = 512_000
 MAX_TEXT = 100_000
@@ -91,11 +92,11 @@ def prepare(original: Path,candidate: Path,lyrics: Path,style: Path,root: Path,s
     common={'music_source':{'kind':'local'},'title':title,
             'style':inputs['style']['text'].strip(),'lyrics':inputs['lyrics']['text'].strip(),
             'seed':seed,'lm_seed':seed,'lm_batch_size':1,'synth_batch_size':1,
-            'abc_continue':False,'lyric_timing':True}
+            'abc_continue':False,'lyric_timing':True,'adapters':[],'companion_scale':0}
     requests={arm:dict(common,abc=inputs[arm]['text']) for arm in 'AB'}
     paths={arm:root/f'{arm}_song_create.json' for arm in 'AB'}
     for arm in 'AB':_write(paths[arm],requests[arm])
-    manifest={'version':'0.6','status':'PREPARED_NO_JOBS','created_utc':_now(),
+    manifest={'version':'0.6','reference_policy':'stock-balanced-cuda-q8-v1','status':'PREPARED_NO_JOBS','created_utc':_now(),
               'sections':section_sequence(scores[0]),'seed':seed,
               'inputs':{k:{'path':v['path'],'sha256':v['sha256']} for k,v in inputs.items()},
               'requests':{arm:_sha(paths[arm].read_bytes()) for arm in 'AB'},
@@ -133,6 +134,52 @@ def _load_journal(root: Path,arm: str) -> dict:
     return json.loads((root/f'journal_{arm}.json').read_text(encoding='utf-8'))
 
 
+def reference_configuration(client, status, request, defaults, capabilities):
+    """Strict stock reference, not a claim of file-byte or waveform identity."""
+    if request.get("adapters") != [] or type(request.get("companion_scale")) not in (int,float) or request["companion_scale"] != 0:
+        raise ValueError("Reference request must explicitly disable adapters and companion")
+    if request.get("lm_batch_size") != 1 or request.get("synth_batch_size") != 1:
+        raise ValueError("Reference requires one composition and synthesis track")
+    if _busy_keys(status):
+        raise ValueError("Studio is not idle; do not discard existing work automatically")
+    if "own_model" not in status or status["own_model"] is not None:
+        raise ValueError("Stock backbone not confirmed; check own model selection")
+    models=unpack(client.call("models_status",{}))
+    options=unpack(client.call("engine_options_get",{}))
+    if not isinstance(models,dict) or not isinstance(options,dict):
+        raise ValueError("Unrecognized model or engine status")
+    if (models.get("ready") is not True or models.get("engine_ready") is not True
+            or models.get("selected_profile_id")!="balanced"
+            or "selected_component_ids" not in models or models["selected_component_ids"] not in (None,[])
+            or "active" not in models or models["active"] is not None
+            or models.get("preset") is not None):
+        raise ValueError("Expected ready stock Balanced profile, no custom components or active download")
+    installed=models.get("installed_components")
+    if not isinstance(installed,list) or not {"backbone-q6","vae-f32"} <= set(installed):
+        raise ValueError("Stock backbone and VAE installation not confirmed")
+    opts=options.get("options")
+    effective=options.get("in_effect")
+    cache=options.get("kv_cache_now")
+    if (not isinstance(opts,dict) or not isinstance(effective,dict) or not isinstance(cache,dict)
+            or opts.get("backend")!="cuda" or opts.get("kv_cache")!="q8"
+            or cache.get("q8") is not True or effective.get("flash_attention") is not True
+            or effective!=status.get("engine")
+            or opts.get("extra_args") not in (None,"",[])
+            or opts.get("engine_bin") not in (None,"")):
+        raise ValueError("Expected consistent CUDA/Q8 reference engine, flash attention and no custom executable/flags")
+    if not isinstance(defaults,dict) or not defaults or not isinstance(capabilities,dict) or not capabilities:
+        raise ValueError("Unrecognized generation defaults or capabilities")
+    # Only stable settings, not live free-memory estimates, process IDs, or jobs.
+    return {"profile":"balanced","own_model":None,"engine_id":models.get("engine_id"),
+            "backbone_component":"backbone-q6","vae_component":"vae-f32",
+            "options":opts,"effective":{"max_seq":effective.get("max_seq"),
+                "max_seq_reason":effective.get("max_seq_reason"),"flash_attention":True,
+                "nar_chunk_seconds":effective.get("nar_chunk_seconds"),"q8":True},
+            "defaults_sha":_sha(_canonical(defaults)),"capabilities_sha":_sha(_canonical(capabilities)),
+            "adapters":[],"companion_scale":0,
+            "actual_weight_bytes_verified":False}
+
+
 def submit(root: Path,arm: str,url: str | None,confirm_idle: bool,confirm_a_complete=False,
            client_factory=Client) -> dict:
     if arm not in ('A','B'): raise ValueError('Invalid arm')
@@ -151,27 +198,34 @@ def submit(root: Path,arm: str,url: str | None,confirm_idle: bool,confirm_a_comp
     client.connect()
     tool_index={item.get('name'):item for item in client.tools()}
     names=set(tool_index)
-    needed={'song_create','song_defaults','studio_status','studio_capabilities'}
+    needed={'song_create','song_defaults','studio_status','studio_capabilities',
+            'models_status','engine_options_get'}
     if not needed.issubset(names):
         raise ValueError('Missing Studio MCP tools: '+str(sorted(needed-names)))
     schema=tool_index['song_create'].get('inputSchema',{})
     properties=schema.get('properties',{})
     expected_fields={'music_source','style','lyrics','abc','abc_continue',
-                     'lyric_timing','seed','lm_seed','lm_batch_size','synth_batch_size'}
+                     'lyric_timing','seed','lm_seed','lm_batch_size','synth_batch_size','adapters','companion_scale'}
     if not expected_fields.issubset(properties):
         raise ValueError('Studio song_create schema missing expected fields')
     defaults=unpack(client.call('song_defaults',{}))
     capabilities=unpack(client.call('studio_capabilities',{}))
     status=unpack(client.call('studio_status',{}))
+    if manifest.get('reference_policy')!='stock-balanced-cuda-q8-v1':
+        raise ValueError('Legacy manifest: prepare a new reference experiment; do not replay old jobs')
+    reference=reference_configuration(client,status,request,defaults,capabilities)
+    reference_sha=_sha(_canonical(reference))
     dh=_sha(_canonical(defaults))
     ch=_sha(_canonical(capabilities))
     if arm=='B':
         journal_a=_load_journal(root,'A')
-        if journal_a.get('defaults_sha')!=dh or journal_a.get('capabilities_sha')!=ch:
+        if (journal_a.get('defaults_sha')!=dh or journal_a.get('capabilities_sha')!=ch
+                or journal_a.get('reference_configuration_sha')!=reference_sha):
             raise ValueError('Studio defaults or capabilities changed between A and B')
     journal={'arm':arm,'state':'SUBMISSION_ATTEMPTED','created_utc':_now(),
              'request_sha256':manifest['requests'][arm],
              'defaults_sha':dh,'capabilities_sha':ch,
+             'reference_configuration_sha':reference_sha,'reference_configuration':reference,
              'status_sha':_sha(_canonical(status)),
              'warning':'Do not rerun submit on timeout or unknown outcome'}
     # Creation must fail if another process created the journal. O_EXCL prevents
