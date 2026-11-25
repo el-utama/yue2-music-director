@@ -50,3 +50,7 @@ No verified public universal pronunciation-fixing LoRA was established by this s
 ## Updated adapter research
 
 See [public LoRA research and compatibility policy](LORA_RESEARCH.md) and [native catalog cross-reference](LORA_CATALOG_INDEX.md) for primary author evidence, including the explicit RS-FW/TW base mismatch warning, KTO instrumental evidence and its stage-specific runtime caveat, prosody conditioning, and official individual-creator output permission. These findings supersede any generic recommendation to use stock-trained adapters with community fine-tunes.
+
+## Evaluator implementation audit
+
+See [Quality Evaluation](../QUALITY_EVALUATION.md) for actual public SongEval, SongBench and AudioBox APIs and licensing. AudioBox is the first production-compatible candidate subject to exact terms and real validation; SongBench is explicitly academic-only, MuQ weights noncommercial. Do not confuse independent implementation outputs with the official YuE2 benchmark protocol.
