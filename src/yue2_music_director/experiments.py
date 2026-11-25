@@ -190,6 +190,25 @@ def confirm_stock_backbone(client,status,models=None):
     return "summary_and_native" if summary_present else "native_selection"
 
 
+def model_download_idle(models):
+    # Studio persists the most recent download receipt even after it ends.
+    if "active" not in models:
+        return False
+    active=models["active"]
+    return active is None or (isinstance(active,dict) and active.get("status") in ("completed","cancelled","failed"))
+
+
+def stock_profile_checks(models):
+    installed=models.get("installed_components")
+    return {"ready":models.get("ready") is True,
+            "balanced":models.get("selected_profile_id")=="balanced",
+            "stock_components":"selected_component_ids" in models and models["selected_component_ids"] in (None,[]),
+            "backbone_q6":isinstance(installed,list) and "backbone-q6" in installed,
+            "vae_f32":isinstance(installed,list) and "vae-f32" in installed,
+            "no_download":model_download_idle(models),
+            "no_preset":"preset" in models and models["preset"] is None}
+
+
 def reference_configuration(client, status, request, defaults, capabilities):
     """Strict stock reference, not a claim of file-byte or waveform identity."""
     if request.get("adapters") != [] or type(request.get("companion_scale")) not in (int,float) or request["companion_scale"] != 0:
@@ -217,15 +236,10 @@ def reference_configuration(client, status, request, defaults, capabilities):
     confirm_stock_backbone(client,status,models)
     if models.get("selection_matches_engine") is False:
         raise ValueError("Running engine does not match selected model files")
-    if (models.get("ready") is not True or models.get("engine_ready") is not True
-            or models.get("selected_profile_id")!="balanced"
-            or "selected_component_ids" not in models or models["selected_component_ids"] not in (None,[])
-            or "active" not in models or models["active"] is not None
-            or "preset" not in models or models["preset"] is not None):
-        raise ValueError("Stock profile check failed: "+", ".join(k for k,ok in {"ready":models.get("ready") is True,"engine_ready":models.get("engine_ready") is True,"balanced":models.get("selected_profile_id")=="balanced","stock_components":"selected_component_ids" in models and models["selected_component_ids"] in (None,[]),"no_download":"active" in models and models["active"] is None,"no_preset":"preset" in models and models["preset"] is None}.items() if not ok))
-    installed=models.get("installed_components")
-    if not isinstance(installed,list) or not {"backbone-q6","vae-f32"} <= set(installed):
-        raise ValueError("Stock backbone and VAE installation not confirmed")
+    checks=stock_profile_checks(models)
+    checks["engine_ready"]=models.get("engine_ready") is True
+    if not all(checks.values()):
+        raise ValueError("Stock profile check failed: "+", ".join(k for k,ok in checks.items() if not ok))
     opts=options.get("options")
     effective=options.get("in_effect")
     cache=options.get("kv_cache_now")

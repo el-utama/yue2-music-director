@@ -11,7 +11,8 @@ class StockSelectionTests(unittest.TestCase):
         self.status={**dict.fromkeys(BUSY_KEYS),"own_model":self.override}
         self.models={"selected_profile_id":"balanced","selected_component_ids":None,
                      "installed_components":["backbone-q6","vae-f32"],"active":None,
-                     "own_model":self.override,"engine_ready":True,"selection_matches_engine":True}
+                     "own_model":self.override,"engine_ready":True,"selection_matches_engine":True,
+                     "ready":True,"preset":None}
         self.own={"selected":self.override,"missing":False,"download":None}
         self.stock={**self.models,"own_model":None}
         self.stock_own={**self.own,"selected":None}
@@ -33,6 +34,21 @@ class StockSelectionTests(unittest.TestCase):
         with patch("yue2_music_director.stock_selection.read_own_model",side_effect=[self.own,self.stock_own,self.stock_own]):
             select_stock(self.client,self.tools,max_waits=2,sleep=lambda _:None)
         self.assertEqual(sum(c.args[0]=="models_own_select" for c in self.client.call.call_args_list),1)
+
+    def test_completed_download_receipt_is_not_active_work(self):
+        self.models["active"]={"status":"completed"}
+        self.replies(iter([self.models,self.stock]))
+        with patch("yue2_music_director.stock_selection.read_own_model",side_effect=[self.own,self.stock_own]):
+            select_stock(self.client,self.tools,max_waits=0)
+        self.assertEqual(sum(c.args[0]=="models_own_select" for c in self.client.call.call_args_list),1)
+
+    def test_downloading_blocks_before_model_write(self):
+        self.models["active"]={"status":"downloading"}
+        self.replies(iter([self.models]))
+        with patch("yue2_music_director.stock_selection.read_own_model",return_value=self.own):
+            with self.assertRaisesRegex(ValueError,"no_download"):
+                select_stock(self.client,self.tools)
+        self.assertFalse(any(c.args[0]=="models_own_select" for c in self.client.call.call_args_list))
 
     def test_conflict_blocks_before_write(self):
         self.replies(iter([self.models]))

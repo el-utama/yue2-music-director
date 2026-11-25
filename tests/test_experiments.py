@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 from email.message import Message
 from pathlib import Path
-from yue2_music_director.experiments import prepare, submit, reconcile, status, confirm_stock_backbone
+from yue2_music_director.experiments import prepare, submit, reconcile, status, confirm_stock_backbone, model_download_idle
 
 ABC='X:1\nT:test\nM:2/4\nL:1/16\nK:Bb\n% verse\nV: Vocal\n"Bb"z2B,F2F2F-|"Bb"F2DD3CC-|"Eb"CB,z6|"Eb"z8|\nV: Ins\nZ4|\n'
 LYRICS='[Verse 1]\nYou left me waiting\n'
@@ -168,6 +168,14 @@ class ExperimentsTests(unittest.TestCase):
         client=FakeClient("http://127.0.0.1:8791/mcp")
         with self.assertRaisesRegex(ValueError,"Models status conflicts"):
             confirm_stock_backbone(client,{"own_model":None},{"own_model":"custom.gguf"})
+
+
+    def test_model_download_terminal_states(self):
+        for state in ("completed","cancelled","failed"):
+            self.assertTrue(model_download_idle({"active":{"status":state}}))
+        self.assertTrue(model_download_idle({"active":None}))
+        for value in ({},{"active":{"status":"downloading"}},{"active":{"status":"unknown"}},{"active":{}}):
+            self.assertFalse(model_download_idle(value))
 
 
 if __name__=='__main__':
