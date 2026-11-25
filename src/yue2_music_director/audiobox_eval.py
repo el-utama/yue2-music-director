@@ -50,7 +50,7 @@ def _predictor(weights):
                        "torchaudio":torchaudio.__version__}
 
 
-def evaluate(audio, weights, out, *, confirm=False):
+def evaluate(audio, weights, out, *, confirm=False, progress=None):
     if not confirm:
         raise ValueError("Explicit --confirm-evaluation required (local CPU inference)")
     paths = [Path(p).resolve(strict=True) for p in audio]
@@ -85,17 +85,21 @@ def evaluate(audio, weights, out, *, confirm=False):
             raise ValueError("Audio outside bounded evaluation format/duration")
         durations.append(duration)
     hashes = [_sha(p) for p in paths]
+    if progress:
+        progress('Loading verified AudioBox model on CPU')
     try:
         predictor, versions = _predictor(weights)
     except (RuntimeError, OSError) as exc:
-        raise ValueError("Local AudioBox checkpoint/runtime could not be loaded") from exc
+        raise ValueError(f"Local AudioBox checkpoint/runtime could not be loaded: {exc}") from exc
     rows = []
     for p, digest, seconds in zip(paths, hashes, durations):
+        if progress:
+            progress(f'Evaluating audio {len(rows)+1}/{len(paths)}')
         # One song per forward; upstream uses weighted 10 s mono windows.
         try:
             scores = predictor.forward([{"path":str(p)}])
         except (RuntimeError, OSError) as exc:
-            raise ValueError("Local AudioBox inference failed; no score recorded") from exc
+            raise ValueError(f"Local AudioBox inference failed: {exc}; no score recorded") from exc
         if not isinstance(scores,list) or len(scores)!=1 or not isinstance(scores[0],dict) or set(scores[0])!=set(AXES):
             raise ValueError("Unexpected evaluator output")
         if any(type(v) not in (int,float) or not math.isfinite(v) for v in scores[0].values()):
