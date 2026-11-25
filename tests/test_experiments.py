@@ -155,5 +155,20 @@ class ExperimentsTests(unittest.TestCase):
             confirm_stock_backbone(FakeClient("http://example.com/mcp"),{})
 
 
+    def test_nonnull_summary_still_reads_native_selection(self):
+        client=FakeClient("http://127.0.0.1:8791/mcp")
+        with self.assertRaisesRegex(ValueError,"conflicts with native null"):
+            confirm_stock_backbone(client,{"own_model":"custom.gguf"})
+        self.opener.return_value.open.assert_called_once()
+        self.response.read.return_value=b'{"selected":"custom.gguf","missing":false,"download":null}'
+        with self.assertRaisesRegex(ValueError,"Native endpoint reports"):
+            confirm_stock_backbone(client,{"own_model":"custom.gguf"})
+
+    def test_models_status_conflict_is_not_ignored(self):
+        client=FakeClient("http://127.0.0.1:8791/mcp")
+        with self.assertRaisesRegex(ValueError,"Models status conflicts"):
+            confirm_stock_backbone(client,{"own_model":None},{"own_model":"custom.gguf"})
+
+
 if __name__=='__main__':
     unittest.main()
