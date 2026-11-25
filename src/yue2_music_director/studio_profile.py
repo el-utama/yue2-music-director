@@ -51,13 +51,13 @@ def capture_profile(out, url=None):
             # Do not retry, silently switch provider, or adapt to an unknown schema.
             data = unpack(client.call(name, args))
             if not isinstance(data, (dict, list)) or (isinstance(data, dict) and
-                    ("content" in data or "structuredContent" in data or "error" in data)):
+                    ("content" in data or "structuredContent" in data or data.get("error") is not None)):
                 raise ValueError("Unrecognized native result")
             observations[name] = data
         except (MCPError, OSError, ValueError, TypeError, KeyError) as exc:
             errors[name] = type(exc).__name__
-    if "studio_status" not in observations:
-        raise ValueError("Studio status unavailable; inventory aborted")
+            if name == "studio_status":
+                raise ValueError("Studio status unavailable; inventory aborted") from exc
     schema_hash = hashlib.sha256(json.dumps(schemas, sort_keys=True, ensure_ascii=False,
         separators=(",", ":"), allow_nan=False).encode("utf-8")).hexdigest()
     summary = {
