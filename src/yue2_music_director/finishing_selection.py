@@ -80,29 +80,51 @@ def select(source, lyrics, baseline_asr, language, out, *, custom=None, native=N
                 parent=read(d/"report.json")
                 submission=read(d/"submission.json")
                 identity=read(d/"run_identity.json")
-                c=d/"headroom-continuation"
-                report=read(c/"report.json")
-                plan=read(c/"plan.json")
-                target=c/"candidate.flac"
-                digest=_sha(target)
-                raw_digest=_sha(d/"preview.flac")
+                raw=d/"preview.flac"
+                raw_digest=_sha(raw)
                 expected={"language":language,"lyrics_sha256":lh,"baseline_asr_sha256":bh}
                 if (submission["state"]!="SUBMITTING" or submission["source_sha256"]!=sh
-                        or submission["screening"]!=expected or plan["screening"]!=expected
-                        or parent["source_sha256"]!=sh or plan["source_sha256"]!=sh
-                        or parent["preview_sha256"]!=raw_digest or plan["raw_preview_sha256"]!=raw_digest
-                        or parent["run_id"]!=plan["run_id"] or identity["run_id"]!=plan["run_id"]
-                        or parent["request"]!=submission["request"] or identity["request"]!=submission["request"]
-                        or parent["status"]!="preview_acoustic_blocked"):
+                        or submission["screening"]!=expected or parent["source_sha256"]!=sh
+                        or parent["preview_sha256"]!=raw_digest
+                        or parent["run_id"]!=identity["run_id"]
+                        or parent["request"]!=submission["request"] or identity["request"]!=submission["request"]):
                     raise ValueError("Native transaction fingerprints do not match")
-                before=report["before"]
-                metrics(before,sh,raw_digest)
-                gain=gain_plan(before)
-                acoustic=report["after"]
-                metrics(acoustic,sh,digest)
-                if plan["gain_db"]!=gain or report["gain_db"]!=gain or not corrected_pass(before,acoustic,gain):
-                    raise ValueError("Native gain correction guard failed")
-                recognition=c/"recognition"
+                metrics(parent["acoustic"],sh,raw_digest)
+                if parent["status"]=="preview_acoustic_pass":
+                    if (d/"headroom-continuation").exists():
+                        raise ValueError("Conflicting native continuation evidence")
+                    row["method"]="native_direct_preview"
+                    report=read(d/"evaluation.json")
+                    if report["processing_run_id"]!=parent["run_id"]:
+                        raise ValueError("Native evaluation run differs")
+                    target=raw
+                    digest=raw_digest
+                    acoustic=parent["acoustic"]
+                    a,b=metrics(acoustic,sh,digest)
+                    if (a["duration_seconds"]!=b["duration_seconds"]
+                            or abs(a["integrated_lufs"]-b["integrated_lufs"])>1
+                            or b["true_peak_dbtp"]>-1):
+                        raise ValueError("Direct preview acoustic guard failed")
+                    recognition=d/"recognition"
+                elif parent["status"]=="preview_acoustic_blocked":
+                    c=d/"headroom-continuation"
+                    report=read(c/"report.json")
+                    plan=read(c/"plan.json")
+                    target=c/"candidate.flac"
+                    digest=_sha(target)
+                    if (plan["screening"]!=expected or plan["source_sha256"]!=sh
+                            or plan["raw_preview_sha256"]!=raw_digest or parent["run_id"]!=plan["run_id"]):
+                        raise ValueError("Native continuation fingerprints do not match")
+                    before=report["before"]
+                    metrics(before,sh,raw_digest)
+                    gain=gain_plan(before)
+                    acoustic=report["after"]
+                    metrics(acoustic,sh,digest)
+                    if plan["gain_db"]!=gain or report["gain_db"]!=gain or not corrected_pass(before,acoustic,gain):
+                        raise ValueError("Native gain correction guard failed")
+                    recognition=c/"recognition"
+                else:
+                    raise ValueError("Unsupported native preview status")
             a,b=metrics(acoustic,sh,digest)
             if report["status"] not in ("candidate_nonregression_unverified","retain_original_asr_regression") or report["recognition_calls"]!=1:
                 raise ValueError("Missing completed screening")
@@ -112,13 +134,15 @@ def select(source, lyrics, baseline_asr, language, out, *, custom=None, native=N
             row.update({"path":str(target),"sha256":digest,"lyric_screen":screen,
                         "true_peak_dbtp":b["true_peak_dbtp"],"integrated_lufs":b["integrated_lufs"],
                         "headroom_pass":b["true_peak_dbtp"]<=-1.0})
-            if screen["status"]=="regression" or report["status"]!="candidate_nonregression_unverified":
+            if (report["status"]=="retain_original_asr_regression")!=(screen["status"]=="regression"):
+                raise ValueError("Recorded screening decision contradicts recomputed evidence")
+            if screen["status"]=="regression":
                 row["reason"]="asr_regression"
             elif not row["headroom_pass"]:
                 row["reason"]="insufficient_headroom"
             else:
                 row["eligible"]=True
-        except (ValueError,OSError,KeyError,TypeError) as exc:
+        except (ValueError,OSError,KeyError,TypeError,OverflowError) as exc:
             row["reason"]="evidence_invalid"
             row["detail"]=str(exc)
         rows.append(row)
