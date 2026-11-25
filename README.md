@@ -170,3 +170,5 @@ See [public LoRA research](docs/knowledge/LORA_RESEARCH.md) and the [39-entry na
 For the 8 GB CUDA tier, the recommended development reference is stock YuE2 Balanced Q6_K with stock VAE, no optional LoRA, and explicit companion off. See [configuration guide](docs/LOCAL_STUDIO_CONFIGURATION.md). This is a controlled reference, not a quality ranking. Native training's documented minimum is 11 GB VRAM.
 
 **Baseline pengembangan 8 GB:** YuE2 original Balanced Q6_K, VAE original, LoRA tambahan nonaktif dan companion off. Fine-tune dan LoRA hanyalah pilihan untuk kebutuhan spesifik, bukan kewajiban. Jangan menghapus file model atau menjalankan training untuk menyiapkan baseline.
+
+Optional independent audio evaluation: see [Quality Evaluation](docs/QUALITY_EVALUATION.md) for the official AudioBox model integration, local checkpoint requirement and research-only alternatives. No required new dependencies or automatic model downloads.
