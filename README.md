@@ -131,3 +131,5 @@ See [temporal evidence](docs/TEMPORAL_EVIDENCE.md) for read-only inspection of e
 See [optional singing alignment backend research](docs/ALIGNMENT_BACKEND.md) for the discovery-only command and model validation gates.
 
 The optional `alignment-benchmark` command evaluates existing HTK phoneme labels against independent reference annotations without inference; see [alignment research and benchmark](docs/ALIGNMENT_BACKEND.md).
+
+Use `alignment-reference` to prepare a short excerpt from independently annotated PCM WAV for the offline benchmark. See [reference data and limits](docs/ALIGNMENT_BACKEND.md); no dataset or model is downloaded automatically.
