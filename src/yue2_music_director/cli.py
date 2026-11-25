@@ -19,6 +19,7 @@ from .director import direct
 from .temporal_evidence import inspect_timing
 from .alignment_backend import preflight as alignment_preflight
 from .alignment_benchmark import benchmark as alignment_benchmark
+from .alignment_reference import prepare as prepare_alignment_reference
 from .multilingual_fidelity import assess as assess_multilingual
 from .midi_events import compare_files,MIDIEventError
 from .pipeline import run as run_pipeline
@@ -239,6 +240,14 @@ def main(argv=None) -> int:
     abm.add_argument('--candidate',type=Path,required=True)
     abm.add_argument('--out',type=Path,required=True)
 
+    arx=sub.add_parser('alignment-reference',help='Prepare a bounded independently annotated singing excerpt')
+    arx.add_argument('--audio',type=Path,required=True)
+    arx.add_argument('--annotation',type=Path,required=True)
+    arx.add_argument('--unit',choices=['htk','seconds'],required=True)
+    arx.add_argument('--first',type=int,required=True)
+    arx.add_argument('--last',type=int,required=True)
+    arx.add_argument('--out',type=Path,required=True)
+
     ping=sub.add_parser('studio-check',help='Read-only local Studio status')
     ping.add_argument('--url')
     args=parser.parse_args(argv)
@@ -416,6 +425,8 @@ def main(argv=None) -> int:
             result=alignment_preflight(args.language,args.out,args.url)
         elif args.command=='alignment-benchmark':
             result=alignment_benchmark(args.audio,args.reference,args.candidate,args.out)
+        elif args.command=='alignment-reference':
+            result=prepare_alignment_reference(args.audio,args.annotation,args.unit,args.first,args.last,args.out)
         elif args.command=='studio-check':
             client=Client(configured_endpoint(args.url)).connect()
             names={x.get('name') for x in client.tools()}
