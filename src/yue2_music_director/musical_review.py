@@ -85,14 +85,7 @@ def _bar_signature(score, bar):
     return tuple((e.offset,e.duration,e.pitch,e.tied) for e in events if e.kind == "note")
 
 
-def review_score(abc, lyrics, *, constraints=None, max_seconds=None):
-    """Versioned local policy, independent of historical inspect_plan.
-
-    constraints is a mapping key/tempo_bpm/section_order/sung_sections to
-    {"mode": "must"|"prefer"|"free", "value": ...}. Section values are
-    normalized occurrence IDs (e.g. chorus#2), not claims about sung words.
-    max_seconds is a hard score-clock limit, not an audio length prediction.
-    """
+def validate_constraints(constraints=None, max_seconds=None):
     constraints = {} if constraints is None else constraints
     if not isinstance(constraints,dict) or not set(constraints) <= {
             "key","tempo_bpm","section_order","sung_sections"}:
@@ -109,12 +102,26 @@ def review_score(abc, lyrics, *, constraints=None, max_seconds=None):
                 raise ValueError("Invalid tempo constraint")
         elif name=="key":
             from .music import key_signature
+            if not isinstance(v,str):
+                raise ValueError("Invalid key constraint")
             key_signature(v,native=True)
         elif not isinstance(v,list) or not all(isinstance(x,str) and x for x in v):
             raise ValueError("Expected section occurrence list")
     if max_seconds is not None and (type(max_seconds) not in (int,float)
             or not math.isfinite(max_seconds) or max_seconds<=0):
         raise ValueError("Invalid absolute score-clock limit")
+    return constraints
+
+
+def review_score(abc, lyrics, *, constraints=None, max_seconds=None):
+    """Versioned local policy, independent of historical inspect_plan.
+
+    constraints is a mapping key/tempo_bpm/section_order/sung_sections to
+    {"mode": "must"|"prefer"|"free", "value": ...}. Section values are
+    normalized occurrence IDs (e.g. chorus#2), not claims about sung words.
+    max_seconds is a hard score-clock limit, not an audio length prediction.
+    """
+    constraints = validate_constraints(constraints, max_seconds)
     expected = _sections(lyrics)
     hard, soft, unknown = [], [], []
     report = {
