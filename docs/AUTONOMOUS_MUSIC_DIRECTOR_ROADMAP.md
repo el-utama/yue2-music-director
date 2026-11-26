@@ -55,3 +55,7 @@ PR #84 live recovery completed without new synthesis/ASR; duration 184.358667 s,
 ### Optional release artwork (P0 adjunct, not a music acceptance blocker)
 
 Add an independent Cover Art Specialist for single or ordered album projects, using existing text provider with a separate visual-direction contract and durable receipts. Export a square artwork prompt for Google Flow and editable typography direction. No Flow credentials or image generation by default; optional audited adapters later. See [cover art](COVER_ART.md). Audio finishing, knowledge bases and Artist Memory remain separate priorities.
+
+### Release Export Specialist
+
+Independent deterministic export of completed single/album/EP jobs, original lossless audio, plain lyrics and existing native timed lyric display anchors as LRC/SRT. No fabricated timings, no new inference, no publishing; missing timing yields explicit partial export. See [release export](RELEASE_EXPORT.md). Finishing and artwork attachment are future independently verified variants.
