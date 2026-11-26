@@ -84,25 +84,48 @@ def codes(value):
 def prepare_replay(song,brief):
     replay=song.get("replay_request")
     settings=song.get("generation_settings")
-    if not isinstance(replay,dict) or not isinstance(settings,dict) or replay.get("cot")!="full":
-        raise ValueError("Expected full-score native replay")
-    if (replay.get("backing_song_id") or replay.get("adapters") not in (None,[])
-            or replay.get("companion_scale") not in (None,0) or replay.get("seed")!=brief["seed"]
-            or replay.get("lm_seed")!=brief["seed"]):
-        raise ValueError("Replay configuration differs from retained reference")
+    if not isinstance(replay,dict) or not isinstance(settings,dict):
+        raise ValueError("Native replay or generation settings unavailable")
+    # Studio import_tracks documents sparse engine replay and merges it
+    # over the submitted generation settings. Reconstruct only known inputs,
+    # never forward bookkeeping fields such as own_model or kv_cache.
+    print("Stored CoT: generation="+repr(settings.get("cot"))+", replay="+repr(replay.get("cot")),flush=True)
+    effective=dict(replay)
+    for key in ("cot","style","lyrics","abc","seed","lm_seed","companion_scale",
+                "cfg_scale","steps","solver","duration","adapters"):
+        if key not in effective and key in settings:
+            effective[key]=settings[key]
+    # A stored full-score request may have no explicit CoT in sparse replay.
+    # Require the actual stored generation/replay mode, not a guessed default.
+    if effective.get("cot")!="full":
+        raise ValueError("Expected full-score generation; effective CoT="+repr(effective.get("cot")))
+    for source in (settings,effective):
+        if (source.get("backing_song_id") or source.get("vocals_only") is True
+                or source.get("instrumental_only") is True or source.get("own_model")
+                or source.get("adapters") not in (None,[])
+                or source.get("companion_scale") not in (None,0)):
+            raise ValueError("Stored generation or replay is not the verified stock mix")
+    for key in ("seed","lm_seed"):
+        if type(effective.get(key)) is not int or effective[key]!=brief["seed"]:
+            raise ValueError("Replay seed mismatch: "+key+"="+repr(effective.get(key)))
+        if key in settings and settings[key]!=effective[key]:
+            raise ValueError("Generation/replay seed mismatch: "+key)
     abc=settings.get("abc")
-    if not isinstance(abc,str) or not isinstance(replay.get("abc"),str) or abc.strip()!=replay["abc"].strip():
+    if not isinstance(abc,str) or not isinstance(effective.get("abc"),str) or abc.strip()!=effective["abc"].strip():
         raise ValueError("Saved score and replay score disagree")
+    replay=effective
     groups=parse_lyrics(brief["lyrics"])
     outro=groups[-1]
     if outro["name"]!="outro" or len(outro["lines"])!=2:
         raise ValueError("This melody template requires two final lyric lines")
     if replay.get("lyrics","").strip()!=brief["lyrics"].strip():
         raise ValueError("Replay lyrics differ from brief")
+    print("Stored score headers:",", ".join(line.strip() for line in abc.splitlines() if line.startswith(("M:","L:","Q:","K:")))[:400],flush=True)
     fixed,start,end=patch_outro(abc)
     original=codes(replay.get("semantic_tokens"))
     # Native source documents 25 semantic frames/s. Score clock is not
     # an acoustic boundary; allow only a close whole-duration match.
+    print("Score end:",round(end,3),"seconds; semantic duration:",round(len(original)/25,3),"seconds",flush=True)
     if abs(len(original)/25-end)>3:
         raise ValueError("Score and semantic stream durations differ by more than three seconds")
     cut=math.floor(start*25)
