@@ -1,9 +1,15 @@
 # Changelog and research milestones
 
+## Unreleased — generation-first architecture (documentation only)
+
+- Establish [architecture and phased implementation roadmap](docs/MUSIC_DIRECTOR_ARCHITECTURE.md): native composition by default, separate mandatory constraints from artistic preferences and unknowns, selective justified score guidance, independent technical/lyric/artistic evidence, bounded journaled recovery.
+- Record completed explicit-score generation and ASR recovery, musical rejection, and preferred stock reference. These are feasibility and preference evidence, not a controlled proof of superior naturalness.
+- P1 offline score evidence and versioned review policy is next; no new inference, runtime feature, private reference asset or dependency included.
+
 ## Unreleased — director-authored first song
 
 - Opt-in research composition and explicit-score draft path; reuse existing journal, reference preflight and recognition, verify native score compatibility and saved conditioning.
-- One full generation maximum, no model change or repair. Musical naturalness and live runtime remain unverified.
+- One full generation maximum, no model change or repair. Live synthesis and resumed ASR verified on one song; musical result rejected, naturalness improvement unverified.
 
 ## Unreleased — generation control study
 
