@@ -106,3 +106,22 @@ class ProviderTransportTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"429"):
                 p.complete("composer","JSON only",{})
             self.assertEqual(opener.return_value.open.call_count,1)
+
+class AuthDiagnosticsTests(unittest.TestCase):
+    def test_configuration_source_no_secrets(self):
+        from yue2_music_director.creative_provider import configuration_source
+        with patch.dict(os.environ,{},clear=True):
+            self.assertEqual(configuration_source(),"local Windows configuration")
+        with patch.dict(os.environ,{"MUSIC_LLM_KEY":"secret"},clear=True):
+            self.assertEqual(configuration_source(),"environment")
+
+    def test_auth_errors_preserve_status_without_body(self):
+        p=TextProvider(ps.PRESETS["1"],"fixture-secret",{r:"fixture" for r in ROLES})
+        for code,word in ((401,"authentication rejected"),(403,"access forbidden")):
+            with patch("urllib.request.build_opener") as opener:
+                opener.return_value.open.side_effect=urllib.error.HTTPError(p.url,code,"fixture-secret",{},None)
+                with self.assertRaisesRegex(ValueError,word) as caught:
+                    p.complete("composer","JSON only",{})
+                self.assertIn(str(code),str(caught.exception))
+                self.assertNotIn("fixture-secret",str(caught.exception))
+                self.assertEqual(opener.return_value.open.call_count,1)

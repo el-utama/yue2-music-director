@@ -6,6 +6,11 @@ import urllib.request
 from urllib.parse import urlsplit
 
 ROLES = ("composer", "lyricist", "reviewer", "director")
+ENV_NAMES = ("MUSIC_LLM_URL", "MUSIC_LLM_KEY", "MUSIC_LLM_MODEL", *("MUSIC_LLM_"+r.upper()+"_MODEL" for r in ROLES))
+
+
+def configuration_source():
+    return "environment" if any(name in os.environ for name in ENV_NAMES) else "local Windows configuration"
 
 
 def strict_json(text):
@@ -47,8 +52,7 @@ class TextProvider:
 
     @classmethod
     def for_repo(cls, repo):
-        names=("MUSIC_LLM_URL","MUSIC_LLM_KEY","MUSIC_LLM_MODEL",*("MUSIC_LLM_"+r.upper()+"_MODEL" for r in ROLES))
-        if any(name in os.environ for name in names):
+        if configuration_source()=="environment":
             # Never mix credentials from different configuration sources.
             return cls.from_env()
         from .provider_setup import load
@@ -80,6 +84,10 @@ class TextProvider:
                 text=text[len("```json\n"):-len("\n```")]
             return strict_json(text)
         except urllib.error.HTTPError as exc:
-            raise ValueError("Provider HTTP status "+str(exc.code)) from None
+            advice={401:"authentication rejected; verify the key belongs to this provider, is complete and not expired or revoked",
+                    403:"access forbidden; check key permissions, account and model access",
+                    429:"rate limit or quota; do not switch to a paid model automatically"}
+            raise ValueError("Provider HTTP status "+str(exc.code)+
+                             ("; "+advice[exc.code] if exc.code in advice else "")) from None
         except (OSError,ValueError,KeyError,IndexError,TypeError):
             raise ValueError("Provider connection or completion failed; inspect configured provider") from None
