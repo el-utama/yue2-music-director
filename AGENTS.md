@@ -1,0 +1,9 @@
+# Repository agent instructions
+
+Read [the active autonomous product roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md) first. The [generation-first architecture](docs/MUSIC_DIRECTOR_ARCHITECTURE.md) defines native execution, evidence and recovery rules. Existing historical experiment gates remain in force.
+
+- Prioritize the P0 natural-language-to-song autonomous CLI on the Windows Studio host; Composer, Lyricist and configurable Nemotron provider are critical path. Do not require web UI, thousands of songs, Artist Memory or additional experiments for P0.
+- Inspect actual source and native capabilities before implementing. Preserve prior evidence and local journals; never retry ambiguous external mutations or repeat completed inference. Keep Studio loopback and GPU jobs sequential. No model download, training, settings changes, new generation outside explicit budget, or publication without authorization.
+- All private audio, unpublished lyrics, personal artist profiles, credentials, and local logs stay local and Git-ignored. Only use rights-compatible reference data; no detector evasion.
+- Test offline with mock providers and failure injection; executable changes require green Windows/Linux CI before merge. Distinguish CI success from live execution and artistic quality. Use one short Windows launcher and a concise TXT report; operator is on another device.
+- Keep technical documentation in English, current roadmap and evidence status accurate. Do not claim a role/service or dataset is built when it is only designed.

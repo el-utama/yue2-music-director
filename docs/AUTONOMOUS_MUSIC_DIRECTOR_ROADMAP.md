@@ -1,0 +1,48 @@
+# Autonomous Music Director — active product roadmap
+
+Decision: 2026-11-26. This is the active product-level roadmap, superseding the sequencing of the earlier generation-first research phases, not their safety contracts. The [generation-first architecture](MUSIC_DIRECTOR_ARCHITECTURE.md) remains the native execution and evidence reference. Freeze this direction until an explicit product decision or demonstrated blocker justifies a change.
+
+## Goal and deployment
+
+One natural-language instruction produces one original, listenable song and a traceable artistic report without repeated operator commands. The operator uses multiple PCs, principally a MacBook via Tailscale and MCP. Run the autonomous orchestration on the Windows host where YuE2 Studio is installed (i7-14700F, RTX 5060 8 GB, 32 GB RAM); keep Studio calls loopback-only, sequential GPU work, CPU MOSS, local Whisper, local files and durable job state. No new large local LLM or duplicate model downloads. Browser/MCP clients are later interfaces to this same backend, not required for first operation. A client disconnect must not cancel a submitted durable job. No public exposure; later private Tailscale HTTPS, authenticated application/MCP, access control and origin validation. Windows host, Studio and required provider connectivity must remain available.
+
+Use a configurable text LLM provider, with the operator's free Nemotron service as the preferred starting point. Do not assume its exact API endpoint, authentication, model ID, quotas or support for structured output until verified. Use a provider interface, role-specific model configuration and bounded calls, not multiple large local models. Explicitly configure authorized external text transfer; credentials and unpublished work stay out of Git. No raw audio sent externally. No claim of background execution in ChatGPT; autonomy belongs to the installed Windows service/runner.
+
+## Current evidence (not release claims)
+
+- Direct-native synthesis, acoustic measurement, one explicit local ASR and two neutral MOSS CPU excerpts completed in the live The Last Train Home run (188.48 s, exit 0; PR #73). Human subjective report: good vocals, monotonous instrumentation, ending not cut off. MOSS agreed broadly on limited arrangement evolution but misjudged the final boundary. This is one example, not evaluator accuracy or professional-quality evidence. Preserve original; no automatic ending repair.
+- PR #74 merged at 51a5ed5; 4/4 CI jobs passed for the bounded style-only arrangement revision. It remains untested on the operator's Studio. No required rerender of that demo.
+- Native draft/score, journal, idle/resource gates and listening director are real implemented building blocks. Neither the autonomous LLM core, Composer, Lyricist, persistent queue, knowledge databases, Artist Memory nor remote dashboard is implemented as a complete product yet. CI is not live validation.
+
+## P0 — autonomous CLI MVP (next implementation)
+
+1. Inspect actual YuE2 Studio v5.0 writing guides, examples, supported native request schema and current provider contract before coding. Use a small versioned YuE2-specific knowledge starter (source, license, engine/version, evidence, limits). No unverified capability claims.
+2. Implement provider abstraction, explicit local configuration and secret handling; test with a deterministic fake provider, malformed output, timeout, rate limit and bounded budgets. No mandatory external calls during offline tests. Real provider smoke check before GPU submission. Never silently fall back to a paid model.
+3. Composer specializes in style conditioning, not merely a persona: musical vocabulary, arrangement role/contrast, vocal delivery, emotional arc, appropriate YuE2 cues and supported syntax. Native engine owns melody unless explicitly constrained. Lyricist independently authors original, specific, coherent and singable lyrics, with narrative, imagery, prosody, rhyme and editorial checks. Preserve supplied lyrics. Avoid generic filler, forced rhyme, imitation/copying and detector optimization; no guarantee of human-like quality. Creative review reconciles both outputs into validated brief/intent, with bounded corrective text calls.
+4. Persist jobs and stage identities before external mutations. Reuse native draft, verified reference configuration, idle locks, receipt recovery, acoustic/ASR and neutral listening code; never replay uncertain or completed inference. Default budget: one approved song, one explicit ASR, two CPU listening excerpts; revisions only within separately approved limits. No training, downloads, settings changes, publication, or destructive operations without permission. Preflight readiness including Whisper before expensive generation. A confirmed job can run end-to-end without mid-stage human intervention, but ambiguous submission or required new authorization stops safely.
+5. Director compares creative intent with separate technical, lyric, and advisory audio evidence; retains original, explains retain/provisional/stop or proposes bounded revision. Finishing only when justified and permitted; a playable provisional result is not automatic artistic acceptance. Human preference remains authoritative for the listener's taste. Store output and concise transcript. One short Windows launcher; no manual multi-command QA.
+
+### P0 acceptance gate (all required)
+
+- A real natural-language instruction (not a bundled prewritten demo) reaches the configured provider, produces a concept, style and original lyrics through distinct Composer/Lyricist responsibilities, and passes creative review.
+- One explicitly approved run reaches actual Windows Studio, generates one playable local song, measures it, runs local ASR and MOSS, records reasoned decision and final status/report. No manual intervention between normal stages.
+- Fake-provider and Studio contract/integration tests cover malformed replies, busy/not-ready Whisper, lost receipts, resume of completed stages, concurrent ownership and no duplicate generation. Windows/Linux CI passes on the exact code. Retain journal/evidence and verify actual live result; do not call CI alone completion.
+- Operator uses a single short launch command and optionally gives a subjective listening verdict. Quality is a distinct dimension; a technically successful but artistically poor song is not a quality pass. No repeated experiments unless they answer a specific unresolved question.
+
+## P1 — artistic intelligence and local catalog
+
+Grow Composer knowledge from documented musical theory, arrangement, production and YuE2-specific empirical conditioning, labeled by version and confidence. Add searchable SQLite/FTS index and optional CPU embeddings only when useful. Lyricist knowledge base should ultimately cover thousands of songs through legally usable sources: metadata, narrative/section patterns, prosody, rhyme and craft annotations; full lyrics only with appropriate rights (owned/licensed/public-domain). Record provenance, licenses, permitted use and data limitations; metadata or bag-of-words is not full lyric structure. No scraping or redistributing copyrighted lyrics without rights. Develop editorial tests, original held-out briefs and cross-model evaluation of Nemotron versus alternatives on identical tasks; measure cost, reliability, and listener preference rather than claim guaranteed no AI-slop. Do not block P0 on corpus acquisition.
+
+## P1 — persistent Artist Memory (after core works)
+
+Versioned, local per-artist profiles, editable by operator; confirmed preferences separate from inferred observations, track provenance and overrides. Example: for the user's own artist profile, a raspy vocal direction may be selected when requested, unless explicitly overridden. Avoid hardcoding an artist, copying private reference lyrics/melody, or treating a style adjective as a guaranteed persistent voice identity. Voice conditioning or LoRA is a separate rights/capability/compute-gated track. Do not publish private profiles in this public repository.
+
+## P2 — private multi-device server
+
+Reuse one backend and local state for persistent worker/service, authenticated web app and MCP. Job queue/status, cancel semantics, approval, audio streaming/range access, comparison, feedback and recovery; Windows startup and user-session compatibility must be tested. Tailscale-only deployment, Studio loopback, no cloud hosting requirement. Validate actual browser UI, authentication, multi-client state, media playback, and reconnect from Mac/other PCs, not just source inspection. Separate remote app authorization from authority to submit GPU jobs. No broad remote file access.
+
+## Engineering rules
+
+Research and audit before code; reuse existing native capabilities and runners; one bounded PR per coherent change; regression and failure-injection tests before live work; merge executable changes only after green CI. Do not rewrite history, delete journals, change user settings, or rerun completed work to compensate for code bugs. Preserve earlier research as evidence, not mandatory repeated tests. Avoid making UI, corpus size or artist memory a P0 blocker. Update this roadmap and changelog/evidence when a milestone actually changes. Report four separate states: implemented, CI-tested, live-validated, artistically assessed. No calendar promises or professional-quality guarantees. Treat operator as musician, not a manual software tester.
+
+Next actionable work: provider and creative-role contract + small YuE2 knowledge starter, then persistent orchestration reusing live-tested native/listening stages. The arrangement revision is an optional experiment, not the critical path. Documentation does not authorize new inference.

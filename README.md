@@ -4,9 +4,13 @@ Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, developing a ge
 
 > The repository is public. Never commit private audio, unpublished lyrics, local job journals, model weights or credentials.
 
+## Active product roadmap
+
+**Next milestone: autonomous Windows agent — one natural-language instruction to one song.** See [Autonomous Music Director roadmap and acceptance gates](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md) and [repository agent instructions](AGENTS.md). The integrated native generation, local ASR and neutral MOSS listening demo has completed live; Composer, Lyricist, LLM orchestration and durable autonomous job management are next, not shipped. The optional arrangement revision has passed CI but has not been live-tested.
+
 ## Native-first development policy
 
-Music Director is an evidence-driven decision and orchestration layer for YuE2 Studio, not a replacement generator, trainer, DAW or Studio UI. The [generation-first architecture and roadmap](docs/MUSIC_DIRECTOR_ARCHITECTURE.md) now governs new-song development; the earlier native-first audit remains the capability and safety reference.
+Music Director is an evidence-driven decision and orchestration layer for YuE2 Studio, not a replacement generator, trainer, DAW or Studio UI. The [generation-first architecture and roadmap](docs/MUSIC_DIRECTOR_ARCHITECTURE.md) governs native execution and evidence; the active product roadmap above governs next milestones; the earlier native-first audit remains the capability and safety reference.
 
 - [Studio capability knowledge](docs/knowledge/STUDIO_CAPABILITIES.md): native workflows, requirements, side effects, limits and reuse decisions.
 - [MCP tool index](docs/knowledge/MCP_TOOL_INDEX.md): 339 static definitions at the audited upstream revision; not live availability.
@@ -25,7 +29,7 @@ YuE2 Music Director adalah agent pendamping YuE2 Studio yang bertugas memahami t
 
 **Penggunaan dasar:** Python 3.10+ dan Git diperlukan. Untuk instalasi editable dan tes offline, ikuti bagian Setup. Jalankan `py -3 -m yue2_music_director.cli --help` untuk melihat perintah aktual. FFmpeg dan Studio lokal diperlukan hanya untuk operasi terkait. Jangan mengulang eksperimen yang sudah selesai; periksa laporan dan jurnal lokal terlebih dahulu. Jangan unggah audio, lirik, dataset atau konfigurasi pribadi ke repository publik.
 
-**Rencana terkini:** baca [arsitektur dan roadmap Music Director](docs/MUSIC_DIRECTOR_ARCHITECTURE.md). Utamakan penciptaan lagu dari intent artistik, komposisi native YuE2, dan review musikal dengan intervensi selektif. Berikutnya implementasi offline untuk analisis score dan pemisahan batas wajib dari preferensi musikal; bukan regenerasi demo atau perbaikan audio lama.
+**Rencana terkini:** baca [roadmap agent otonom](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md). Prioritas berikutnya adalah Composer, Lyricist, provider Nemotron yang dapat diganti, dan orchestrator Windows yang menyelesaikan satu lagu dari instruksi natural. Web app, katalog ribuan lagu dan Artist Memory menyusul; tidak perlu mengulang demo lama.
 
 ## Setup
 
