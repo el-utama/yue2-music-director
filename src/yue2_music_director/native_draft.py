@@ -123,10 +123,11 @@ def verify_directed_score(abc,brief):
 def score_signature(abc, *, native=False):
     from .music import parse_score
     score=parse_score(abc,native=native)
-    return (tuple(score.headers.get(k) for k in ("M","L","K","Q")),
+    signature=(tuple(score.headers.get(k) for k in ("M","L","K","Q")),
             score.sections,score.bar_chords,
             [(e.voice,e.bar,e.section,e.kind,e.offset,e.duration,e.pitch,e.tied) + ((e.chord,) if native else ())
              for e in sorted(score.events,key=lambda e:(e.voice,e.bar,e.offset))])
+    return signature+(score.bar_lengths,score.key_changes) if native else signature
 
 
 def verify_saved_directed_score(saved,abc,song_id,job_id,brief,*,native=False):

@@ -77,18 +77,32 @@ def verify_take(draft, brief, report):
     request = nd.request_for(brief)
     route=report.get("generation_path")
     if route=="reviewed_native":
-        abc=(draft.parent/"native-plan.abc").read_text(encoding="utf-8")
+        # Preserve raw source identity (read_text normalizes CRLF on Windows).
+        abc=(draft.parent/"native-plan.abc").read_bytes().decode("utf-8")
         plan=nd.read(draft.parent/"journal_plan.json")
         decision=nd.read(draft.parent/"plan-decision.json")
         score_sha=nd.digest(abc.encode("utf-8"))
-        if (plan.get("state")!="COMPLETED" or plan.get("score_sha256")!=score_sha
-                or decision.get("decision")!="retain"
-                or decision.get("score_review",{}).get("score_sha256")!=score_sha
-                or report.get("saved_score_verified") is not True
-                or report.get("actual_lyric_conditioning_verified") is not True
-                or (draft/"saved-score.abc").read_bytes()!=abc.encode("utf-8")
-                or report.get("score_review",{}).get("score_sha256")!=score_sha):
-            raise ValueError("Retained reviewed score identity mismatch")
+        if plan.get("state")!="COMPLETED" or plan.get("score_sha256")!=score_sha:
+            raise ValueError("Retained reviewed score identity mismatch: planner receipt")
+        if decision.get("decision")!="retain" or decision.get("score_review",{}).get("score_sha256")!=score_sha:
+            raise ValueError("Retained reviewed score identity mismatch: plan decision")
+        pre=nd.read(draft/"score-review.json")
+        if (report.get("score_review")!=pre or pre.get("score_sha256")!=score_sha
+                or pre.get("structural_review")!=decision
+                or not isinstance(pre.get("midi"),dict) or not pre["midi"]):
+            raise ValueError("Retained reviewed score identity mismatch: pre-render review")
+        if report.get("saved_score_verified") is not True or report.get("actual_lyric_conditioning_verified") is not True:
+            raise ValueError("Retained reviewed score identity mismatch: conditioning flags")
+        saved=(draft/"saved-score.abc").read_bytes().decode("utf-8")
+        post=nd.read(draft/"saved-score-review.json")
+        if (report.get("saved_score_review")!=post
+                or post.get("score_sha256")!=nd.digest(saved.encode("utf-8"))):
+            raise ValueError("Retained reviewed score identity mismatch: saved score receipt")
+        # Studio may normalize whitespace or notation while importing.
+        # Compare musical semantics, not byte equality between two independently
+        # hashed artifacts. This includes synchronized meter and key timelines.
+        if nd.score_signature(saved,native=True)!=nd.score_signature(abc,native=True):
+            raise ValueError("Retained reviewed score identity mismatch: musical semantics")
         request["abc"]=abc
     elif route!="direct_native":
         raise ValueError("Unsupported retained artistic generation route")
