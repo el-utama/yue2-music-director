@@ -7,6 +7,7 @@ set "PYTHONPATH=%ROOT%src"
 if /I "%~1"=="--setup" goto setup
 if /I "%~1"=="--check-provider" goto check
 if /I "%~1"=="--inspect-ending" goto ending
+if /I "%~1"=="--review-plan" goto reviewplan
 py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\music-output.txt" -- py -3 -u -m yue2_music_director.autonomous --repo "%ROOT%." --url "%YUE2_MCP_URL%" %*
 exit /b %ERRORLEVEL%
 
@@ -20,4 +21,8 @@ exit /b %ERRORLEVEL%
 
 :ending
 py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\ending-output.txt" -- py -3 -u -m yue2_music_director.ending_audit --repo "%ROOT%." --job "%~2" --url "%YUE2_MCP_URL%"
+exit /b %ERRORLEVEL%
+
+:reviewplan
+py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\plan-review-output.txt" -- py -3 -u -m yue2_music_director.retained_plan_review --repo "%ROOT%." --job "%~2"
 exit /b %ERRORLEVEL%
