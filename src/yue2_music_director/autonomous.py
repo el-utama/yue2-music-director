@@ -120,7 +120,11 @@ def main():
             language=a.language if a.language is not None else previous["language"]
             duration=a.duration if a.duration is not None else previous["duration_seconds"]
         else:
-            request=a.request if a.request is not None else input("Song idea: ")
+            if a.request is None:
+                print("Song idea:",flush=True)
+                request=input()
+            else:
+                request=a.request
             language=a.language or "en"
             duration=a.duration if a.duration is not None else 195
         return launch(repo,job,request,language,duration,a.url,confirm=a.confirm_run)
