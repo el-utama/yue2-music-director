@@ -1,6 +1,6 @@
 # Development audit and revised roadmap
 
-Date: 2026-11-25. Supersedes the sequencing in earlier alignment research documents; historical results remain intact. Primary references: [native capability knowledge](STUDIO_CAPABILITIES.md), [339-tool source index](MCP_TOOL_INDEX.md), [official/community prior art](COMMUNITY_AND_EVALUATION.md).
+Date: 2026-11-25 (historical capability audit). The [2026-11-26 generation-first architecture and roadmap](../MUSIC_DIRECTOR_ARCHITECTURE.md) supersedes the next-product sequencing; reuse the capability and permission gates here. Supersedes the sequencing in earlier alignment research documents; historical results remain intact. Primary references: [native capability knowledge](STUDIO_CAPABILITIES.md), [339-tool source index](MCP_TOOL_INDEX.md), [official/community prior art](COMMUNITY_AND_EVALUATION.md).
 
 ## Assessment of our earlier plan
 
@@ -50,4 +50,4 @@ The controlled A/B submission path now has an explicit stock-reference configura
 
 ## Next product milestone
 
-Proceed with [one-brief native draft](../NATIVE_DRAFT.md), not a new collection of evaluator wrappers. It is an initial unified production path for the stock reference configuration, separate from optional phone research. One authorized song and local ASR, technical QA, stop and preserve the draft; actual combined runtime validation pending.
+The [one-brief native draft](../NATIVE_DRAFT.md) explicit-score route has completed one real song and resumed ASR without duplicate synthesis; musical quality was rejected. The next milestone is [P1: offline score evidence and versioned artistic review policy](../MUSIC_DIRECTOR_ARCHITECTURE.md#7-implementation-roadmap-and-exit-criteria), not additional evaluator wrappers, alignment research or another demo render. Reuse the native execution contracts and capability checks.
