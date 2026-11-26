@@ -61,3 +61,9 @@ Add an independent Cover Art Specialist for single or ordered album projects, us
 Independent deterministic export of completed single/album/EP jobs, original lossless audio, plain lyrics and existing native timed lyric display anchors as LRC/SRT. No fabricated timings, no new inference, no publishing; missing timing yields explicit partial export. See [release export](RELEASE_EXPORT.md). Finishing and artwork attachment are future independently verified variants.
 
 Export refinement: preserve Studio native enhanced LRC verbatim, derive SRT using the pinned UI display heuristic with duration cap. No separate SRT export MCP required. Missing/invalid timing remains a partial export, not a fabricated subtitle.
+
+### Audit hardening sequence
+
+The retained score-first reference passed all five human listening dimensions; cover prompt and single-song original FLAC/TXT/LRC/SRT export completed on the operator host. Opening/vocal policy v2 and multi-track export have fixture coverage, not live acceptance. The next engineering priority is creative semantic acceptance, opening evidence, retained-source provenance and hash-bound human feedback before any mix-only finishing implementation.
+
+Creative-stage hardening: Composer opening/vocal headers and Lyricist opening structure are checked before a successful v2 role receipt. Returned invalid responses are kept in separate local rejection evidence; the existing explicit one-time text recovery remains bounded to the unresolved role. Existing valid receipt identities are preserved. Previously frozen invalid receipts are not automatically rewritten or replayed. No new live inference is required for these regression tests.
