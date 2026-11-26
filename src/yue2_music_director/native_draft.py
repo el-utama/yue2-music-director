@@ -119,16 +119,16 @@ def verify_directed_score(abc,brief):
     return review
 
 
-def score_signature(abc):
+def score_signature(abc, *, native=False):
     from .music import parse_score
-    score=parse_score(abc)
+    score=parse_score(abc,native=native)
     return (tuple(score.headers.get(k) for k in ("M","L","K","Q")),
             score.sections,score.bar_chords,
             [(e.voice,e.bar,e.section,e.kind,e.offset,e.duration,e.pitch,e.tied)
              for e in sorted(score.events,key=lambda e:(e.voice,e.bar,e.offset))])
 
 
-def verify_saved_directed_score(saved,abc,song_id,job_id,brief):
+def verify_saved_directed_score(saved,abc,song_id,job_id,brief,*,native=False):
     if (saved.get("id")!=song_id or not isinstance(saved.get("metadata"),dict)
             or saved["metadata"].get("job_id")!=job_id):
         raise ValueError("Directed song provenance mismatch")
@@ -136,14 +136,28 @@ def verify_saved_directed_score(saved,abc,song_id,job_id,brief):
     if (not isinstance(settings,dict) or settings.get("cot")!="full"
             or settings.get("lyrics")!=brief["lyrics"]
             or not isinstance(settings.get("abc"),str)
-            or score_signature(settings["abc"])!=score_signature(abc)):
+            or score_signature(settings["abc"],native=native)!=score_signature(abc,native=native)):
         raise ValueError("Saved directed score or lyrics differ; retain song, do not regenerate")
 
 
-def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None):
+def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=None,expected_configuration=None):
     request=request_for(brief)
-    if abc is not None:
+    if artist is not None:
+        from .artist_run import evaluate_plan, route_for
+        route=route_for(artist)
+        if (route=="direct_native")!=(abc is None):
+            raise ValueError("Artistic route and score presence differ")
+        if restore_stock:
+            raise ValueError("Artistic run cannot change model selection")
+        if abc is not None:
+            review=evaluate_plan(abc,brief,artist)
+            if review["decision"]!="retain":
+                raise ValueError("Native plan is not cleared for synthesis")
+            if expected_configuration is None and route=="reviewed_native":
+                raise ValueError("Reviewed native route requires retained planner configuration")
+    elif abc is not None:
         review=verify_directed_score(abc,brief)
+    if abc is not None:
         request["abc"]=abc
     request_sha=digest(_canonical(request))
     brief_sha=digest(_canonical(brief))
@@ -153,6 +167,16 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None):
         atomic_write(root/"request.json",request)
     elif read(root/"brief.json")!=brief or read(root/"request.json")!=request:
         raise ValueError("Retained draft does not match current brief")
+    if artist is not None:
+        policy={"intent":artist,"planner_configuration":expected_configuration}
+        policy_path=root/"artist-policy.json"
+        if policy_path.exists():
+            if read(policy_path)!=policy:
+                raise ValueError("Retained artistic policy differs")
+        elif (root/"journal_song.json").exists() or (root/"report.json").exists():
+            raise ValueError("Existing draft lacks artistic policy identity")
+        else:
+            atomic_write(policy_path,policy)
     report_path=root/"report.json"
     if report_path.exists():
         report=read(report_path)
@@ -179,6 +203,8 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None):
         journal=read(journal_path)
         if journal.get("request_sha256")!=request_sha or journal.get("brief_sha256")!=brief_sha:
             raise ValueError("Journal identity differs")
+        if expected_configuration is not None and journal.get("reference_configuration")!=expected_configuration:
+            raise ValueError("Retained synthesis configuration differs from planner")
         if journal.get("state") not in ("SUBMITTED","COMPLETED") or not journal.get("job_id"):
             raise ValueError("Previous submission outcome unknown; inspect Studio, never resubmit")
     else:
@@ -192,6 +218,8 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None):
         capabilities=unpack(client.call("studio_capabilities",{}))
         status=unpack(client.call("studio_status",{}))
         configuration=reference_configuration(client,status,request,defaults,capabilities)
+        if expected_configuration is not None and configuration!=expected_configuration:
+            raise ValueError("Native configuration changed after score planning")
         if abc is not None:
             from .midi import extract_midi,midi_header
             if "abc" not in tools["score_to_midi"].get("properties",{}):
@@ -245,10 +273,29 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None):
     else:
         journal.update(state="COMPLETED",song_id=song_id,audio_sha256=audio_sha)
         atomic_write(journal_path,journal)
-    if abc is not None:
+    if abc is not None or artist is not None:
         from .temporal_evidence import native_song_read
-        verify_saved_directed_score(native_song_read(url,song_id),abc,song_id,job_id,brief)
-        print("Saved native score and lyric conditioning verified.",flush=True)
+        saved=native_song_read(url,song_id)
+        if abc is not None:
+            verify_saved_directed_score(saved,abc,song_id,job_id,brief,native=artist is not None)
+            print("Saved native score and lyric conditioning verified.",flush=True)
+        else:
+            if (not isinstance(saved,dict) or saved.get("id")!=song_id
+                    or not isinstance(saved.get("metadata"),dict) or saved["metadata"].get("job_id")!=job_id):
+                raise ValueError("Saved native song provenance mismatch")
+            settings=saved.get("generation_settings")
+            if not isinstance(settings,dict) or settings.get("cot")!="full" or settings.get("lyrics")!=brief["lyrics"]:
+                raise ValueError("Saved native lyric conditioning differs")
+        if artist is not None:
+            saved_abc=saved["generation_settings"].get("abc")
+            if isinstance(saved_abc,str) and saved_abc.strip():
+                from .musical_review import review_score
+                post_review=review_score(saved_abc,brief["lyrics"],constraints=artist["constraints"],
+                                         max_seconds=brief["duration_seconds"])
+            else:
+                post_review={"status":"unassessable","reason":"Saved native ABC unavailable",
+                             "render_authorized":False}
+            atomic_write(root/"saved-score-review.json",post_review)
     print("Measuring existing native draft...",flush=True)
     acoustic_path=root/"acoustic.json"
     if acoustic_path.exists():
@@ -290,8 +337,15 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None):
                         "Duration is a generation cap, not guaranteed song length.",
                         "Reference policy is stock Balanced only, not a universal model preference.",
                         "No automatic regeneration, finishing, export, or further model changes."]}
+    if artist is not None:
+        report["generation_path"]=route
+        report["artistic_intent"]=artist
+        report["saved_score_review"]=read(root/"saved-score-review.json")
+        report["listening_verdict"]="unrated"
+        report["artistic_acceptance"]="unverified"
     if abc is not None:
-        report["generation_path"]="director_authored_score"
+        if artist is None:
+            report["generation_path"]="director_authored_score"
         report["saved_score_verified"]=True
         report["score_review"]=read(root/"score-review.json")
     atomic_write(report_path,report)
@@ -303,11 +357,19 @@ def main():
     parser.add_argument("--repo",type=Path,required=True)
     parser.add_argument("--url",required=True)
     parser.add_argument("--confirm-run",action="store_true")
-    parser.add_argument("--director-demo",action="store_true",help="Use the original research brief and precomposed score")
+    choices=parser.add_mutually_exclusive_group()
+    choices.add_argument("--director-demo",action="store_true",help="Use the original research brief and precomposed score")
+    choices.add_argument("--artist-demo",action="store_true",help="Original generation-first artistic study")
+    choices.add_argument("--artist",action="store_true",help="Use local brief and artistic intent")
     parser.add_argument("--select-stock",action="store_true",help="Explicitly clear own-model override before a new draft")
     args=parser.parse_args()
     try:
         repo=args.repo.resolve()
+        if args.artist or args.artist_demo:
+            if args.select_stock:
+                raise ValueError("Artistic run does not change model selection")
+            from .artist_run import launch
+            return launch(repo,args.url,confirm=args.confirm_run,demo=args.artist_demo)
         abc=None
         if args.director_demo:
             if args.select_stock:
