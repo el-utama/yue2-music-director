@@ -25,10 +25,14 @@ def extract_midi(response) -> bytes:
         if depth>6:
             return None
         if isinstance(item,dict):
+            if item.get('ok') is False:
+                reason=item.get('error')
+                raise ValueError('Studio rejected score: '+str(reason or 'No reason supplied')[:1000])
             if item.get('type')=='text':
                 value=item.get('text','')
-                try:return seek(json.loads(value),depth+1)
-                except (ValueError,TypeError):return seek(value,depth+1)
+                try: decoded=json.loads(value)
+                except (ValueError,TypeError): decoded=value
+                return seek(decoded,depth+1)
             for name in ('data','midi_base64','base64','midi','file','result','output','resource'):
                 if name in item:
                     value=seek(item[name],depth+1)

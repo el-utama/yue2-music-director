@@ -146,7 +146,7 @@ class DraftTests(unittest.TestCase):
             client.assert_not_called()
 
     def test_directed_draft_uses_explicit_score_and_native_compatibility(self):
-        abc='X:1\nM:4/4\nL:1/16\nQ:1/4=80\nK:C\n% verse\nV: Vocal\n"C"C8D8|\nV: Ins\nZ|\n'
+        abc='X:1\nT:\nM:4/4\nL:1/16\nQ:1/4=80\nV: Vocal clef=treble name="Vocal Melody" snm="Vocal"\nV: Ins clef=treble name="Ins Melody" snm="Inst."\nK:C\n% verse\nV: Vocal\n"C"C8D8|\nV: Ins\nZ|\n'
         with patch.object(nd,"Client") as factory,patch.object(nd,"reference_configuration",return_value={}), \
              patch.object(nd,"recognition_preflight"),patch.object(nd.shutil,"which",return_value="fixture"), \
              patch.object(nd,"_measure",return_value={"sha256":nd._sha(self.audio),
@@ -174,3 +174,26 @@ class DraftTests(unittest.TestCase):
             self.assertEqual(next(c.args[1]["abc"] for c in calls if c.args[0]=="song_create"),abc)
             self.assertEqual(nd.execute(self.brief,self.run,"unused",abc=abc),report)
 
+
+
+    def test_native_layout_rejects_old_header_and_overlong_groups(self):
+        abc=(Path(__file__).resolve().parents[1]/"examples/director-demo/score.abc").read_text(encoding="utf-8")
+        nd.verify_native_directed_layout(abc)
+        with self.assertRaisesRegex(ValueError,"eight-line native header"):
+            nd.verify_native_directed_layout(abc.replace("T:\n","T:Title\n"))
+        lines=abc.splitlines()
+        i=lines.index("% verse")+1
+        lines[i+1]+=lines[i+5]
+        lines[i+3]+=lines[i+7]
+        del lines[i+4:i+8]
+        old="\n".join(lines)+"\n"
+        self.assertEqual(nd.score_signature(abc),nd.score_signature(old))
+        with self.assertRaisesRegex(ValueError,"1–4 equal bars"):
+            nd.verify_native_directed_layout(old)
+
+    def test_native_rejection_explains_problem(self):
+        from yue2_music_director.midi import extract_midi
+        for raw in ({"structuredContent":{"ok":False,"error":"Expected native X:1 and blank T: header"}},
+                    {"content":[{"type":"text","text":json.dumps({"ok":False,"error":"Expected native X:1 and blank T: header"})}]}):
+            with self.assertRaisesRegex(ValueError,"Studio rejected score: Expected native X:1"):
+                extract_midi(raw)
