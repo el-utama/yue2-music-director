@@ -1,5 +1,10 @@
 # Changelog and research milestones
 
+## Unreleased — matched direct-native comparison
+
+- Add explicitly confirmed direct-native baseline against the completed reviewed demo. Freeze brief, seed, configuration and original evidence; omit explicit ABC only. Separate journal and one song/one ASR, no extra score job.
+- Compare actual saved score identity where assessable; no automatic winner. Single pair and live execution remain unvalidated.
+
 ## Unreleased — stable Studio handoff gates
 
 - Wait for reported background activities to finish, including automatic karaoke, before native planning, synthesis or ASR. Require three idle observations five seconds apart, bounded native wait, and final submission checks. Preserve journals and never cancel unrelated jobs.
