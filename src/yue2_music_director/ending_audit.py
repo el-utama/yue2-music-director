@@ -1,4 +1,4 @@
-"""Inspect completed autonomous job artifacts locally; zero inference or mutation."""
+"""Inspect completed autonomous job artifacts and read-only Studio metadata; zero inference or mutation."""
 import argparse
 import json
 import math
@@ -9,6 +9,9 @@ from . import native_draft as nd, listening_director as ld
 from .creative_core import validate_job
 from .prosody import parse_lyrics
 from .musical_review import review_score
+from .native_completion import inspect_completion
+from .temporal_evidence import native_song_read
+from .mcp import MCPError
 
 
 def cap_screen(cap, measured):
@@ -22,7 +25,7 @@ def cap_screen(cap, measured):
             "note":"Conservative review flag only; not proof of truncation."}
 
 
-def inspect(repo, job):
+def inspect(repo, job, url):
     validate_job(job,"placeholder","en",195)
     root=repo/"results/autonomous"/job
     identity=nd.read(root/"job.json")
@@ -44,6 +47,7 @@ def inspect(repo, job):
     packet=ld.retained_packet(production,brief,intent,row)
     if final.get("listening_packet_sha256")!=nd._sha(production/"neutral-listening/review-packet.json"):
         raise ValueError("Listening packet digest differs")
+    native=inspect_completion(native_song_read(url,report["song_id"]),report["song_id"],report["job_id"])
     duration=cap_screen(brief["duration_seconds"],report["acoustic"]["duration_seconds"])
     groups=parse_lyrics(brief["lyrics"])
     last=next(g for g in reversed(groups) if g["lines"])
@@ -66,7 +70,7 @@ def inspect(repo, job):
                                          for s in metrics["sections"][-3:]]
     screen=report["lyric_screen"]
     primary=screen["primary_metric"]
-    return {"schema":"ending-audit-v1","job":job,"duration":duration,
+    return {"schema":"ending-audit-v1","job":job,"duration":duration,"native_completion":native,
             "lyric_structure":{"sections":len(groups),"sung_lines":sum(len(g["lines"]) for g in groups),
                               "last_sung_section":last["name"],"last_section_lines":len(last["lines"])},
             "score":score_info,"lyric_screen":{"metric":primary,"disagreement_rate":screen[primary]["disagreement_rate"]},
@@ -81,11 +85,12 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--repo",type=Path,required=True)
     p.add_argument("--job",required=True)
+    p.add_argument("--url",required=True)
     a=p.parse_args()
     try:
-        print(json.dumps(inspect(a.repo.resolve(),a.job),indent=2,ensure_ascii=False))
+        print(json.dumps(inspect(a.repo.resolve(),a.job,a.url),indent=2,ensure_ascii=False))
         return 0
-    except (OSError,ValueError,KeyError,TypeError,StopIteration) as exc:
+    except (OSError,ValueError,KeyError,TypeError,StopIteration,MCPError) as exc:
         print("ERROR:",exc,file=sys.stderr)
         return 2
 

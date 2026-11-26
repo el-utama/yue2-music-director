@@ -87,6 +87,9 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
         print("Director judgment",flush=True)
         decision=cc.stage(root,"director",dd,provider,dd.context(request,brief,intent,report,packet),retry=retry_role=="director")
         technical=report["headroom_pass"] and report["duration_cap_screen_pass"]
+        if "native_completion" in report:
+            from .native_completion import blocks_provisional
+            technical=technical and not blocks_provisional(report["native_completion"])
         status=("provisional" if technical and decision["decision"]=="retain_provisional"
                 else "review_required")
         final={"schema":"autonomous-result-v1","status":status,"song_id":report["song_id"],
@@ -96,6 +99,8 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
                "native_report_sha256":nd._sha(production/"draft/report.json"),
                "listening_packet_sha256":nd._sha(production/"neutral-listening/review-packet.json"),
                "revision_authorized":False}
+        if "native_completion" in report:
+            final["native_completion"]=report["native_completion"]
         freeze(root/"result.json",final)
         print("Status:",status,flush=True)
         print("Director:",decision["rationale"],flush=True)

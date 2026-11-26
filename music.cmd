@@ -19,5 +19,5 @@ py -3 -u -m yue2_music_director.provider_setup --repo "%ROOT%." --check
 exit /b %ERRORLEVEL%
 
 :ending
-py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\ending-output.txt" -- py -3 -u -m yue2_music_director.ending_audit --repo "%ROOT%." --job "%~2"
+py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\ending-output.txt" -- py -3 -u -m yue2_music_director.ending_audit --repo "%ROOT%." --job "%~2" --url "%YUE2_MCP_URL%"
 exit /b %ERRORLEVEL%
