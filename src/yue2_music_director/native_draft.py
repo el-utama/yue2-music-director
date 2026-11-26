@@ -124,7 +124,7 @@ def score_signature(abc, *, native=False):
     score=parse_score(abc,native=native)
     return (tuple(score.headers.get(k) for k in ("M","L","K","Q")),
             score.sections,score.bar_chords,
-            [(e.voice,e.bar,e.section,e.kind,e.offset,e.duration,e.pitch,e.tied)
+            [(e.voice,e.bar,e.section,e.kind,e.offset,e.duration,e.pitch,e.tied) + ((e.chord,) if native else ())
              for e in sorted(score.events,key=lambda e:(e.voice,e.bar,e.offset))])
 
 
@@ -289,6 +289,13 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
         if artist is not None:
             saved_abc=saved["generation_settings"].get("abc")
             if isinstance(saved_abc,str) and saved_abc.strip():
+                saved_path=root/"saved-score.abc"
+                if saved_path.exists():
+                    if saved_path.read_bytes()!=saved_abc.encode("utf-8"):
+                        raise ValueError("Retained saved native score changed")
+                else:
+                    with saved_path.open("xb") as stream:
+                        stream.write(saved_abc.encode("utf-8"))
                 from .musical_review import review_score
                 post_review=review_score(saved_abc,brief["lyrics"],constraints=artist["constraints"],
                                          max_seconds=brief["duration_seconds"])
@@ -343,6 +350,8 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
         report["saved_score_review"]=read(root/"saved-score-review.json")
         report["listening_verdict"]="unrated"
         report["artistic_acceptance"]="unverified"
+        report["budget"]=artist["budget"]
+        report["actual_lyric_conditioning_verified"]=True
     if abc is not None:
         if artist is None:
             report["generation_path"]="director_authored_score"
