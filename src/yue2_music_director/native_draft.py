@@ -140,6 +140,47 @@ def verify_saved_directed_score(saved,abc,song_id,job_id,brief,*,native=False):
         raise ValueError("Saved directed score or lyrics differ; retain song, do not regenerate")
 
 
+def read_job(client,job_id):
+    job=unpack(client.call("song_job_get",{"job_id":job_id,"response_format":"concise"}))
+    if not isinstance(job,dict) or job.get("id")!=job_id:
+        raise ValueError("Job response identity mismatch")
+    return job
+
+
+def print_job(job):
+    print("Native job status:",job.get("status"),flush=True)
+    for key in ("phase","message"):
+        if job.get(key) is not None:
+            print("Native "+key+":",job[key],flush=True)
+
+
+def inspect_artist_demo(repo,url):
+    """Read the existing job only; never create, wait, or resume a transaction."""
+    brief=load_brief(repo/"examples/artist-demo/brief.json")
+    root=repo/"results/drafts"/("artist-"+digest(_canonical(brief)))
+    draft=root/"draft"
+    manifest=read(root/"manifest.json")
+    if manifest.get("brief")!=brief or manifest.get("route")!="reviewed_native":
+        raise ValueError("Retained artist demo identity differs")
+    request=read(draft/"request.json")
+    journal=read(draft/"journal_song.json")
+    if (read(draft/"brief.json")!=brief or journal.get("brief_sha256")!=digest(_canonical(brief))
+            or journal.get("request_sha256")!=digest(_canonical(request))
+            or not isinstance(journal.get("job_id"),str) or not journal["job_id"]):
+        raise ValueError("No verified retained song job; inspection cannot submit")
+    decision=read(root/"plan-decision.json")
+    metrics=decision.get("score_review",{}).get("metrics") or {}
+    print("Retained score:",metrics.get("score_seconds"),"seconds | cap:",brief["duration_seconds"],flush=True)
+    print("Job ID:",journal["job_id"],flush=True)
+    client=Client(configured_endpoint(url),timeout=90).connect()
+    job=read_job(client,journal["job_id"])
+    print_job(job)
+    atomic_write(draft/"job-inspection.json",job)
+    print("Evidence:",draft/"job-inspection.json",flush=True)
+    print("Read-only Studio inspection: zero generation or recognition submissions.",flush=True)
+    return 0
+
+
 def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=None,expected_configuration=None):
     request=request_for(brief)
     if artist is not None:
@@ -243,11 +284,12 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
         atomic_write(journal_path,journal)
     job_id=journal["job_id"]
     for attempt in range(max_waits+1):
-        job=unpack(client.call("song_job_get",{"job_id":job_id,"response_format":"concise"}))
-        if not isinstance(job,dict) or job.get("id")!=job_id:
-            raise ValueError("Job response identity mismatch")
+        job=read_job(client,job_id)
+        atomic_write(root/"latest-job-status.json",job)
         state=job.get("status")
-        print("Native job status:",state,flush=True)
+        print_job(job)
+        if state in ("failed","cancelled","canceled"):
+            raise ValueError("Native song reached terminal "+state+"; retain journal, never resubmit")
         if state=="completed":
             break
         if state not in ("queued","running") or attempt==max_waits:
@@ -371,9 +413,14 @@ def main():
     choices.add_argument("--artist-demo",action="store_true",help="Original generation-first artistic study")
     choices.add_argument("--artist",action="store_true",help="Use local brief and artistic intent")
     parser.add_argument("--select-stock",action="store_true",help="Explicitly clear own-model override before a new draft")
+    parser.add_argument("--inspect",action="store_true",help="Read existing artist-demo job status only")
     args=parser.parse_args()
     try:
         repo=args.repo.resolve()
+        if args.inspect:
+            if not args.artist_demo or args.confirm_run or args.select_stock:
+                raise ValueError("--inspect requires --artist-demo without confirmation or stock selection")
+            return inspect_artist_demo(repo,args.url)
         if args.artist or args.artist_demo:
             if args.select_stock:
                 raise ValueError("Artistic run does not change model selection")
