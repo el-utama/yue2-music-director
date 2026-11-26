@@ -49,8 +49,18 @@ def native_section(name):
     return normalize_section(name)
 
 
+def validate_native_meter(value):
+    found=re.fullmatch(r"([1-9][0-9]*)/([1-9][0-9]*)",value)
+    if not found:
+        raise ScoreError("Invalid native meter")
+    n,d=map(int,found.groups())
+    if n>2**32-1 or d>1024 or d&(d-1):
+        raise ScoreError("Invalid native meter")
+    return value
+
+
 def _native_layout(source):
-    """Conservative fixed-meter/key subset of the pinned Studio grammar."""
+    """Conservative native two-voice subset including synchronized meter/key changes."""
     if len(source)>200_000:
         raise ScoreError("Score exceeds native review size limit")
     lines=source.splitlines()
@@ -77,11 +87,20 @@ def _native_layout(source):
             if i>=len(lines) or lines[i]!=f"V: {voice}":
                 raise NativeUnsupported("Expected paired native voice group")
             i+=1
+            fields=set()
+            while i<len(lines) and lines[i].startswith(("M:","K:")):
+                field,value=lines[i].split(":",1)
+                if field in fields:
+                    raise ScoreError("Duplicate native voice field")
+                fields.add(field)
+                if field=="M":
+                    validate_native_meter(value)
+                else:
+                    key_signature(value,native=True)
+                i+=1
             if i>=len(lines):
                 raise ScoreError("Missing music line")
             line=lines[i]
-            if line.startswith(("M:","K:")) or "[K:" in line:
-                raise NativeUnsupported("Meter/key changes not assessed by fixed-grid review")
             if not line.endswith("|") or any(not b.strip() for b in line[:-1].split("|")):
                 raise ScoreError("Invalid plain barline layout")
             count=0
@@ -186,6 +205,8 @@ class Score:
     sections: dict[str, list[str]]
     bar_units: Fraction
     warnings: list[str]
+    bar_lengths: tuple[Fraction, ...] = ()
+    key_changes: tuple = ()
 
     @property
     def counts(self) -> dict[str, int]:
@@ -202,6 +223,10 @@ def parse_score(source: str, *, native=False) -> Score:
     bar_chords: dict[tuple[str,int], list[str]] = {}
     sections: dict[str, list[str]] = defaultdict(list)
     all_events: list[Event] = []
+    native_fields = {}
+    native_bars = defaultdict(list)
+    native_keys = defaultdict(list)
+    native_time = defaultdict(Fraction)
     current_voice: str | None = None
     current_section = 'unmarked#1'
     section_counts: dict[str,int] = defaultdict(int)
@@ -222,18 +247,32 @@ def parse_score(source: str, *, native=False) -> Score:
                 current_voice = value.split()[0] if value else None
                 if current_voice not in ('Vocal','Ins'):
                     raise ScoreError(f'line {i+1}: unsupported voice {current_voice}')
+            elif native and i>=8 and key in ("M","K"):
+                if current_voice is None:
+                    raise ScoreError("Native voice field without voice")
+                state=native_fields.setdefault(current_voice,{"M":headers["M"],"K":headers["K"]})
+                if key=="M":
+                    validate_native_meter(value)
+                else:
+                    key_signature(value,native=True)
+                    native_keys[current_voice].append((native_time[current_voice],value))
+                state[key]=value
             else:
                 headers[key] = value
             continue
         if current_voice is None:
             raise ScoreError(f'line {i+1}: notes without V: declaration')
-        signature = key_signature(headers.get('K', ''), native=native)
+        state=native_fields.setdefault(current_voice,{"M":headers["M"],"K":headers["K"]}) if native else headers
+        bar_length=Fraction(state["M"])/Fraction(headers["L"]) if native else None
+        signature = key_signature(state.get('K', ''), native=native)
         pieces = content.split('|')
         cursor = 0
         for piece in pieces:
             if not piece.strip():
                 cursor += len(piece) + 1
                 continue
+            if native:
+                signature=key_signature(state["K"],native=True)
             bar_index = len(bar_events[current_voice])
             found: list[Event] = []
             active_chord = ''
@@ -245,6 +284,17 @@ def parse_score(source: str, *, native=False) -> Score:
                 if piece[at].isspace():
                     at += 1
                     continue
+                if native and piece.startswith("[K:",at):
+                    key_match=re.match(r"\[K:([^\]\n]+)\]",piece[at:])
+                    if not key_match or offset>=bar_length:
+                        raise ScoreError("Invalid native inline key change")
+                    value=key_match[1]
+                    signature=key_signature(value,native=True)
+                    state["K"]=value
+                    native_keys[current_voice].append((native_time[current_voice]+offset,value))
+                    carried.clear()
+                    at+=len(key_match[0])
+                    continue
                 if piece[at] == '"':
                     cm = CHORD.match(piece, at)
                     if not cm:
@@ -252,7 +302,7 @@ def parse_score(source: str, *, native=False) -> Score:
                     active_chord = cm.group()[1:-1]
                     if native and (current_voice!='Vocal' or not NATIVE_CHORD.fullmatch(active_chord)):
                         raise ScoreError('Invalid native chord or chord in Ins')
-                    if native and offset>=Fraction(headers['M'])/Fraction(headers['L']):
+                    if native and offset>=bar_length:
                         raise ScoreError('Chord after bar end')
                     chords.append(active_chord)
                     at = cm.end()
@@ -275,7 +325,7 @@ def parse_score(source: str, *, native=False) -> Score:
                 if native and kind=='rest' and pending.get(current_voice):
                     raise ScoreError('Native tie enters a rest')
                 if symbol == 'Z':
-                    if native and (chords or not re.fullmatch(r'Z[2-4]?',raw)):
+                    if native and (chords or at!=len(piece)-len(piece.lstrip()) or not re.fullmatch(r'Z[2-4]?',raw)):
                         raise ScoreError('Native whole-bar rest must stand alone')
                     if found or piece[m.end():].strip():
                         raise ScoreError('Z multibar rest must occupy entire measure')
@@ -288,6 +338,9 @@ def parse_score(source: str, *, native=False) -> Score:
                                raw,i,cursor+at,cursor+m.end(),Fraction(0),dur,active_chord)
                     all_events.append(ev)
                     for z in range(count):
+                        if native:
+                            native_bars[current_voice].append((state["M"],bar_length))
+                            native_time[current_voice]+=bar_length
                         sections[current_voice].append(current_section)
                         bar_events[current_voice].append([ev] if z == 0 else [])
                     found = []
@@ -328,7 +381,7 @@ def parse_score(source: str, *, native=False) -> Score:
                 sections[current_voice].append(current_section)
                 if chords:
                     bar_chords[(current_voice,bar_index)] = chords
-                expected = headers.get('M')
+                expected = state.get('M')
                 unit = headers.get('L')
                 if expected and unit:
                     try:
@@ -340,6 +393,9 @@ def parse_score(source: str, *, native=False) -> Score:
                     if offset != target:
                         raise ScoreError(f'{current_voice} bar {bar_index+1}: '
                                          f'{offset} note units, expected {target}')
+                if native:
+                    native_bars[current_voice].append((state["M"],bar_length))
+                    native_time[current_voice]+=bar_length
             cursor += len(piece)+1
     if not headers.get('M') or not headers.get('L') or not headers.get('K'):
         raise ScoreError('M:, L: and K: headers are required')
@@ -352,6 +408,8 @@ def parse_score(source: str, *, native=False) -> Score:
         raise ScoreError(f'expected Vocal and Ins, found {sorted(bar_events)}')
     if len(bar_events['Vocal']) != len(bar_events['Ins']):
         raise ScoreError('Vocal/Ins bar counts differ')
+    if native and (native_bars["Vocal"]!=native_bars["Ins"] or native_keys["Vocal"]!=native_keys["Ins"]):
+        raise ScoreError("Native voice meter or key timelines differ")
     if native and any(pending.values()):
         raise ScoreError('Unresolved native tie')
     for voice in (() if native else ('Vocal','Ins')):
@@ -365,7 +423,9 @@ def parse_score(source: str, *, native=False) -> Score:
         warnings.append('Empty ABC title')
     warnings.append('No proven syllable-to-note mapping; do not infer exact vocal prosody')
     return Score(source,lines,headers,all_events,dict(bar_events),bar_chords,
-                 dict(sections),expected,warnings)
+                 dict(sections),expected,warnings,
+                 tuple(length for meter,length in native_bars["Vocal"]) if native else (),
+                 tuple(native_keys["Vocal"]) if native else ())
 
 
 def section_sequence(score: Score) -> list[str]:

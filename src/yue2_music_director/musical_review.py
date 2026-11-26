@@ -28,9 +28,12 @@ def _sections(lyrics):
 def _notes(score, voice):
     """Absolute note spans, retaining tied attacks only once."""
     result = []
+    offsets=[Fraction(0)]
+    for length in score.bar_lengths:
+        offsets.append(offsets[-1]+length)
     for e in sorted((e for e in score.events if e.voice == voice and e.kind == "note"),
                     key=lambda e: (e.bar, e.offset)):
-        start = e.bar * score.bar_units + e.offset
+        start = (offsets[e.bar] if score.bar_lengths else e.bar * score.bar_units) + e.offset
         result.append((start, start + e.duration, e.pitch, e.tied))
     merged = []
     pending = False
@@ -152,13 +155,16 @@ def review_score(abc, lyrics, *, constraints=None, max_seconds=None):
     seconds_per_unit=Fraction(score.headers["L"])*240/bpm
     bar_units=score.bar_units
     count=score.counts["Vocal"]
-    total=count*bar_units
+    offsets=[Fraction(0)]
+    for length in score.bar_lengths or (bar_units,)*count:
+        offsets.append(offsets[-1]+length)
+    total=offsets[-1]
     section_ids=list(dict.fromkeys(score.sections["Vocal"]))
     rows=[]
     ranges={}
     for sec in section_ids:
         bars=[i for i,label in enumerate(score.sections["Vocal"]) if label==sec]
-        start,end=bars[0]*bar_units,(bars[-1]+1)*bar_units
+        start,end=offsets[bars[0]],offsets[bars[-1]+1]
         ranges[sec]=bars
         rows.append({"section":sec,"bars":len(bars),"start_seconds":float(start*seconds_per_unit),
                      "duration_seconds":float((end-start)*seconds_per_unit),
@@ -191,7 +197,8 @@ def review_score(abc, lyrics, *, constraints=None, max_seconds=None):
     actual={"key":score.headers["K"],"tempo_bpm":bpm,"section_order":section_ids,
             "sung_sections":sung}
     for name,c in constraints.items():
-        if c["mode"]!="free" and c["value"]!=actual[name]:
+        mismatch=c["value"]!=actual[name] or (name=="key" and any(key!=c["value"] for _,key in score.key_changes))
+        if c["mode"]!="free" and mismatch:
             (hard if c["mode"]=="must" else soft).append(
                 {"code":"constraint_mismatch","field":name,"expected":c["value"],"actual":actual[name]})
     duration=float(total*seconds_per_unit)
@@ -202,6 +209,9 @@ def review_score(abc, lyrics, *, constraints=None, max_seconds=None):
                        "vocal":_voice_metrics(notes["Vocal"],0,total,seconds_per_unit),
                        "ins":_voice_metrics(notes["Ins"],0,total,seconds_per_unit),
                        "chorus_comparisons":comparisons}
+    if len(set(score.bar_lengths))>1 or score.key_changes:
+        report["metrics"]["variable_grid"]={"bar_lengths_note_units":[str(x) for x in score.bar_lengths],
+                  "key_changes":[{"seconds":float(at*seconds_per_unit),"key":key} for at,key in score.key_changes]}
     unknown.append({"code":"acoustic_performance_and_lyric_delivery_unverified"})
     report["status"]="blocked" if hard else "artistic_review_required" if soft else "local_review_ready"
     return report

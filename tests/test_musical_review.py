@@ -63,7 +63,7 @@ class MusicalReviewTests(unittest.TestCase):
         self.assertFalse(review_score(ABC,LYRICS,max_seconds=20)["hard_violations"])
 
     def test_unsupported_vs_invalid(self):
-        unknown=ABC.replace("F8B8|","F8[K:D]B8|",1)
+        unknown=ABC.replace("F8B8|","F8{a}B8|",1)
         r=review_score(unknown,LYRICS)
         self.assertEqual(r["status"],"unassessable")
         self.assertFalse(r["hard_violations"])
@@ -100,3 +100,28 @@ class MusicalReviewTests(unittest.TestCase):
             self.assertEqual(main(argv),2)
             self.assertEqual(abc.read_text(),ABC)
             client.assert_not_called()
+
+class VariableGridTests(unittest.TestCase):
+    def make_score(self):
+        header=HEADER.replace("M:2/4","M:4/4").replace("L:1/32","L:1/16").replace("K:Dm","K:C")
+        return header+group("verse",'"C"C8D8|',"Z|")+(
+            "% chorus\nV: Vocal\nM:3/4\nK:G\n\"G\"F4[K:C]F8|\n"
+            "V: Ins\nM:3/4\nK:G\nz4[K:C]z8|\n")
+
+    def test_variable_meter_and_key_timing(self):
+        abc=self.make_score()
+        report=review_score(abc,"[Verse]\nOne\n[Chorus]\nTwo",max_seconds=7)
+        self.assertEqual(report["status"],"local_review_ready",report)
+        self.assertEqual(report["metrics"]["score_seconds"],7)
+        self.assertEqual(report["metrics"]["sections"][1]["start_seconds"],4)
+        self.assertEqual(report["metrics"]["sections"][1]["duration_seconds"],3)
+        self.assertEqual([e.pitch for e in parse_score(abc,native=True).events if e.kind=="note"][-2:],[66,65])
+        self.assertEqual(review_score(abc,"[Verse]\nOne\n[Chorus]\nTwo",max_seconds=6)["hard_violations"][0]["code"],"score_clock_exceeds_cap")
+
+    def test_unsynchronized_key_changes_block(self):
+        abc=self.make_score().replace("z4[K:C]z8|","z8[K:C]z4|")
+        self.assertEqual(review_score(abc,"[Verse]\nOne\n[Chorus]\nTwo",max_seconds=8)["status"],"blocked")
+
+    def test_unsynchronized_meters_block(self):
+        abc=self.make_score().replace("V: Ins\nM:3/4","V: Ins\nM:4/4").replace("z4[K:C]z8|","z4[K:C]z12|")
+        self.assertEqual(review_score(abc,"[Verse]\nOne\n[Chorus]\nTwo",max_seconds=8)["status"],"blocked")
