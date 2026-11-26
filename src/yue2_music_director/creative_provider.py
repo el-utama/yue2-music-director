@@ -6,6 +6,17 @@ import urllib.request
 from urllib.parse import urlsplit
 
 ROLES = ("composer", "lyricist", "reviewer", "director")
+NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
+NEMOTRON_VL = "nvidia/nemotron-3.5-super-vl-120b-a12b"
+SMOKE_SCHEMA = {"type":"object","properties":{"ready":{"type":"boolean","enum":[True]}},
+                "required":["ready"],"additionalProperties":False}
+
+
+def role_schema(role):
+    from . import composer, lyricist, creative_reviewer, director_decision
+    return {"composer":composer.SCHEMA,"lyricist":lyricist.SCHEMA,
+            "reviewer":creative_reviewer.SCHEMA,"director":director_decision.SCHEMA}[role]
+
 ENV_NAMES = ("MUSIC_LLM_URL", "MUSIC_LLM_KEY", "MUSIC_LLM_MODEL", *("MUSIC_LLM_"+r.upper()+"_MODEL" for r in ROLES))
 
 
@@ -59,7 +70,10 @@ class TextProvider:
         return load(repo)
 
     def identity(self):
-        return {"url":self.url, "models":dict(self.models)}
+        identity={"url":self.url, "models":dict(self.models)}
+        if self.url==NVIDIA_URL and NEMOTRON_VL in self.models.values():
+            identity["nemotron_vl_policy"]="structured-v1"
+        return identity
 
     def nvidia_catalog(self):
         """Read-only hosted NIM catalog probe; not proof of inference entitlement."""
@@ -83,10 +97,17 @@ class TextProvider:
         except (OSError,ValueError,KeyError,TypeError):
             raise ValueError("NVIDIA catalog connection or response failed") from None
 
-    def complete(self, role, prompt, data):
+    def complete(self, role, prompt, data, *, smoke=False):
         body = {"model":self.models[role], "messages":[{"role":"system","content":prompt},
                 {"role":"user","content":json.dumps(data, ensure_ascii=False)}],
                 "max_tokens":4096,"stream":False}
+        if self.url==NVIDIA_URL and self.models[role]==NEMOTRON_VL:
+            schema=SMOKE_SCHEMA if smoke else role_schema(role)
+            body["response_format"]={"type":"json_schema","json_schema":{
+                "name":"provider_check" if smoke else role+"_result","strict":True,"schema":schema}}
+            # Hosted model documents a 16384 default completion budget and reasoning control.
+            body["max_tokens"]=256 if smoke else 16384
+            body["chat_template_kwargs"]={"enable_thinking":not smoke}
         request = urllib.request.Request(self.url, data=json.dumps(body).encode(),
                   headers={"Authorization":"Bearer "+self._key,"Content-Type":"application/json","Accept":"application/json"},
                   method="POST")
@@ -104,7 +125,10 @@ class TextProvider:
             text=content.strip()
             if text.startswith("```json\n") and text.endswith("\n```"):
                 text=text[len("```json\n"):-len("\n```")]
-            return strict_json(text)
+            result=strict_json(text)
+            if not isinstance(result,dict):
+                raise ValueError("Final JSON is not an object")
+            return result
         except urllib.error.HTTPError as exc:
             advice={401:"authentication rejected; verify the key belongs to this provider, is complete and not expired or revoked",
                     403:"access forbidden; check key permissions, account and model access",

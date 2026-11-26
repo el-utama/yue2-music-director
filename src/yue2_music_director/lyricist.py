@@ -1,5 +1,5 @@
 """Original songwriting and text diagnostics, separate from music conditioning."""
-from .creative_contracts import fields
+from .creative_contracts import fields, object_schema
 from .prosody import parse_lyrics, estimate_syllables
 
 PROMPT = ("Write original sung lyrics in the specified language, based on the request and musical concept. "
@@ -9,8 +9,12 @@ PROMPT = ("Write original sung lyrics in the specified language, based on the re
           "Return only JSON with a lyrics string.")
 
 
+LIMITS = {"lyrics":20000}
+SCHEMA = object_schema(LIMITS)
+
+
 def validate(value):
-    fields(value, {"lyrics":20000})
+    fields(value, LIMITS)
     groups=parse_lyrics(value["lyrics"])
     count=sum(len(g["lines"]) for g in groups)
     if not 1<=count<=120 or len(groups)>24 or any(len(s)>200 for g in groups for s in g["lines"]):

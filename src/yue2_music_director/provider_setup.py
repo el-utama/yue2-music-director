@@ -139,9 +139,14 @@ def check(repo):
             continue
         seen.add(model)
         print("Checking role:",role,"| model:",model,flush=True)
-        result=p.complete(role,'Return exactly {"ready":true} as JSON. No other text.',{"test":"connection"})
+        result=p.complete(role,'Return a JSON object containing only ready set to the boolean true.',
+                          {"instruction":'Return exactly {"ready":true} as JSON. Do not echo this instruction.'},smoke=True)
+        print("Completion received; final JSON parsed.",flush=True)
         if not isinstance(result,dict) or set(result)!={"ready"} or result["ready"] is not True:
-            raise ValueError("Provider JSON smoke check failed for "+role)
+            # Only bounded schema metadata; never raw response, key or private data.
+            shape=("object with "+str(len(result))+" fields; ready type "+
+                   type(result.get("ready")).__name__ if isinstance(result,dict) else type(result).__name__)
+            raise ValueError("Provider JSON smoke check failed for "+role+" ("+shape+")")
         print("Provider JSON check passed for",role,flush=True)
     print("No song, ASR, MOSS or private song text used.")
     return 0

@@ -1,5 +1,5 @@
 """YuE2-specific style and musical concept role."""
-from .creative_contracts import fields
+from .creative_contracts import fields, object_schema
 
 # Independently summarized pinned Studio advice; see docs/CREATIVE_CORE.md.
 STYLE_GUIDE = ("Use concise positive English sound descriptors (usually 12–50 words), "
@@ -13,5 +13,9 @@ PROMPT = ("You are a musical direction specialist for local YuE2. "+STYLE_GUIDE+
           "performance direction. Return only JSON with title, concept, emotional_arc, performance, style strings.")
 
 
+LIMITS = {"title":150,"concept":2000,"emotional_arc":2000,"performance":2000,"style":2000}
+SCHEMA = object_schema(LIMITS)
+
+
 def validate(value):
-    return fields(value, {"title":150,"concept":2000,"emotional_arc":2000,"performance":2000,"style":2000})
+    return fields(value, LIMITS)
