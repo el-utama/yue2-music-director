@@ -31,3 +31,22 @@ class OutroRepairTests(unittest.TestCase):
     def test_unexpected_score_fails_closed(self):
         with self.assertRaises(ValueError):
             patch_outro(SCORE.replace('"Em7"z16','"Em7"E16',1))
+
+
+    def test_sparse_native_replay_uses_retained_full_settings(self):
+        lyrics="[Chorus]\nOne two\n[Outro]\nThree four\nFive six"
+        replay={"abc":SCORE,"lyrics":lyrics,"seed":42,"lm_seed":42,"semantic_tokens":",".join(["7"]*850)}
+        song={"replay_request":replay,"generation_settings":{"abc":SCORE,"cot":"full"},
+              "metadata":{"cot":"full"}}
+        brief={"lyrics":lyrics,"seed":42,"title":"Test"}
+        payload,cut,start,end=prepare_replay(song,brief)
+        self.assertEqual(payload["replay_request"]["cot"],"full")
+        self.assertEqual(cut,400)
+        self.assertNotIn("cot",replay)
+        for wrong in ("off","melody",None):
+            with self.subTest(mode=wrong),self.assertRaisesRegex(ValueError,"Full-score mode"):
+                prepare_replay({**song,"replay_request":{**replay,"cot":wrong}},brief)
+        with self.assertRaisesRegex(ValueError,"Full-score mode"):
+            prepare_replay({"replay_request":replay,"generation_settings":{"abc":SCORE}},brief)
+        with self.assertRaisesRegex(ValueError,"Full-score mode"):
+            prepare_replay({**song,"metadata":{"cot":"off"}},brief)
