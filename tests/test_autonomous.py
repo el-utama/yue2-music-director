@@ -173,3 +173,81 @@ class AutonomousTests(unittest.TestCase):
             legacy={**identity,"production_policy":au.LEGACY_POLICY}
             _,old_intent=au.make_inputs(result,legacy)
             self.assertEqual(old_intent["constraints"],{})
+
+
+class CreativeSemanticRecoveryTests(unittest.TestCase):
+    def test_composer_and_lyricist_rejections_recover_without_replay(self):
+        for role in ("composer","lyricist"):
+            with self.subTest(role=role), tempfile.TemporaryDirectory() as tmp:
+                repo=Path(tmp)
+                provider=Provider(stop=True)
+                valid=provider.complete
+                bad=True
+                def complete(stage,prompt,data):
+                    result=valid(stage,prompt,data)
+                    if bad and stage==role:
+                        if stage=="composer":
+                            result["performance"]="Missing required headers"
+                        else:
+                            result["lyrics"]="[Intro]\n[Verse]\nI left the key beside the door"
+                    return result
+                provider.complete=complete
+                args=(repo,"one","A quiet goodbye","en",150,"http://127.0.0.1:8791/mcp")
+                root=repo/"results/autonomous/one"
+                with patch.object(au.artist_run,"run") as native:
+                    with self.assertRaises(ValueError):
+                        au.launch(*args,confirm=True,provider_factory=lambda:provider)
+                    self.assertFalse((root/(role+".json")).exists())
+                    rejected=root/(role+".rejected.json")
+                    evidence=rejected.read_bytes()
+                    self.assertEqual(nd.read(rejected)["schema"],"creative-stage-rejected-v1")
+                    self.assertEqual(provider.calls,["composer"] if role=="composer" else ["composer","lyricist"])
+                    before=list(provider.calls)
+                    with self.assertRaises(ValueError):
+                        au.launch(*args,confirm=True,provider_factory=lambda:provider)
+                    self.assertEqual(provider.calls,before)
+                    bad=False
+                    self.assertEqual(au.launch(*args,confirm=True,provider_factory=lambda:provider,retry_role=role),2)
+                    self.assertEqual(provider.calls,["composer","composer","lyricist","reviewer"] if role=="composer" else ["composer","lyricist","lyricist","reviewer"])
+                    self.assertEqual(rejected.read_bytes(),evidence)
+                    self.assertEqual(nd.read(root/(role+".json"))["schema"],"creative-stage-semantic-v1")
+                    with self.assertRaises(ValueError):
+                        au.launch(*args,confirm=True,provider_factory=lambda:provider,retry_role=role)
+                    native.assert_not_called()
+
+    def test_second_invalid_response_exhausts_retry_and_preserves_both(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            provider=Provider()
+            valid=provider.complete
+            def complete(role,prompt,data):
+                result=valid(role,prompt,data)
+                result["performance"]="Bad opening header"
+                return result
+            provider.complete=complete
+            args=(repo,"one","A quiet goodbye","en",150,"http://127.0.0.1:8791/mcp")
+            root=repo/"results/autonomous/one"
+            with patch.object(au.artist_run,"run") as native:
+                with self.assertRaises(ValueError):
+                    au.launch(*args,confirm=True,provider_factory=lambda:provider)
+                for _ in range(2):
+                    with self.assertRaises(ValueError):
+                        au.launch(*args,confirm=True,provider_factory=lambda:provider,retry_role="composer")
+                self.assertEqual(provider.calls,["composer","composer"])
+                self.assertFalse((root/"composer.json").exists())
+                self.assertTrue((root/"composer.rejected.json").is_file())
+                self.assertTrue((root/"composer.retry-1.rejected.json").is_file())
+                native.assert_not_called()
+
+    def test_legacy_receipts_are_not_rewritten(self):
+        from yue2_music_director import creative_core as cc
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            provider=Provider()
+            args=(root,provider,"A quiet goodbye","en",150)
+            result=cc.prepare(*args,duration_guidance=True)
+            before={p:p.read_bytes() for p in root.iterdir()}
+            self.assertNotIn("schema",nd.read(root/"composer.json"))
+            self.assertEqual(cc.prepare(*args,duration_guidance=True),result)
+            self.assertEqual(provider.calls,["composer","lyricist","reviewer"])
+            self.assertEqual({p:p.read_bytes() for p in root.iterdir()},before)
