@@ -32,3 +32,17 @@ These sources describe research results or project capabilities, not tests on ou
 6. Keep native finishing separate: an explicitly approved derived copy and audible improvement assessment, not destructive changes to source or proof that clipping caused the drum artifact.
 
 Success criterion: a new director decision must be both musically meaningful and supported by an observation, not merely another generation or a higher opaque score. Existing runner, parser, stable-idle barriers and journals remain the execution foundation. No new phase is claimed implemented by this document.
+
+## Follow-up: official MIRA demonstration artifacts
+
+Operator supplied https://mirareview.github.io/. Live page fetch failed, but the public [website source](https://github.com/mirareview/mirareview.github.io) was accessible through GitHub. Inspected `site/index.html`, the referenced JavaScript bundle `site/assets/main-BWJKZV79.js`, and `site/data/search-cases.json`. The site advertises 13 curated audio comparisons and links to [MIRA code](https://github.com/mirareview/MIRA). The latter public repository was found, but README fetch returned 404; its executable implementation, release/license and installation are not verified. Do not treat the website bundle as the agent code.
+
+All three exported YuE2-3B trajectories are labeled instrumental, with structured memory enabled, experience summarization disabled, same recorded generation seed within each shown trajectory, and `humanListeningVerified:false`. Online verifier scores below are 0–1, not calibrated listener ratings or the paper's offline benchmark. Root and parent are not always the same:
+
+| Case | Root | Parent | Selected | Selected round |
+|---|---:|---:|---:|---:|
+| [08 industrial](https://mirareview.github.io/listen.html#case-08) | .343770 | .343770 | .827894 | 3 |
+| [09 acoustic morning](https://mirareview.github.io/listen.html#case-09) | .899940 | .904638 | .959460 | 6 |
+| [10 guitar/piano café](https://mirareview.github.io/listen.html#case-10) | .731245 | .714081 | .769855 | 8 |
+
+Case 08 kick criterion .109149 -> .989014, sub-bass .087334 -> .971068; unsettling melody .627725 -> .565857 regressed. Case 09 morning mood .350541 -> .836187 between parent and selected, minor regressions elsewhere. Case 10 piano .085865 -> .940115 between parent and selected, guitar .974046 -> .756303; no-vocals criterion remains low (.406028). The parent-to-selected gain is larger than root-to-selected. The exports expose original request, reference-derived evidence, confidence, prompt revisions, per-item changes, clips and caveats. No audio listened to or independently evaluated here. This is evidence for prompt refinement and item-level regression reporting, not evidence of improved singing, lyric fidelity or human-like vocals; the three YuE examples are instrumental. Our next critic contract should preserve root and selected evidence, protect previously satisfied high-priority intent, and distinguish automated scores from listener judgments. No new generation or dependency authorized.
