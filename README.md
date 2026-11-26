@@ -1,12 +1,12 @@
 # YuE2 Music Director
 
-Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, focused on safe ABC score edits, lyric-section diagnostics, MIDI compatibility checks and controlled audio A/B experiments. **Development build: experimental alpha; package version 0.7.0a8.post3. Identify unreleased builds by Git commit, not the unchanged package version.**
+Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, developing a generation-first, native YuE2 music director for original songs, artistic guidance and evidence-based evaluation. Existing ABC, MIDI, lyric and audio experiment utilities remain available. **Development build: experimental alpha; package version 0.7.0a8.post3. Identify unreleased builds by Git commit, not the unchanged package version.**
 
 > The repository is public. Never commit private audio, unpublished lyrics, local job journals, model weights or credentials.
 
 ## Native-first development policy
 
-Music Director is an evidence-driven decision and orchestration layer for YuE2 Studio, not a replacement generator, trainer, DAW or Studio UI. The current development audit supersedes earlier alignment-first planning.
+Music Director is an evidence-driven decision and orchestration layer for YuE2 Studio, not a replacement generator, trainer, DAW or Studio UI. The [generation-first architecture and roadmap](docs/MUSIC_DIRECTOR_ARCHITECTURE.md) now governs new-song development; the earlier native-first audit remains the capability and safety reference.
 
 - [Studio capability knowledge](docs/knowledge/STUDIO_CAPABILITIES.md): native workflows, requirements, side effects, limits and reuse decisions.
 - [MCP tool index](docs/knowledge/MCP_TOOL_INDEX.md): 339 static definitions at the audited upstream revision; not live availability.
@@ -19,13 +19,13 @@ Do not add a feature until native and reusable alternatives have been checked. D
 
 YuE2 Music Director adalah agent pendamping YuE2 Studio yang bertugas memahami tujuan musik, memilih fitur native yang sesuai, mengelola eksperimen secara aman, menilai hasil berdasarkan bukti, dan menentukan apakah kandidat perlu dipertahankan atau ditolak. Agent ini bukan pengganti generator, trainer LoRA, DAW, maupun antarmuka Studio.
 
-**Status:** masih dalam tahap riset alpha. Evaluasi AudioBox, review gabungan dan inspeksi timing native telah berhasil pada satu perbandingan audio nyata. Kualitas musikal, koreksi fonetik otomatis, dan orkestrasi produksi lagu baru belum tervalidasi. Dokumentasi teknis berbahasa Inggris merupakan sumber utama.
+**Status:** masih dalam tahap riset alpha. Evaluasi AudioBox, review gabungan dan inspeksi timing native telah berhasil pada satu perbandingan audio nyata. Generasi satu lagu dengan score buatan director dan recovery evaluasi telah berhasil secara nyata, tetapi hasil musikal ditolak oleh pendengar. Agent otonom, peningkatan naturalness lintas lagu dan koreksi fonetik otomatis belum tervalidasi. Dokumentasi teknis berbahasa Inggris merupakan sumber utama.
 
 **Kebijakan:** utamakan fitur bawaan YuE2, skill resmi, model dan adapter komunitas yang kompatibel serta berlisensi sesuai penggunaan. Gunakan eksperimen yang sudah ada sebelum meminta pengguna menjalankan inferensi lagi. Jangan mengunduh model, melatih LoRA, mengubah pengaturan, atau menghapus hasil tanpa izin.
 
 **Penggunaan dasar:** Python 3.10+ dan Git diperlukan. Untuk instalasi editable dan tes offline, ikuti bagian Setup. Jalankan `py -3 -m yue2_music_director.cli --help` untuk melihat perintah aktual. FFmpeg dan Studio lokal diperlukan hanya untuk operasi terkait. Jangan mengulang eksperimen yang sudah selesai; periksa laporan dan jurnal lokal terlebih dahulu. Jangan unggah audio, lirik, dataset atau konfigurasi pribadi ke repository publik.
 
-**Rencana terkini:** baca [audit pengembangan](docs/knowledge/DEVELOPMENT_AUDIT.md). Inventaris kemampuan Studio yang benar-benar terpasang, validasi laporan eksperimen lama, audit evaluator resmi dan kompatibilitas adapter, baru tentukan kebutuhan implementasi baru.
+**Rencana terkini:** baca [arsitektur dan roadmap Music Director](docs/MUSIC_DIRECTOR_ARCHITECTURE.md). Utamakan penciptaan lagu dari intent artistik, komposisi native YuE2, dan review musikal dengan intervensi selektif. Berikutnya implementasi offline untuk analisis score dan pemisahan batas wajib dari preferensi musikal; bukan regenerasi demo atau perbaikan audio lama.
 
 ## Setup
 
@@ -39,6 +39,8 @@ py -3 -m unittest discover -s tests -v
 ```
 
 ## Documentation map
+
+- [Generation-first architecture and implementation roadmap](docs/MUSIC_DIRECTOR_ARCHITECTURE.md): authoritative next phases, routing, artistic constraints, musical review, budgets, recovery and acceptance criteria (design, not shipped).
 
 - [Research handbook](docs/RESEARCH_HANDBOOK.md): goals, architecture, evidence, operating rules and roadmap.
 - [Changelog and research milestones](CHANGELOG.md): retrospective history from the early prototypes.
@@ -55,11 +57,11 @@ See [Generation Control Study](docs/GENERATION_CONTROL_STUDY.md). Compare defaul
 
 ## Director-authored first-song study (experimental)
 
-Run `draft.cmd --director-demo` to inspect the bundled original research composition offline, or `draft.cmd --director-demo --confirm-run` to authorize one new song and one local lyric recognition. Uses an explicit pre-reviewed score, native MIDI preflight and retained score verification; no repair or edits to the private brief. See [Study 2](docs/GENERATION_CONTROL_STUDY.md#study-2--new-song-director-authored-composition).
+Run `draft.cmd --director-demo` to inspect the bundled original research composition offline, or `draft.cmd --director-demo --confirm-run` to authorize one new song and one local lyric recognition. Uses an explicit pre-reviewed score, native MIDI preflight and retained score verification; no repair or edits to the private brief. See [Study 2](docs/GENERATION_CONTROL_STUDY.md#study-2--new-song-director-authored-composition). Live synthesis and resumed recognition completed; the operator rejected the musical result. Retain the demo as a research fixture, not a recommended artistic default.
 
 ## Native song draft (experimental)
 
-See [Native Song Draft](docs/NATIVE_DRAFT.md). A private six-field brief and one explicit authorization drive one native stock reference generation and one local recognition, with a resumable journal, technical QA and automatic TXT handoff. No optional evaluator is required. Combined live validation is pending.
+See [Native Song Draft](docs/NATIVE_DRAFT.md). A private six-field brief and one explicit authorization drive one native stock reference generation and one local recognition, with a resumable journal, technical QA and automatic TXT handoff. No optional evaluator is required. The explicit-score variant completed one live song and resumed evaluation; the revised generation-first orchestration and cross-song artistic quality are not yet validated.
 
 ## Finish a generated song (alpha 8)
 
