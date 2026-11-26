@@ -131,6 +131,83 @@ def prepare_replay(song,brief):
     return {"title":brief["title"]+" - Outro candidate","replay_request":fields},cut,start,end
 
 
+# Evidence-scoped second attempt. Fingerprints bind the approximate listening
+# observation to the actual original score, lyric brief and retained prefix.
+# Do not generalize these musical decisions to other songs.
+V2_SCORE_SHA = "40555cd912ad386695556f33619c8fdf1666dd0859f26378d51b46ab741ca1fe"
+V2_LYRICS_SHA = "c397d17bb7b0c9ba852ac8d284fd616a1bfb76aa4eeb7d4682b15177c1ed67d0"
+V2_PREFIX_SHA = "9b26d62db346326af6a763586fe279e85d0afb4bd66fff0de974c70ad916e912"
+V2_ENDING = """% outro
+V: Vocal
+"Dmaj7"F2A2F4A2B6|"Em7"G2F2E2F2E6z2|"A7"A2G2E4F2E6|"Dmaj7"F2A2F4D6z2|
+V: Ins
+Z4|
+V: Vocal
+"Dmaj7"z16|"A7"z16|"Dmaj7"z16|
+V: Ins
+z4c2B2c3A3d2-|d4zBAFEDB,A,D4-|D12z4|
+"""
+
+
+def restructure_ending(abc):
+    """Replace the redundant third chorus and silent outro, not earlier score."""
+    original = parse_score(abc)
+    expected = ["intro#1","verse#1","pre-chorus#1","chorus#1","verse#2",
+                "pre-chorus#2","chorus#2","interlude#1","chorus#3","outro#1"]
+    counts = [9,8,4,9,8,5,9,8,8,9]
+    sections = [name for name,count in zip(expected,counts) for _ in range(count)]
+    if (original.headers.get("Q") != "1/4=87" or original.headers.get("K") != "D"
+            or original.headers.get("M") != "4/4" or original.headers.get("L") != "1/16"
+            or any(original.sections[voice] != sections for voice in ("Vocal","Ins"))):
+        raise ValueError("V2 requires the exact observed score structure")
+    markers = list(re.finditer(r"(?m)^% chorus[ \\t]*$",abc))
+    if len(markers) != 3:
+        raise ValueError("V2 requires three explicit chorus labels")
+    prefix = abc[:markers[-1].start()]
+    fixed = prefix + V2_ENDING
+    check = parse_score(fixed)
+    if any(check.sections[v] != sections[:60]+["outro#1"]*7 for v in ("Vocal","Ins")):
+        raise ValueError("V2 ending structure verification failed")
+    def protected(score):
+        return [(e.voice,e.bar,e.section,e.raw,e.offset,e.duration,e.pitch)
+                for e in score.events if e.bar < 60]
+    if protected(original) != protected(check):
+        raise ValueError("V2 changed the protected score")
+    attacks = [e for e in check.events if e.voice=="Vocal" and e.bar>=60 and e.kind=="note"]
+    if [sum(e.bar in interval for e in attacks) for interval in (range(60,62),range(62,64),range(64,67))] != [10,9,0]:
+        raise ValueError("V2 phrase layout mismatch")
+    prior = [e.pitch for e in original.events if e.voice=="Vocal" and e.bar<60 and e.kind=="note"]
+    if not prior or any(not min(prior)<=e.pitch<=max(prior) for e in attacks):
+        raise ValueError("V2 melody exceeds prior vocal register")
+    return fixed
+
+
+def prepare_replay_v2(song,brief):
+    # Reuse the original identity, full mode, provenance-adjacent score and
+    # sparse replay checks; never submit its rejected payload.
+    payload,old_cut,_,_=prepare_replay(song,brief)
+    abc=song["generation_settings"]["abc"]
+    stream=codes(song["replay_request"]["semantic_tokens"])
+    fingerprints=(_sha(abc.strip().encode()),_sha(brief["lyrics"].strip().encode()),
+                  _sha(",".join(stream[:old_cut]).encode()))
+    if fingerprints != (V2_SCORE_SHA,V2_LYRICS_SHA,V2_PREFIX_SHA) or old_cut!=4689:
+        raise ValueError("V2 listening evidence does not match this source")
+    fixed=restructure_ending(abc)
+    # Reported humming onset ~163 s. Recompose from 160 s (bar 58,
+    # inside the instrumental interlude); not a verified acoustic splice.
+    start=160.0
+    cut=4000
+    end=float(Fraction(67*240,87))
+    fields=payload["replay_request"]
+    fields.update(abc=fixed,semantic_tokens=",".join(stream[:cut]),duration=end+0.5)
+    # Keep the two intended vocal phrases in budget; allow the cadence
+    # to end freely after them. This is a hypothesis, not enforced singing.
+    fields["semantic_sampling"]["min_tokens"]=math.floor(Fraction(64*240*25,87))
+    fields["semantic_sampling"]["max_tokens"]=math.ceil((end+0.5)*25)
+    payload["title"]=brief["title"]+" - Ending candidate v2"
+    return payload,cut,start,end
+
+
 def submit(url,payload):
     endpoint=urlsplit(configured_endpoint(url))
     if endpoint.path!="/mcp":
@@ -144,7 +221,7 @@ def submit(url,payload):
     return json.loads(raw)
 
 
-def run(repo,url,confirm):
+def run(repo,url,confirm,v2=False):
     brief=load_brief(repo/"local/brief.json")
     root=repo/"results/drafts"/_sha(_canonical(brief))
     original=read(root/"journal_song.json")
@@ -166,15 +243,27 @@ def run(repo,url,confirm):
     if not audio.is_absolute() or not audio.is_file() or audio.suffix.lower()!=".flac":
         raise ValueError("Original FLAC unavailable")
     sha=file_sha(audio)
-    payload,cut,start,end=prepare_replay(song,brief)
-    out=root/"outro-repair"
+    if v2:
+        prior=read(root/"outro-repair"/"report.json")
+        if (prior.get("original_job_id")!=job_id or prior.get("original_song_id")!=song_id
+                or prior.get("original_audio_sha256")!=sha or prior.get("original_unchanged") is not True
+                or prior.get("semantic_prefix_equal") is not True or not prior.get("candidate_song_id")):
+            raise ValueError("V2 requires the retained first trial evidence")
+        payload,cut,start,end=prepare_replay_v2(song,brief)
+    else:
+        payload,cut,start,end=prepare_replay(song,brief)
+    out=root/("outro-repair-v2" if v2 else "outro-repair")
     out.mkdir(exist_ok=True)
     path=out/"journal.json"
     plan={"original_job_id":job_id,"original_song_id":song_id,"original_audio_sha256":sha,
           "payload_sha256":_sha(_canonical(payload)),"prefix_frames":cut,"planned_outro_start":start,
           "planned_score_end":end,"acoustic_boundary_verified":False}
     print("Planned outro:",round(start,3),"to",round(end,3),"seconds; retained frames:",cut,flush=True)
-    print("19 vocal note attacks added; instrumental score and earlier score unchanged.",flush=True)
+    if v2:
+        print("V2: remove redundant chorus; two sung phrases and three instrumental cadence bars.",flush=True)
+        print("Reported humming ~163 s; planned recompose 160 s; score outro 165.517 s.",flush=True)
+    else:
+        print("19 vocal note attacks added; instrumental score and earlier score unchanged.",flush=True)
     if path.exists():
         j=read(path)
         if any(j.get(k)!=v for k,v in plan.items()) or not j.get("job_id"):
@@ -185,6 +274,8 @@ def run(repo,url,confirm):
         if not confirm:
             print("Plan only. No generation.")
             return
+        if not v2:
+            raise ValueError("V1 rejected musically; new submission disabled. Do not reset its journal.")
         status=unpack(client.call("studio_status",{}))
         reference_configuration(client,status,request_for(brief),unpack(client.call("song_defaults",{})),
                                 unpack(client.call("studio_capabilities",{})))
@@ -235,9 +326,10 @@ def main():
     parser.add_argument("--repo",type=Path,required=True)
     parser.add_argument("--url",required=True)
     parser.add_argument("--confirm",action="store_true")
+    parser.add_argument("--v2",action="store_true",help="Evidence-scoped revised ending; separate trial journal")
     args=parser.parse_args()
     try:
-        run(args.repo.resolve(),args.url,args.confirm)
+        run(args.repo.resolve(),args.url,args.confirm,args.v2)
         return 0
     except (ValueError,OSError,KeyError,TypeError,MCPError) as exc:
         print("ERROR:",exc,file=sys.stderr)
