@@ -185,3 +185,67 @@ class FailureInspectionTests(unittest.TestCase):
             client.call.assert_called_once_with("song_job_get",{"job_id":"known","response_format":"concise"})
             self.assertEqual(nd.read(draft/"job-inspection.json"),job)
             self.assertEqual(nd.read(draft/"journal_song.json")["state"],"SUBMITTED")
+
+
+class OOMRecoveryTests(unittest.TestCase):
+    def setUp(self):
+        tmp=tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root=Path(tmp.name).resolve()
+        self.intent=intent("reviewed_native")
+        config={"profile":"same"}
+        request={**nd.request_for(BRIEF),"abc":ABC}
+        self.journal={"state":"SUBMITTED","job_id":"failed-song",
+                      "brief_sha256":nd.digest(nd._canonical(BRIEF)),
+                      "request_sha256":nd.digest(nd._canonical(request)),
+                      "reference_configuration":config}
+        self.draft=self.root/"draft"
+        self.draft.mkdir()
+        nd.atomic_write(self.root/"manifest.json",{"schema":"artist-run-v1","brief":BRIEF,
+            "intent":self.intent,"route":"reviewed_native","explicit_score_sha256":None})
+        nd.atomic_write(self.root/"journal_plan.json",{"state":"COMPLETED","id":"plan",
+            "configuration":config,"request_sha256":nd.digest(nd._canonical(ar.plan_request(BRIEF,self.intent))),
+            "score_sha256":nd.digest(ABC.encode("utf-8"))})
+        nd.atomic_write(self.root/"plan-result.json",{"id":"plan","status":"done","lm_seed":42,"abc":ABC,
+            "plans":[{"lm_seed":42,"abc":ABC}]})
+        (self.root/"native-plan.abc").write_bytes(ABC.encode("utf-8"))
+        nd.atomic_write(self.root/"plan-decision.json",ar.evaluate_plan(ABC,BRIEF,self.intent))
+        nd.atomic_write(self.draft/"brief.json",BRIEF)
+        nd.atomic_write(self.draft/"request.json",request)
+        nd.atomic_write(self.draft/"journal_song.json",self.journal)
+        nd.atomic_write(self.draft/"artist-policy.json",{"intent":self.intent,"planner_configuration":config})
+        self.failed={"id":"failed-song","status":"failed","songs":[],
+            "message":"The graphics card ran out of memory while the engine was loading the models."}
+
+    def test_one_separate_recovery_reuses_score_and_evidence(self):
+        with patch.object(ar,"Client") as factory,patch.object(nd,"read_job",return_value=self.failed) as read_job, \
+             patch.object(nd,"execute",return_value={"status":"provisional_draft"}) as execute, \
+             patch.object(ar,"native_plan") as planner:
+            for _ in range(2):
+                ar.recover_oom(BRIEF,self.intent,self.root,URL)
+            read_job.assert_called_once()
+            factory.assert_called_once()
+            planner.assert_not_called()
+            self.assertEqual(execute.call_args.kwargs["abc"],ABC)
+            self.assertEqual(execute.call_args.args[1],self.root/"oom-recovery-1"/"draft")
+            self.assertEqual(nd.read(self.draft/"journal_song.json"),self.journal)
+            self.assertEqual(nd.read(self.root/"oom-recovery-1"/"recovery.json")["budget"]["score_jobs"],0)
+
+    def test_nonterminal_or_other_failure_cannot_recover(self):
+        with patch.object(ar,"Client"),patch.object(nd,"read_job") as read_job,patch.object(nd,"execute") as execute:
+            for failure in ({**self.failed,"status":"running"},
+                            {**self.failed,"message":"different failure"},
+                            {**self.failed,"songs":[{"id":"unexpected"}]}):
+                read_job.return_value=failure
+                with self.assertRaisesRegex(ValueError,"not a verified terminal"):
+                    ar.recover_oom(BRIEF,self.intent,self.root,URL)
+            execute.assert_not_called()
+            self.assertFalse((self.root/"oom-recovery-1").exists())
+
+    def test_missing_retained_plan_never_plans(self):
+        (self.root/"plan-result.json").unlink()
+        with patch.object(ar,"Client") as factory,patch.object(nd,"execute") as execute:
+            with self.assertRaises(OSError):
+                ar.recover_oom(BRIEF,self.intent,self.root,URL)
+            factory.assert_not_called()
+            execute.assert_not_called()
