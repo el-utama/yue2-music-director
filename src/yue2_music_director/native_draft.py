@@ -15,6 +15,7 @@ from .multilingual_fidelity import SUPPORTED, assess
 from .native_recognition import _sha, _recognition, capture, recognition_preflight
 from .prosody import parse_lyrics
 from .stock_selection import select_stock
+from .studio_idle import wait_for_idle, assert_idle
 
 
 def read(path):
@@ -257,7 +258,7 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
             select_stock(client,tools)
         defaults=unpack(client.call("song_defaults",{}))
         capabilities=unpack(client.call("studio_capabilities",{}))
-        status=unpack(client.call("studio_status",{}))
+        status=wait_for_idle(client,"song synthesis")
         configuration=reference_configuration(client,status,request,defaults,capabilities)
         if expected_configuration is not None and configuration!=expected_configuration:
             raise ValueError("Native configuration changed after score planning")
@@ -271,6 +272,7 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
             atomic_write(root/"score-review.json",{"structural_review":review,"midi":midi,
                          "score_sha256":digest(abc.encode("utf-8"))})
             print("Directed score: structural and native MIDI compatibility passed.",flush=True)
+        assert_idle(client)
         journal={"state":"SUBMISSION_ATTEMPTED","brief_sha256":brief_sha,
                  "request_sha256":request_sha,"reference_configuration":configuration}
         create_journal(journal_path,journal)
@@ -356,6 +358,7 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
         raise ValueError("Acoustic evidence identity differs")
     recognition=root/"recognition"
     if not recognition.exists():
+        wait_for_idle(client,"local lyric recognition")
         print("Running one authorized local lyric recognition...",flush=True)
         capture(audio,recognition,url,confirm=True,language=brief["language"])
     receipt=read(recognition/"receipt.json")

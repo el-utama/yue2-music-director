@@ -27,6 +27,9 @@ def intent(route="auto",constraints=None,flags=None):
 
 class ArtistTests(unittest.TestCase):
     def setUp(self):
+        guard=patch.object(ar,'assert_idle',return_value={})
+        guard.start()
+        self.addCleanup(guard.stop)
         tmp=tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         self.root=Path(tmp.name).resolve()
@@ -105,6 +108,12 @@ class ArtistTests(unittest.TestCase):
 
 
 class IntegratedDraftTests(unittest.TestCase):
+    def setUp(self):
+        for name in ('wait_for_idle','assert_idle'):
+            guard=patch.object(nd,name,return_value={})
+            guard.start()
+            self.addCleanup(guard.stop)
+
     def test_native_reviewed_minor_song_and_recognition_resume(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp).resolve()
