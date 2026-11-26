@@ -1,5 +1,11 @@
 # Changelog and research milestones
 
+## Unreleased — generation-first artistic routing and execution (P2/P3)
+
+- Add a versioned artistic intent companion, explicit budgets, direct/reviewed/explicit routing and documented soft-flag decisions. Reuse native draft and recognition recovery, verify retained planner configuration, native MIDI and saved score/lyric conditioning.
+- Add original blues-soul demo and `draft.cmd --artist-demo` / `--artist` modes; offline plan only unless confirmed. No new dependencies, private assets, or automatic retries.
+- Synthetic transaction tests; real Studio execution and musical quality remain pending. No autonomous language-model composition claim. See [Artistic Run](docs/ARTISTIC_RUN.md).
+
 ## Unreleased — generation-first P1 score review
 
 - Add an opt-in native fixed-grid parser profile for major/minor scores, native paired groups, ties and accidentals, preserving the legacy parser defaults.

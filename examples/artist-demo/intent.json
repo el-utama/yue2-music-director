@@ -1,0 +1,39 @@
+{
+  "schema": "artist-intent-v1",
+  "route": "reviewed_native",
+  "concept": "An intimate blues-soul song about gradually accepting a quiet separation. Original lyrics; no imitation of reference melody or singer.",
+  "emotional_arc": "Begin alone and restrained; deepen longing in the first refrain; find tentative independence in verse two; bridge turns toward acceptance; final refrain releases rather than forces the emotion; leave space for a quiet resolution.",
+  "performance": "Conversational low male vocal, deliberate pauses and gentle dynamic build; let native planner choose actual key, tempo, melodic contour and harmonic colors. Keep sparse arrangement early, fuller later, then let it breathe.",
+  "section_purposes": {
+    "intro#1": "Create atmosphere without rushing the vocal.",
+    "verse#1": "Intimate observation and absence.",
+    "pre-chorus#1": "Build tension with space.",
+    "chorus#1": "Memorable vulnerable refrain.",
+    "verse#2": "Subtle shift toward independence.",
+    "bridge#1": "Emotional turning point.",
+    "chorus#2": "Develop the same lyrical hook with expressive freedom.",
+    "outro#1": "Unhurried resolution."
+  },
+  "constraints": {
+    "key": {
+      "mode": "prefer",
+      "value": "Am"
+    },
+    "tempo_bpm": {
+      "mode": "prefer",
+      "value": 72
+    }
+  },
+  "retain_soft_flags": {
+    "constraint_mismatch": "Key and tempo are creative preferences rather than fixed values.",
+    "section_order_differs": "Native form may redistribute instrumental space or combine sections; inspect actual sung text after rendering.",
+    "notated_sung_sequence_differs": "Notated sections are only a lyric scheduling risk, not proof of omitted words. Preserve native interpretation and assess actual lyric disagreement after synthesis.",
+    "identical_repeated_chorus": "A stable hook can support emotional progression through performance and arrangement; identical notation does not establish identical audio."
+  },
+  "follow_lyrics": false,
+  "budget": {
+    "score_jobs": 1,
+    "song_jobs": 1,
+    "recognition_calls": 1
+  }
+}
