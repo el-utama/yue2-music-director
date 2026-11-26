@@ -6,6 +6,11 @@ import urllib.request
 from urllib.parse import urlsplit
 
 ROLES = ("composer", "lyricist", "reviewer", "director")
+ENV_NAMES = ("MUSIC_LLM_URL", "MUSIC_LLM_KEY", "MUSIC_LLM_MODEL", *("MUSIC_LLM_"+r.upper()+"_MODEL" for r in ROLES))
+
+
+def configuration_source():
+    return "environment" if any(name in os.environ for name in ENV_NAMES) else "local Windows configuration"
 
 
 def strict_json(text):
@@ -32,7 +37,7 @@ class TextProvider:
         if (p.scheme != "https" or not p.hostname or p.username or p.password
                 or p.query or p.fragment or not p.path.endswith("/chat/completions")):
             raise ValueError("Configure an HTTPS chat/completions URL")
-        if not key or any(c in key for c in "\r\n"):
+        if (not key or not key.isascii() or any(c.isspace() or ord(c)<33 or ord(c)>126 for c in key)):
             raise ValueError("Missing or invalid provider key")
         if set(models) != set(ROLES) or any(not isinstance(v, str) or not v.strip()
                                           or len(v)>200 for v in models.values()):
@@ -47,8 +52,7 @@ class TextProvider:
 
     @classmethod
     def for_repo(cls, repo):
-        names=("MUSIC_LLM_URL","MUSIC_LLM_KEY","MUSIC_LLM_MODEL",*("MUSIC_LLM_"+r.upper()+"_MODEL" for r in ROLES))
-        if any(name in os.environ for name in names):
+        if configuration_source()=="environment":
             # Never mix credentials from different configuration sources.
             return cls.from_env()
         from .provider_setup import load
@@ -57,12 +61,34 @@ class TextProvider:
     def identity(self):
         return {"url":self.url, "models":dict(self.models)}
 
+    def nvidia_catalog(self):
+        """Read-only hosted NIM catalog probe; not proof of inference entitlement."""
+        if self.url != "https://integrate.api.nvidia.com/v1/chat/completions":
+            raise ValueError("NVIDIA catalog probe requires the exact hosted NIM endpoint")
+        request=urllib.request.Request("https://integrate.api.nvidia.com/v1/models",
+                  headers={"Authorization":"Bearer "+self._key,"Accept":"application/json"},
+                  method="GET")
+        try:
+            with urllib.request.build_opener(NoRedirect()).open(request,timeout=30) as response:
+                raw=response.read(1048577)
+            if len(raw)>1048576:
+                raise ValueError("Catalog response too large")
+            data=strict_json(raw.decode("utf-8"))["data"]
+            if not isinstance(data,list) or any(not isinstance(x,dict) or
+                    not isinstance(x.get("id"),str) for x in data):
+                raise ValueError("Invalid catalog response")
+            return 200, {x["id"] for x in data}
+        except urllib.error.HTTPError as exc:
+            return exc.code, set()
+        except (OSError,ValueError,KeyError,TypeError):
+            raise ValueError("NVIDIA catalog connection or response failed") from None
+
     def complete(self, role, prompt, data):
         body = {"model":self.models[role], "messages":[{"role":"system","content":prompt},
                 {"role":"user","content":json.dumps(data, ensure_ascii=False)}],
                 "max_tokens":4096,"stream":False}
         request = urllib.request.Request(self.url, data=json.dumps(body).encode(),
-                  headers={"Authorization":"Bearer "+self._key,"Content-Type":"application/json"},
+                  headers={"Authorization":"Bearer "+self._key,"Content-Type":"application/json","Accept":"application/json"},
                   method="POST")
         try:
             with urllib.request.build_opener(NoRedirect()).open(request, timeout=180) as response:
@@ -80,6 +106,10 @@ class TextProvider:
                 text=text[len("```json\n"):-len("\n```")]
             return strict_json(text)
         except urllib.error.HTTPError as exc:
-            raise ValueError("Provider HTTP status "+str(exc.code)) from None
+            advice={401:"authentication rejected; verify the key belongs to this provider, is complete and not expired or revoked",
+                    403:"access forbidden; check key permissions, account and model access",
+                    429:"rate limit or quota; do not switch to a paid model automatically"}
+            raise ValueError("Provider HTTP status "+str(exc.code)+
+                             ("; "+advice[exc.code] if exc.code in advice else "")) from None
         except (OSError,ValueError,KeyError,IndexError,TypeError):
             raise ValueError("Provider connection or completion failed; inspect configured provider") from None

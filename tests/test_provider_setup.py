@@ -106,3 +106,53 @@ class ProviderTransportTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"429"):
                 p.complete("composer","JSON only",{})
             self.assertEqual(opener.return_value.open.call_count,1)
+
+class AuthDiagnosticsTests(unittest.TestCase):
+    def test_configuration_source_no_secrets(self):
+        from yue2_music_director.creative_provider import configuration_source
+        with patch.dict(os.environ,{},clear=True):
+            self.assertEqual(configuration_source(),"local Windows configuration")
+        with patch.dict(os.environ,{"MUSIC_LLM_KEY":"secret"},clear=True):
+            self.assertEqual(configuration_source(),"environment")
+
+    def test_auth_errors_preserve_status_without_body(self):
+        p=TextProvider(ps.PRESETS["1"],"fixture-secret",{r:"fixture" for r in ROLES})
+        for code,word in ((401,"authentication rejected"),(403,"access forbidden")):
+            with patch("urllib.request.build_opener") as opener:
+                opener.return_value.open.side_effect=urllib.error.HTTPError(p.url,code,"fixture-secret",{},None)
+                with self.assertRaisesRegex(ValueError,word) as caught:
+                    p.complete("composer","JSON only",{})
+                self.assertIn(str(code),str(caught.exception))
+                self.assertNotIn("fixture-secret",str(caught.exception))
+                self.assertEqual(opener.return_value.open.call_count,1)
+
+class NvidiaCatalogTests(unittest.TestCase):
+    def test_catalog_uses_same_key_and_exact_host(self):
+        p=TextProvider(ps.PRESETS["1"],"fixture-secret",{r:"fixture" for r in ROLES})
+        with patch("urllib.request.build_opener") as opener:
+            response=opener.return_value.open.return_value.__enter__.return_value
+            response.read.return_value=b'{"data":[{"id":"fixture"}]}'
+            self.assertEqual(p.nvidia_catalog(),(200,{"fixture"}))
+            request=opener.return_value.open.call_args.args[0]
+            self.assertEqual(request.full_url,"https://integrate.api.nvidia.com/v1/models")
+            self.assertEqual(request.get_method(),"GET")
+            self.assertEqual(request.get_header("Authorization"),"Bearer fixture-secret")
+
+    def test_catalog_rejection_stops_before_completion(self):
+        p=TextProvider(ps.PRESETS["1"],"fixture-secret",{r:"fixture" for r in ROLES})
+        with patch.object(TextProvider,"for_repo",return_value=p), patch.object(p,"nvidia_catalog",return_value=(401,set())), patch.object(p,"complete") as completion:
+            with self.assertRaisesRegex(ValueError,"401"):
+                ps.check(Path("."))
+            completion.assert_not_called()
+
+    def test_catalog_success_is_not_completion_success(self):
+        p=TextProvider(ps.PRESETS["1"],"fixture-secret",{r:"fixture" for r in ROLES})
+        with patch.object(TextProvider,"for_repo",return_value=p), patch.object(p,"nvidia_catalog",return_value=(200,{"fixture"})), patch.object(p,"complete",side_effect=ValueError("Provider HTTP status 403")) as completion:
+            with self.assertRaisesRegex(ValueError,"403"):
+                ps.check(Path("."))
+            completion.assert_called_once()
+
+    def test_malformed_key_rejected_locally(self):
+        for key in ("Bearer fixture","fixture\tsecret","fixture\x16secret","fixture\u200bsecret"):
+            with self.assertRaises(ValueError):
+                TextProvider(ps.PRESETS["1"],key,{r:"fixture" for r in ROLES})

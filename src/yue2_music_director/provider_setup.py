@@ -7,10 +7,11 @@ import getpass
 import json
 import os
 from pathlib import Path
+from urllib.parse import urlsplit
 import sys
 import warnings
 
-from .creative_provider import TextProvider, ROLES, strict_json
+from .creative_provider import TextProvider, ROLES, strict_json, configuration_source
 from .native_draft import atomic_write
 
 PRESETS={"1":"https://integrate.api.nvidia.com/v1/chat/completions",
@@ -108,17 +109,36 @@ def setup(repo):
         key=getpass.getpass("API key (hidden; stays on this PC): ").strip()
     save(repo,url,key,{r:model for r in ROLES})
     print("Saved encrypted local configuration. No API calls made.")
+    if configuration_source()=="environment":
+        print("WARNING: MUSIC_LLM_* environment settings override this local configuration.")
     print("The selected provider's quotas and charges apply; no paid-model fallback.")
     return 0
 
 
 def check(repo):
+    print("Configuration source:",configuration_source(),flush=True)
     p=TextProvider.for_repo(repo)
+    print("Provider host:",urlsplit(p.url).hostname,flush=True)
+    # No credential value, prefix, fingerprint, URL path or raw error body in output.
+    print("Credential loaded: yes (not yet authenticated)",flush=True)
+    if p.url==PRESETS["1"]:
+        status, models=p.nvidia_catalog()
+        print("NVIDIA model catalog HTTP:",status,flush=True)
+        if status in (401,403):
+            raise ValueError("Provider HTTP status "+str(status)+"; catalog access rejected. No completion attempted. Check NVIDIA key scope/account; not a song-generation failure.")
+        if status!=200:
+            raise ValueError("Provider HTTP status "+str(status)+"; catalog unavailable. No completion attempted.")
+        missing=set(p.models.values())-models
+        if missing:
+            print("Configured model absent from catalog; checking exact requested model anyway.",flush=True)
+        else:
+            print("Configured model present in catalog (inference permission still unverified).",flush=True)
     seen=set()
     for role,model in p.models.items():
         if model in seen:
             continue
         seen.add(model)
+        print("Checking role:",role,"| model:",model,flush=True)
         result=p.complete(role,'Return exactly {"ready":true} as JSON. No other text.',{"test":"connection"})
         if not isinstance(result,dict) or set(result)!={"ready"} or result["ready"] is not True:
             raise ValueError("Provider JSON smoke check failed for "+role)
@@ -139,6 +159,8 @@ def main():
     except (OSError,ValueError,TypeError,KeyError,EOFError,getpass.GetPassWarning) as exc:
         # Never print input or provider secrets.
         print("ERROR: "+str(exc) if isinstance(exc,ValueError) else "ERROR: provider setup/check failed",file=sys.stderr)
+        if a.check and "HTTP status" in str(exc) and ("401" in str(exc) or "403" in str(exc)):
+            print("If NVIDIA NIM is selected, check the NVIDIA API key and Public API Endpoints permission at build.nvidia.com/settings/api-keys. A key from another provider cannot authenticate here.",file=sys.stderr)
         return 2
 
 
