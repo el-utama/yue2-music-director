@@ -150,6 +150,27 @@ def lock(path):
         path.unlink()
 
 
+def listen(root, brief, intent, row, url):
+    out = root / "neutral-listening"
+    contract = freeze(out, row)
+    installed = ac.inventory([row])
+    nd.atomic_write(out / "inventory.json", installed)
+    client = Client(configured_endpoint(url), timeout=90).connect()
+    def barrier():
+        wait_for_idle(client, "neutral CPU listening")
+        assert_idle(client)
+    evidence = ac.evaluate(out, [row], installed, parse=parse_observations,
+                           before_excerpt=barrier)
+    packet = review_packet(brief, intent, row, contract, evidence)
+    nd.atomic_write(out / "review-packet.json", packet)
+    print("Local audio:", row["audio"], flush=True)
+    print("Director review packet:", out / "review-packet.json", flush=True)
+    for item in packet["observations"]:
+        print("Excerpt:", item["start_seconds"], "to", item["end_seconds"], flush=True)
+        print(item["raw_response"], flush=True)
+    return packet
+
+
 def launch(repo, url, *, demo=False, confirm=False):
     brief, intent = inputs(repo, demo)
     print("Director:", brief["title"], flush=True)
@@ -163,23 +184,7 @@ def launch(repo, url, *, demo=False, confirm=False):
     with lock(drafts / ".active"), lock(repo / "results/.critic-active"):
         report = artist_run.run(brief, intent, root, url)
         row = verify_take(root / "draft", brief, report)
-        out = root / "neutral-listening"
-        contract = freeze(out, row)
-        installed = ac.inventory([row])
-        nd.atomic_write(out / "inventory.json", installed)
-        client = Client(configured_endpoint(url), timeout=90).connect()
-        def barrier():
-            wait_for_idle(client, "neutral CPU listening")
-            assert_idle(client)
-        evidence = ac.evaluate(out, [row], installed, parse=parse_observations,
-                               before_excerpt=barrier)
-        packet = review_packet(brief, intent, row, contract, evidence)
-        nd.atomic_write(out / "review-packet.json", packet)
-        print("Local audio:", row["audio"], flush=True)
-        print("Director review packet:", out / "review-packet.json", flush=True)
-        for item in packet["observations"]:
-            print("Excerpt:", item["start_seconds"], "to", item["end_seconds"], flush=True)
-            print(item["raw_response"], flush=True)
+        listen(root, brief, intent, row, url)
         print("Retained original; artistic review pending. No automatic revision or finishing.", flush=True)
     return 0
 
@@ -189,10 +194,16 @@ def main():
     parser.add_argument("--repo", type=Path, required=True)
     parser.add_argument("--url", required=True)
     parser.add_argument("--demo", action="store_true")
+    parser.add_argument("--revise-arrangement", action="store_true", help="One separately approved demo arrangement revision")
     parser.add_argument("--confirm-run", action="store_true",
                         help="Authorize one native song, ASR and two CPU listening excerpts")
     args = parser.parse_args()
     try:
+        if args.revise_arrangement:
+            if not args.demo:
+                raise ValueError("Arrangement revision currently supports the retained demo only")
+            from .arrangement_refinement import launch_revision
+            return launch_revision(args.repo.resolve(), args.url, confirm=args.confirm_run)
         return launch(args.repo.resolve(), args.url, demo=args.demo, confirm=args.confirm_run)
     except (OSError, ValueError, KeyError, TypeError, MCPError, subprocess.SubprocessError) as exc:
         print("ERROR:", exc, file=sys.stderr, flush=True)
