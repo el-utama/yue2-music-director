@@ -1,14 +1,14 @@
 # Research handbook
 
-Status: experimental alpha 8.post3, 2026-11-25. This handbook consolidates the accessible project record; not a verbatim archive of all conversations or older local prototypes.
+Status: experimental alpha 8.post3 development, 2026-11-26. This handbook consolidates the accessible project record; not a verbatim archive of all conversations or older local prototypes.
 
 ## Current authoritative roadmap
 
-The 2026-11-25 [native-first development audit](knowledge/DEVELOPMENT_AUDIT.md) supersedes the sequencing of earlier plans below. Review [Studio capabilities](knowledge/STUDIO_CAPABILITIES.md), [MCP inventory](knowledge/MCP_TOOL_INDEX.md) and [community/evaluation research](knowledge/COMMUNITY_AND_EVALUATION.md) before proposing new implementation. The installed runtime inventory was read locally; stock configuration must still be checked before a new generation. Historical experimental evidence remains valid within its original scope.
+The 2026-11-26 [generation-first architecture and implementation roadmap](MUSIC_DIRECTOR_ARCHITECTURE.md) supersedes the sequencing of earlier plans below. The 2026-11-25 [native-first development audit](knowledge/DEVELOPMENT_AUDIT.md) remains the capability and safety reference. Review [Studio capabilities](knowledge/STUDIO_CAPABILITIES.md), [MCP inventory](knowledge/MCP_TOOL_INDEX.md) and [community/evaluation research](knowledge/COMMUNITY_AND_EVALUATION.md) before proposing new implementation. The installed runtime inventory was read locally; stock configuration must still be checked before a new generation. Historical experimental evidence remains valid within its original scope.
 
 ## Goal and scope
 
-Build a local-first music director that diagnoses score, lyric, performance and audio issues, chooses supported interventions, creates bounded candidates, evaluates evidence and keeps or rejects candidates without mandatory routine manual listening. Respect the user's intended melody, hook, arrangement, lyrics and style. Never claim that a text score or successful MIDI conversion proves natural performance. Human musical preference remains separate from automatic lyric screening. ASR is the default diagnostic for languages the operator may not speak; it is fallible and does not measure phonemes or verified sung errors.
+Build a local-first music director that creates original songs from artistic intent, delegates composition to native YuE2 by default, reviews musical development, chooses supported selective interventions, and evaluates bounded candidates. Retained-audio diagnosis is a secondary capability, not the main product. Routine technical QA needs no manual listening; artistic acceptance remains separate. Respect the user's intended melody, hook, arrangement, lyrics and style. Never claim that a text score or successful MIDI conversion proves natural performance. Human musical preference remains separate from automatic lyric screening. ASR is the default diagnostic for languages the operator may not speak; it is fallible and does not measure phonemes or verified sung errors.
 
 ## Primary research objective: musical humanization (2026-11-26)
 
@@ -18,11 +18,11 @@ Human contribution and AI generation are distinct dimensions. Record actual huma
 
 If an independent music-AI detector is available, its reported result may be recorded as a secondary observational research metric, with detector identity, version/date, input format and frozen comparison conditions. A detector score is not a percentage of AI creative contribution, a calibrated probability unless established by that detector, a musical quality score, or evidence of human authorship. Do not optimize against a detector or select processing solely to reduce its score. No claim of reduced detection without measured evidence, and no guarantee of a particular classification. No third-party audio upload without explicit consent. Use matched, loudness-controlled blinded listening where practical, lyric fidelity and technical non-regression, human reference recordings with appropriate rights, and held-out songs distinct from training material for eventual cross-song validation. Existing stock repair, pitch, dynamics and AudioBox experiments remain scoped evidence; no repeat merely to populate a dashboard.
 
-Research ordering: complete the current bounded lyric-conditioning experiment without automatic retries; then audit already available native expressive controls and retained A/B evidence, establish a humanization evaluation protocol, and separately evaluate compatible custom-trained models/adapters when their provenance and local configuration are verified. No training, inference, model change or detector upload is authorized by this roadmap update.
+Research ordering: the bounded lyric-conditioning experiment is closed. Implement the new roadmap's offline score evidence and review policy first, then intent/routing and integrated recovery-safe generation. Evaluate a new song only after those gates and explicit authorization. Custom-trained models/adapters remain a separate evidence-driven track when provenance and compatibility are verified. No training, inference, model change or detector upload is authorized by this roadmap update.
 
 ## Generation-first control study
 
-The bounded lyric-repair trial is closed. [Generation Control Study](GENERATION_CONTROL_STUDY.md) is the next empirical gate: compare native planning with and without section-order steering on the existing private brief, before committing to any full-song synthesis. This is an experiment, not a default production policy or a proven naturalness improvement.
+The bounded lyric-repair trial is closed. [Generation Control Study](GENERATION_CONTROL_STUDY.md) records completed planning and authored-score generation experiments plus the preferred stock reference. Technical feasibility is demonstrated; musical improvement is not. Adopt native creative freedom with separate hard constraints, review flags and unknowns under the [new architecture](MUSIC_DIRECTOR_ARCHITECTURE.md). The historical strict study policy remains unchanged in code.
 
 ## Architecture and operating paths
 
@@ -59,7 +59,8 @@ Read [changelog](../CHANGELOG.md) and [Issue #4](https://github.com/el-utama/yue
 
 - Native Process Audio: one Naturalize preview and continuation verified locally; preserve its evidence. Other effects and installed versions remain unverified. No automatic keep/discard until ownership and semantics are verified.
 - Completed real combined review, AudioBox and native timing validation. Do not repeat.
-- [Native song draft](NATIVE_DRAFT.md): one bounded production path, awaiting combined live validation.
+- [Native song draft](NATIVE_DRAFT.md): explicit-score variant completed one live full generation and resumed ASR without duplicate synthesis. Musical verdict rejected; revised orchestration remains pending.
+- Next priority: P1 offline score evidence and versioned review policy, then P2 intent/routing, P3 integration and P4 one original live song, as specified in [the authoritative roadmap](MUSIC_DIRECTOR_ARCHITECTURE.md). The remaining bullets are secondary or longer-term tracks.
 - Improve provenance and calibrated signal metrics; explicitly distinguish technical pass, lyric non-regression and unverified musical outcome.
 - Verified phoneme/time alignment and safe correction planner; no guessed mapping or invented model controls.
 - Unified local agent orchestration: budgeted, resumable decisions across score, generation, recognition, finishing; stop when blocked, no loop of repeated user manual checks.
