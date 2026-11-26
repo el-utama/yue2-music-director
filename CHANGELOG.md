@@ -1,5 +1,11 @@
 # Changelog and research milestones
 
+## Unreleased — generation control study
+
+- Add a bounded, journaled comparison of native score planning with and without section-order steering, before full synthesis.
+- Compare structural eligibility only; no naturalness, lyric delivery, or live runtime claims until verified. Two score jobs, no full-song generation or automatic repair.
+- See [study protocol](docs/GENERATION_CONTROL_STUDY.md).
+
 This is a retrospective index, not a complete record of every historical prototype. Git history and [research issue #4](https://github.com/el-utama/yue2-music-director/issues/4) preserve the underlying decisions. Private artifacts stay on the operator's machine.
 
 | Milestone | Changes / evidence |
