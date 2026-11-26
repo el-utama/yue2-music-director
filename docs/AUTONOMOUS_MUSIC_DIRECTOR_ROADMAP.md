@@ -59,3 +59,5 @@ Add an independent Cover Art Specialist for single or ordered album projects, us
 ### Release Export Specialist
 
 Independent deterministic export of completed single/album/EP jobs, original lossless audio, plain lyrics and existing native timed lyric display anchors as LRC/SRT. No fabricated timings, no new inference, no publishing; missing timing yields explicit partial export. See [release export](RELEASE_EXPORT.md). Finishing and artwork attachment are future independently verified variants.
+
+Export refinement: preserve Studio native enhanced LRC verbatim, derive SRT using the pinned UI display heuristic with duration cap. No separate SRT export MCP required. Missing/invalid timing remains a partial export, not a fabricated subtitle.

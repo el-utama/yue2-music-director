@@ -9,7 +9,7 @@ from pathlib import Path
 
 from . import native_draft as nd, creative_core as cc, cover_art, listening_director as ld
 from .mcp import MCPError, configured_endpoint
-from .temporal_evidence import native_song_read, karaoke_metadata, parse_lrc
+from .temporal_evidence import native_song_read, karaoke_metadata, parse_lrc, LINE
 from .prosody import parse_lyrics
 
 
@@ -45,18 +45,40 @@ def stamp(ms,*,srt=False):
 
 
 def timed_text(lrc,lyrics,duration):
-    rows=parse_lrc(lrc,duration)
+    # Match the pinned Studio UI's subtitle display policy, independently
+    # implemented from app/services/lrc-parser.ts (bfd35a0).
+    # Section labels are not sung cues; preserve them in the original LRC.
+    if not isinstance(lrc,str) or len(lrc)>512000:
+        raise ValueError("Invalid native LRC")
+    sung=[]
+    for raw in lrc.splitlines():
+        match=LINE.fullmatch(raw.strip())
+        if match and re.fullmatch(r"\[.*\]",match.group(4).strip()):
+            continue
+        sung.append(raw)
+    rows=parse_lrc("\n".join(sung),duration)
     expected=[line for group in parse_lyrics(lyrics) for line in group["lines"]]
     if [" ".join(r["text"].split()) for r in rows]!=[" ".join(x.split()) for x in expected]:
         raise ValueError("Native LRC does not cover the exact lyric lines in order")
-    starts=[round(r["start_seconds"]*1000) for r in rows]
-    limit=math.floor(duration*1000)
-    if any(a>=b for a,b in zip(starts,starts[1:]+[limit])):
-        raise ValueError("Timestamp precision collapses display interval")
-    lrc_out="".join(f"[{stamp(start)}]{line}\n" for start,line in zip(starts,expected))
-    srt_out="\n".join(f"{i+1}\n{stamp(start,srt=True)} --> {stamp(end,srt=True)}\n{line}\n"
-                      for i,(start,end,line) in enumerate(zip(starts,starts[1:]+[limit],expected)))
-    return lrc_out,srt_out
+    cues=[]
+    for i,row in enumerate(rows):
+        start=row["start_seconds"]
+        words=row["word_anchors"]
+        ceiling=rows[i+1]["start_seconds"] if i+1<len(rows) else start+3
+        if words:
+            span=words[-1]["start_seconds"]-words[0]["start_seconds"]
+            tail=span/(len(words)-1) if len(words)>1 else 0.8
+            line_end=words[-1]["start_seconds"]+max(0.3,min(1.5,tail))
+        else:
+            line_end=start+4
+        end=min(duration,ceiling,max(start+0.3,min(line_end,ceiling)))
+        # JS Math.round for nonnegative time, with measured duration as extra cap.
+        start_ms=math.floor(start*1000+0.5)
+        end_ms=min(math.floor(end*1000+0.5),math.floor(duration*1000))
+        if end_ms<=start_ms:
+            raise ValueError("Timestamp precision collapses display interval")
+        cues.append(f"{i+1}\n{stamp(start_ms,srt=True)} --> {stamp(end_ms,srt=True)}\n{row['text']}\n")
+    return lrc,"\n".join(cues)
 
 
 def read_timing(track,url):
@@ -102,7 +124,7 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",confirm=Fa
     root=base/(safe_title(title)+"--"+release)
     contract={"schema":"release-export-v1","release":release,"type":kind,"title":title,"artist":artist,
               "sources":[t["evidence"] for t in tracks],"audio_variant":"original",
-              "timing_policy":"native-display-anchors-v1"}
+              "timing_policy":"studio-display-anchors-v2"}
     print("Export folder:",root,flush=True)
     if not confirm:
         print("Plan only; no writes or Studio calls.",flush=True)
@@ -136,7 +158,8 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",confirm=Fa
                     (dest/(name+".srt")).write_bytes(srt_out.encode("utf-8"))
                     timing={"status":"exported_unverified_display_anchors","acoustic_timing_verified":False,
                             "source_lrc_sha256":nd.digest(lrc.encode("utf-8")),
-                            "srt_end_policy":"next line onset; final line ends at measured recording duration"}
+                            "srt_end_policy":"Studio UI word-tail/plain-line heuristic; capped at next onset, final 3 seconds and measured duration",
+                            "lrc_preserved":True}
                 except (ValueError,MCPError) as exc:
                     timing["reason"]=str(exc)
                 details.append({"track":i,"job":t["job"],"title":t["brief"]["title"],"audio_sha256":t["result"]["audio_sha256"],

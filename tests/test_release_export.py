@@ -20,13 +20,24 @@ def fixture(repo,job):
 class ExportTests(unittest.TestCase):
     def test_times_and_order(self):
         lrc,srt=ex.timed_text(LRC,LYRICS,5.5)
-        self.assertIn("[00:03.250]Three four",lrc)
-        self.assertIn("00:00:01,000 --> 00:00:03,250",srt)
+        self.assertEqual(lrc,LRC)
+        self.assertIn("00:00:01,000 --> 00:00:02,000",srt)
         self.assertIn("00:00:03,250 --> 00:00:05,500",srt)
         with self.assertRaises(ValueError):
             ex.timed_text("[00:01.00]One two",LYRICS,5.5)
         with self.assertRaises(ValueError):
             ex.timed_text(LRC.replace("Three four","Wrong"),LYRICS,5.5)
+
+    def test_native_gap_example_and_section_labels(self):
+        source="[00:01.50][Verse 1]\n[00:02.00]<00:02.00>First <00:02.40>line\n[00:05.25]Second line\n[01:02.10]Last line"
+        words="[Verse 1]\nFirst line\nSecond line\nLast line"
+        raw,srt=ex.timed_text(source,words,70)
+        self.assertEqual(raw,source)
+        self.assertEqual(srt,"1\n00:00:02,000 --> 00:00:02,800\nFirst line\n\n"
+                             "2\n00:00:05,250 --> 00:00:09,250\nSecond line\n\n"
+                             "3\n00:01:02,100 --> 00:01:05,100\nLast line\n")
+        _,short=ex.timed_text(source,words,63)
+        self.assertIn("00:01:02,100 --> 00:01:03,000",short)
 
     def test_export_single_album_ep_and_retention(self):
         with tempfile.TemporaryDirectory() as tmp:
