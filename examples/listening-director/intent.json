@@ -1,6 +1,6 @@
 {
   "schema": "artist-intent-v1",
-  "route": "direct_native",
+  "route": "auto",
   "concept": "An ordinary late train ride becomes a small moment of self-acceptance after separation. The empty seat is an image of new independence, not a demand for reconciliation.",
   "emotional_arc": "Quiet observation moves into tentative acceptance; the second verse widens perspective, the bridge offers a moment of insight, the final refrain feels warmer rather than louder for its own sake.",
   "performance": "Intimate conversational lead, natural breathing and space; acoustic instrumental responses, small dynamic shifts, understated final release. Native engine chooses melody, harmony and tempo.",
