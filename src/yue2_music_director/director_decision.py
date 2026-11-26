@@ -1,5 +1,5 @@
 """Advisory post-generation judgment. No tool access or acceptance authority."""
-from .creative_contracts import fields
+from .creative_contracts import fields, object_schema
 
 PROMPT = ("You are the music director reviewing a completed provisional take. Use only supplied creative intent, "
           "technical screens and unverified audio observations. Distinguish subjective interpretation from measurement. "
@@ -9,8 +9,12 @@ PROMPT = ("You are the music director reviewing a completed provisional take. Us
           "'review_required'), rationale and suggested_next_step strings. Do not declare artistic acceptance.")
 
 
+LIMITS = {"decision":30,"rationale":2000,"suggested_next_step":1000}
+SCHEMA = object_schema(LIMITS, {"decision":["retain_provisional","review_required"]})
+
+
 def validate(value):
-    fields(value, {"decision":30,"rationale":2000,"suggested_next_step":1000})
+    fields(value, LIMITS)
     if value["decision"] not in ("retain_provisional","review_required"):
         raise ValueError("Unsupported director decision")
     return value

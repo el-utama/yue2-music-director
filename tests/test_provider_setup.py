@@ -156,3 +156,50 @@ class NvidiaCatalogTests(unittest.TestCase):
         for key in ("Bearer fixture","fixture\tsecret","fixture\x16secret","fixture\u200bsecret"):
             with self.assertRaises(ValueError):
                 TextProvider(ps.PRESETS["1"],key,{r:"fixture" for r in ROLES})
+
+class NemotronStructuredTests(unittest.TestCase):
+    def provider(self):
+        from yue2_music_director.creative_provider import NEMOTRON_VL
+        return TextProvider(ps.PRESETS["1"],"fixture-secret",{r:NEMOTRON_VL for r in ROLES})
+
+    def test_structured_schema_and_budget_for_each_role(self):
+        from yue2_music_director.creative_provider import role_schema
+        p=self.provider()
+        for role in ROLES:
+            with patch("urllib.request.build_opener") as opener:
+                response=opener.return_value.open.return_value.__enter__.return_value
+                response.read.return_value=b'{"choices":[{"finish_reason":"stop","message":{"content":"{}"}}]}'
+                p.complete(role,"JSON",{})
+                body=json.loads(opener.return_value.open.call_args.args[0].data)
+                self.assertEqual(body["response_format"]["json_schema"]["schema"],role_schema(role))
+                self.assertTrue(body["response_format"]["json_schema"]["strict"])
+                self.assertEqual(body["max_tokens"],16384)
+                self.assertTrue(body["chat_template_kwargs"]["enable_thinking"])
+                self.assertEqual(opener.return_value.open.call_count,1)
+
+    def test_smoke_schema_is_distinct_and_reasoning_disabled(self):
+        p=self.provider()
+        with patch("urllib.request.build_opener") as opener:
+            response=opener.return_value.open.return_value.__enter__.return_value
+            response.read.return_value=b'{"choices":[{"finish_reason":"stop","message":{"content":"{\\"ready\\":true}"}}]}'
+            self.assertEqual(p.complete("composer","JSON",{},smoke=True),{"ready":True})
+            body=json.loads(opener.return_value.open.call_args.args[0].data)
+            self.assertEqual(body["response_format"]["json_schema"]["schema"]["properties"],{"ready":{"type":"boolean","enum":[True]}})
+            self.assertFalse(body["chat_template_kwargs"]["enable_thinking"])
+            self.assertEqual(body["max_tokens"],256)
+
+    def test_smoke_does_not_accept_wrong_json_object(self):
+        p=self.provider()
+        with patch.object(TextProvider,"for_repo",return_value=p), patch.object(p,"nvidia_catalog",return_value=(200,set(p.models.values()))), patch.object(p,"complete",return_value={"test":"connection"}):
+            with self.assertRaisesRegex(ValueError,"smoke check failed"):
+                ps.check(Path("."))
+
+    def test_generic_provider_no_nvidia_specific_fields(self):
+        p=TextProvider("https://example.com/v1/chat/completions","fixture-secret",{r:"fixture" for r in ROLES})
+        with patch("urllib.request.build_opener") as opener:
+            response=opener.return_value.open.return_value.__enter__.return_value
+            response.read.return_value=b'{"choices":[{"finish_reason":"stop","message":{"content":"{}"}}]}'
+            p.complete("composer","JSON",{},smoke=True)
+            body=json.loads(opener.return_value.open.call_args.args[0].data)
+            self.assertNotIn("response_format",body)
+            self.assertNotIn("chat_template_kwargs",body)
