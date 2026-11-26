@@ -129,7 +129,7 @@ def score_signature(abc, *, native=False):
 
 
 def verify_saved_directed_score(saved,abc,song_id,job_id,brief,*,native=False):
-    if (saved.get("id")!=song_id or not isinstance(saved.get("metadata"),dict)
+    if (not isinstance(saved,dict) or saved.get("id")!=song_id or not isinstance(saved.get("metadata"),dict)
             or saved["metadata"].get("job_id")!=job_id):
         raise ValueError("Directed song provenance mismatch")
     settings=saved.get("generation_settings")
