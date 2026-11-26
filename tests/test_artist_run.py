@@ -164,7 +164,33 @@ class IntegratedDraftTests(unittest.TestCase):
                 self.assertFalse(result["automatic_acceptance"])
                 self.assertEqual(result["lyric_screen"]["WER"]["edits"],0)
                 self.assertEqual(result,nd.execute(BRIEF,run,URL,abc=ABC,artist=chosen,expected_configuration=config))
+                # Exercise the actual post-production verifier, not a mocked row.
+                from yue2_music_director import listening_director as ld
+                (root/"native-plan.abc").write_bytes(ABC.encode("utf-8"))
+                nd.atomic_write(root/"journal_plan.json",{"state":"COMPLETED","score_sha256":nd.digest(ABC.encode("utf-8"))})
+                nd.atomic_write(root/"plan-decision.json",ar.evaluate_plan(ABC,BRIEF,chosen))
+                row=ld.verify_take(run,BRIEF,result)
+                self.assertEqual(row["audio_sha256"],nd._sha(audio))
+                # A separately hashed native spelling/line-ending normalization
+                # is allowed only if the musical semantics still match.
+                from yue2_music_director.musical_review import review_score
+                saved=ABC.replace("\n","\r\n").rstrip()
+                (run/"saved-score.abc").write_bytes(saved.encode("utf-8"))
+                post=review_score(saved,BRIEF["lyrics"],constraints=chosen["constraints"],max_seconds=BRIEF["duration_seconds"])
+                nd.atomic_write(run/"saved-score-review.json",post)
+                result["saved_score_review"]=post
+                nd.atomic_write(run/"report.json",result)
+                self.assertEqual(ld.verify_take(run,BRIEF,result),row)
+                changed=saved.replace("D8F8","D8G8")
+                (run/"saved-score.abc").write_bytes(changed.encode("utf-8"))
+                post=review_score(changed,BRIEF["lyrics"],constraints=chosen["constraints"],max_seconds=BRIEF["duration_seconds"])
+                nd.atomic_write(run/"saved-score-review.json",post)
+                result["saved_score_review"]=post
+                nd.atomic_write(run/"report.json",result)
+                with self.assertRaisesRegex(ValueError,"musical semantics"):
+                    ld.verify_take(run,BRIEF,result)
                 self.assertEqual(sum(c.args[0]=="song_create" for c in client.call.call_args_list),1)
+                self.assertEqual(capture.call_count,2)
 
 
 class FailureInspectionTests(unittest.TestCase):
