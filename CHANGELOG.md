@@ -1,5 +1,10 @@
 # Changelog and research milestones
 
+## Unreleased — native terminal job evidence
+
+- First live artist demo completed one plan and passed native MIDI; song job failed. Cause not established by the operator log. No additional generation authorized.
+- Expose native phase/message, retain job status, distinguish terminal failure from bounded wait, and add read-only `--artist-demo --inspect` to recover existing evidence.
+
 ## Unreleased — generation-first artistic routing and execution (P2/P3)
 
 - Add a versioned artistic intent companion, explicit budgets, direct/reviewed/explicit routing and documented soft-flag decisions. Reuse native draft and recognition recovery, verify retained planner configuration, native MIDI and saved score/lyric conditioning.
