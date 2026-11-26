@@ -59,3 +59,37 @@ class ListeningDirectorTests(unittest.TestCase):
                         self.fail("Unexpected acquired lock")
                 self.assertTrue(p.exists())
             self.assertFalse(p.exists())
+
+    def test_retained_packet_is_offline_and_validates_raw_receipt(self):
+        row={"arm":"baseline","audio":"fixture.flac","audio_sha256":"fixture",
+             "acoustic":{"duration_seconds":180},"lyric_screen":{}}
+        brief={"title":"fixture"}
+        intent={}
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            out=root/"neutral-listening"
+            contract=ld.freeze(out,row)
+            runtime={"fixture":"hash"}
+            ld.nd.atomic_write(out/"runtime.json",runtime)
+            evidence=[]
+            for j,(start,duration) in enumerate(contract["ranges"],1):
+                stem="arm-1-part-"+str(j)
+                raw=out/(stem+".txt")
+                response="VOCAL: soft"
+                raw.write_text(response,encoding="utf-8")
+                identity={"audio_sha256":row["audio_sha256"],"start_seconds":start,
+                          "duration_seconds":duration,"prompt_sha256":ld.nd._sha(out/"prompt.txt"),
+                          "runtime":runtime}
+                ld.nd.atomic_write(out/(stem+".json"),{"identity":identity,"response_sha256":ld.nd._sha(raw)})
+                status,checks=ld.parse_observations(response)
+                evidence.append({"arm":"baseline","start_seconds":start,"duration_seconds":duration,
+                                 "format_status":status,"checks":checks,"raw_response":response})
+            packet=ld.review_packet(brief,intent,row,contract,evidence)
+            ld.nd.atomic_write(out/"review-packet.json",packet)
+            with patch.object(ld,"Client") as client, patch.object(ld.ac,"evaluate") as evaluate:
+                self.assertEqual(ld.listen(root,brief,intent,row,"unused"),packet)
+                client.assert_not_called()
+                evaluate.assert_not_called()
+                raw.write_text("changed",encoding="utf-8")
+                with self.assertRaises(ValueError):
+                    ld.listen(root,brief,intent,row,"unused")
