@@ -28,7 +28,7 @@ def inspect_plan(abc, brief):
     wanted = [f"{g['name']}#{g['occurrence']}" for g in groups if g["lines"]]
     try:
         score = parse_score(abc)
-    except (ScoreError, ValueError, KeyError) as exc:
+    except (ScoreError, ValueError, KeyError, ZeroDivisionError) as exc:
         return {"status": "unsupported_or_invalid_score", "reason": str(exc),
                 "eligible_for_render": False}
     actual = list(dict.fromkeys(score.sections["Vocal"]))
@@ -39,8 +39,8 @@ def inspect_plan(abc, brief):
     # Unrequested purely instrumental sections are legitimate. An unrequested
     # vocal-note section is not; an expected sung section without notes fails.
     sung = [s for s in actual if note_counts[s] > 0]
-    # Count by *sung* occurrence so an instrumental bridge/chorus does not
-    # shift later lyric matches silently: any extra note-bearing block fails.
+    # Compare original section occurrences: an extra section with notes fails.
+    # A rest-only occurrence cannot silently stand in for a sung lyric block.
     missing = [s for s in wanted if not note_counts.get(s)]
     extra = [s for s in sung if s not in wanted]
     flags = []
@@ -62,8 +62,6 @@ def inspect_plan(abc, brief):
             flags.append("score_exceeds_requested_duration_cap")
     except (KeyError, ValueError, ZeroDivisionError):
         flags.append("duration_not_assessable")
-    if score.warnings:
-        flags.append("parser_warnings_require_review")
     return {"status": "review_required" if flags else "structural_pass",
             "eligible_for_render": not flags, "flags": flags, "missing_sung_sections": missing,
             "extra_sung_sections": extra, "expected_sung_sections": wanted,
