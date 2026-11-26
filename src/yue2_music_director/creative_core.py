@@ -43,7 +43,7 @@ def stage(root, role, module, provider, data, *, retry=False):
     return result
 
 
-def prepare(root, provider, request, language, duration, *, retry_role=None, duration_guidance=False):
+def prepare(root, provider, request, language, duration, *, retry_role=None, duration_guidance=False, direction_guidance=False):
     data={"request":request,"language":language,"duration_seconds":duration}
     if duration_guidance:
         # Advisory target only; the actual native score clock is screened before rendering.
@@ -51,8 +51,15 @@ def prepare(root, provider, request, language, duration, *, retry_role=None, dur
         data["duration_plan"]={"hard_cap_seconds":duration,"target_score_seconds":duration-reserve,
               "ending_reserve_seconds":reserve,
               "guidance":"Plan a compact complete song, with a resolved final sung phrase and short instrumental tail inside the target. Allow room for introductions, instrumental breaks, breathing and sustained notes. Avoid redundant verses, long repeated choruses or extended outros. Lyricist should adapt line and section count to pacing; reviewer should stop implausibly long plans. Do not treat duration as an exact target or omit necessary closure."}
+    if direction_guidance:
+        from . import creative_direction as cd
+        data["direction_guidance"]=cd.GUIDANCE
     music=stage(root,"composer",composer,provider,data,retry=retry_role=="composer")
+    if direction_guidance:
+        cd.parse_direction(music)
     words=stage(root,"lyricist",lyricist,provider,{**data,"composition":music},retry=retry_role=="lyricist")
+    if direction_guidance:
+        cd.validate_opening(music,words["lyrics"])
     review=stage(root,"reviewer",creative_reviewer,provider,{**data,"composition":music,
                  "lyrics":words["lyrics"],"diagnostics":lyricist.diagnostics(words["lyrics"],language)},retry=retry_role=="reviewer")
     return {"composition":music,"lyrics":words["lyrics"],"review":review}

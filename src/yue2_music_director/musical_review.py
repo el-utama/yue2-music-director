@@ -91,7 +91,7 @@ def _bar_signature(score, bar):
 def validate_constraints(constraints=None, max_seconds=None):
     constraints = {} if constraints is None else constraints
     if not isinstance(constraints,dict) or not set(constraints) <= {
-            "key","tempo_bpm","section_order","sung_sections"}:
+            "key","tempo_bpm","section_order","sung_sections","opening"}:
         raise ValueError("Unknown review constraint")
     for name,c in constraints.items():
         if not isinstance(c,dict) or set(c)!={"mode","value"} or c["mode"] not in ("must","prefer","free"):
@@ -103,6 +103,9 @@ def validate_constraints(constraints=None, max_seconds=None):
         elif name=="tempo_bpm":
             if type(v) is not int or v<=0:
                 raise ValueError("Invalid tempo constraint")
+        elif name=="opening":
+            if v not in ("instrumental_intro","direct_vocal"):
+                raise ValueError("Invalid opening constraint")
         elif name=="key":
             from .music import key_signature
             if not isinstance(v,str):
@@ -196,6 +199,14 @@ def review_score(abc, lyrics, *, constraints=None, max_seconds=None):
             soft.append({"code":"identical_repeated_chorus","sections":[first,second]})
     actual={"key":score.headers["K"],"tempo_bpm":bpm,"section_order":section_ids,
             "sung_sections":sung}
+    if "opening" in constraints:
+        first=rows[0] if rows else None
+        opening="unassessed"
+        if first and first["section"]=="intro#1" and first["vocal"]["sounding_fraction"]==0 and first["duration_seconds"]>0 and sung:
+            opening="instrumental_intro"
+        elif first and first["section"]!="intro#1" and first["vocal"]["sounding_fraction"]>0:
+            opening="direct_vocal"
+        actual["opening"]=opening
     for name,c in constraints.items():
         mismatch=c["value"]!=actual[name] or (name=="key" and any(key!=c["value"] for _,key in score.key_changes))
         if c["mode"]!="free" and mismatch:

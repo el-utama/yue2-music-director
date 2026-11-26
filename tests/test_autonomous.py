@@ -14,12 +14,15 @@ class Provider:
         return {"models":"fake"}
     def complete(self,role,prompt,data):
         self.calls.append(role)
-        return {"composer":{"title":"A Key","concept":"Moving out","emotional_arc":"loss to relief",
+        result={"composer":{"title":"A Key","concept":"Moving out","emotional_arc":"loss to relief",
                 "performance":"soft guitar","style":"English, folk, gentle alto vocals, acoustic guitar"},
                 "lyricist":{"lyrics":"[Verse]\nI left the key beside the door\n[Chorus]\nI do not live there anymore"},
                 "reviewer":{"decision":"stop" if self.stop else "retain","rationale":"Review"},
                 "director":{"decision":"retain_provisional","rationale":"Limited evidence",
                             "suggested_next_step":"Listen"}}[role]
+        if role=="composer" and "direction_guidance" in data:
+            result["performance"]="Opening: direct_vocal\nVocal: female\nNarrator: first person\nSoft guitar, intimate alto"
+        return result
 
 
 class AutonomousTests(unittest.TestCase):
@@ -154,3 +157,19 @@ class AutonomousTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,"source differs"):
                     au.continue_plan(repo,"one",url,confirm=True,provider_factory=lambda:f)
                 self.assertEqual(produce.call_count,2)
+
+    def test_new_policy_records_opening_without_migrating_old_job(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            f=Provider(stop=True)
+            args=(repo,"one","A quiet goodbye","en",150,"http://127.0.0.1:8791/mcp")
+            self.assertEqual(au.launch(*args,confirm=True,provider_factory=lambda:f),2)
+            root=repo/"results/autonomous/one"
+            identity=nd.read(root/"job.json")
+            self.assertEqual(identity["production_policy"],au.POLICY)
+            result=nd.read(root/"creative-result.json")
+            _,intent=au.make_inputs(result,identity)
+            self.assertEqual(intent["constraints"]["opening"],{"mode":"must","value":"direct_vocal"})
+            legacy={**identity,"production_policy":au.LEGACY_POLICY}
+            _,old_intent=au.make_inputs(result,legacy)
+            self.assertEqual(old_intent["constraints"],{})

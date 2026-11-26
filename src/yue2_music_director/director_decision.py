@@ -33,4 +33,10 @@ def context(request, brief, intent, report, packet):
                                                   "format_status","checks")} for item in packet["observations"]]}
     if "native_completion" in report:
         result["technical"]["native_completion"]=report["native_completion"]
+    if "opening" in intent.get("constraints",{}):
+        saved=report.get("saved_score_review",{})
+        metrics=saved.get("metrics") or {}
+        result["score_evidence"]={"opening":metrics.get("opening"),"score_seconds":metrics.get("score_seconds"),
+            "section_order":metrics.get("section_order"),"limits":"Notated opening is not acoustic vocal onset."}
+        result["observation_policy"]="MOSS descriptions are advisory, not independent proof of bad arrangement or unfinished ending. Native truncation evidence and human listening have distinct roles. Never equate no fade with an incomplete song. Report disagreement as uncertainty; headroom failure is not proven clipping."
     return result

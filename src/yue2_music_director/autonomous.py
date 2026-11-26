@@ -10,8 +10,11 @@ from . import native_draft as nd, artist_run
 from .creative_provider import TextProvider, ROLES
 from .mcp import MCPError, configured_endpoint
 from .prosody import parse_lyrics
+from . import creative_direction as cd
 
-POLICY="reviewed-score-v1"
+LEGACY_POLICY="reviewed-score-v1"
+POLICY=cd.POLICY
+POLICIES=(LEGACY_POLICY,POLICY)
 
 
 def freeze(path, value):
@@ -29,9 +32,13 @@ def make_inputs(result, identity):
            "seed":int(nd.digest(nd._canonical(identity))[:8],16) % (2**31)}
     purposes={f"{g['name']}#{g['occurrence']}":"Native musical development within the creative brief."
               for g in parse_lyrics(brief["lyrics"])}
+    constraints={}
+    if identity.get("production_policy")==POLICY:
+        opening=cd.validate_opening(music,brief["lyrics"])["opening"]
+        constraints["opening"]={"mode":"must","value":opening}
     intent=artist_run.validate_intent({"schema":"artist-intent-v1","route":"reviewed_native",
           "concept":music["concept"],"emotional_arc":music["emotional_arc"],"performance":music["performance"],
-          "section_purposes":purposes,"constraints":{},"retain_soft_flags":{},"follow_lyrics":True,
+          "section_purposes":purposes,"constraints":constraints,"retain_soft_flags":{},"follow_lyrics":True,
           "budget":{"score_jobs":1,"song_jobs":1,"recognition_calls":1}})
     return brief,intent
 
@@ -60,8 +67,9 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
                 raise ValueError("Only one explicit retry of an existing unresolved text stage is permitted")
         if root.exists():
             previous=nd.read(root/"job.json")
-            if previous.get("production_policy")!=POLICY:
+            if previous.get("production_policy") not in POLICIES:
                 raise ValueError("Legacy job retained unchanged; use --inspect-ending, not a new production route on this job")
+            identity["production_policy"]=previous["production_policy"]
             if previous!=identity:
                 raise ValueError("Retained job identity differs")
         else:
@@ -70,7 +78,8 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
         if (root/"plan-stop.json").exists():
             raise ValueError("Stopped plan retained; use --review-plan or explicit --continue-plan")
         print("Creative stages",flush=True)
-        result=cc.prepare(root,provider,request,language,duration,retry_role=retry_role,duration_guidance=True)
+        result=cc.prepare(root,provider,request,language,duration,retry_role=retry_role,duration_guidance=True,
+                          direction_guidance=identity["production_policy"]==POLICY)
         freeze(root/"creative-result.json",result)
         if result["review"]["decision"]!="retain":
             print("Editorial stop. No native generation:",root/"creative-result.json",flush=True)
@@ -140,7 +149,7 @@ def continue_plan(repo,job,url,*,confirm=False,provider_factory=None):
         return 0
     with ld.lock(jobs/".active"):
         identity=nd.read(parent/"job.json")
-        if (identity.get("job")!=job or identity.get("production_policy")!=POLICY
+        if (identity.get("job")!=job or identity.get("production_policy") not in POLICIES
                 or identity.get("studio_url")!=url):
             raise ValueError("Retained job or Studio endpoint differs")
         cc.validate_job(job,identity["request"],identity["language"],identity["duration_seconds"])
@@ -157,7 +166,8 @@ def continue_plan(repo,job,url,*,confirm=False,provider_factory=None):
             if not (parent/(role+".json")).is_file() or not (parent/(role+".attempt.json")).is_file():
                 raise ValueError("Retained creative receipt missing")
         result=cc.prepare(parent,provider,identity["request"],identity["language"],
-                          identity["duration_seconds"],duration_guidance=True)
+                          identity["duration_seconds"],duration_guidance=True,
+                          direction_guidance=identity["production_policy"]==POLICY)
         if nd.read(parent/"creative-result.json")!=result or result["review"]["decision"]!="retain":
             raise ValueError("Retained creative result differs")
         brief,intent=make_inputs(result,identity)
