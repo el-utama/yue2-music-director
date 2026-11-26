@@ -150,7 +150,34 @@ def lock(path):
         path.unlink()
 
 
+def retained_packet(root, brief, intent, row):
+    """Validate completed local listening receipts without invoking Studio or MOSS."""
+    out = root / "neutral-listening"
+    contract = freeze(out, row)
+    runtime = nd.read(out / "runtime.json")
+    evidence = []
+    for j, (start, duration) in enumerate(contract["ranges"], 1):
+        stem = "arm-1-part-" + str(j)
+        raw = out / (stem + ".txt")
+        receipt = nd.read(out / (stem + ".json"))
+        identity = {"audio_sha256": row["audio_sha256"], "start_seconds": start,
+                    "duration_seconds": duration, "prompt_sha256": nd._sha(out / "prompt.txt"),
+                    "runtime": runtime}
+        if receipt.get("identity") != identity or receipt.get("response_sha256") != nd._sha(raw):
+            raise ValueError("Retained listening receipt differs")
+        response = raw.read_text(encoding="utf-8", errors="replace")
+        status, checks = parse_observations(response)
+        evidence.append({"arm": row["arm"], "start_seconds": start, "duration_seconds": duration,
+                         "format_status": status, "checks": checks, "raw_response": response})
+    packet = nd.read(out / "review-packet.json")
+    if packet != review_packet(brief, intent, row, contract, evidence):
+        raise ValueError("Retained review packet differs")
+    return packet
+
+
 def listen(root, brief, intent, row, url):
+    if (root / "neutral-listening/review-packet.json").exists():
+        return retained_packet(root, brief, intent, row)
     out = root / "neutral-listening"
     contract = freeze(out, row)
     installed = ac.inventory([row])
