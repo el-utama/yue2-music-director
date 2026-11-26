@@ -275,9 +275,100 @@ def recover_oom(brief,intent,root,url):
                       expected_configuration=plan["configuration"])
 
 
-def launch(repo,url,*,confirm=False,demo=False,recover=False):
-    if recover and (not demo or not confirm):
-        raise ValueError("OOM recovery requires the artist demo and explicit confirmation")
+def comparison_arm(brief,intent,root,url):
+    """One direct-native baseline against the already completed reviewed take."""
+    validate_intent(intent)
+    if route_for(intent)!="reviewed_native" or intent["follow_lyrics"] or any(
+            c["mode"]=="must" for c in intent["constraints"].values()):
+        raise ValueError("Matched baseline requires unsteered native planning and no hard score constraints")
+    manifest={"schema":"artist-run-v1","brief":brief,"intent":intent,
+              "route":"reviewed_native","explicit_score_sha256":None}
+    if nd.read(root/"manifest.json")!=manifest:
+        raise ValueError("Reviewed arm manifest differs")
+    plan=nd.read(root/"journal_plan.json")
+    result=nd.read(root/"plan-result.json")
+    abc=result_score(result,brief["seed"])
+    if (plan.get("state")!="COMPLETED" or not plan.get("id")
+            or result.get("id")!=plan["id"]
+            or plan.get("request_sha256")!=digest(_canonical(plan_request(brief,intent)))
+            or plan.get("score_sha256")!=digest(abc.encode("utf-8"))
+            or (root/"native-plan.abc").read_bytes()!=abc.encode("utf-8")
+            or not isinstance(plan.get("configuration"),dict)):
+        raise ValueError("Reviewed plan identity differs")
+    decision=evaluate_plan(abc,brief,intent)
+    if decision["decision"]!="retain" or nd.read(root/"plan-decision.json")!=decision:
+        raise ValueError("Retained review differs")
+    candidates=[p for p in (root/"draft",root/"oom-recovery-1"/"draft")
+                if (p/"report.json").is_file()]
+    if len(candidates)!=1:
+        raise ValueError("Exactly one completed reviewed take is required")
+    reviewed=candidates[0]
+    request=nd.request_for(brief)
+    supplied={**request,"abc":abc}
+    report=nd.read(reviewed/"report.json")
+    journal=nd.read(reviewed/"journal_song.json")
+    sha=digest(_canonical(supplied))
+    brief_sha=digest(_canonical(brief))
+    if (nd.read(reviewed/"brief.json")!=brief or nd.read(reviewed/"request.json")!=supplied
+            or nd.read(reviewed/"artist-policy.json")!={"intent":intent,"planner_configuration":plan["configuration"]}
+            or journal.get("state")!="COMPLETED" or journal.get("request_sha256")!=sha
+            or journal.get("brief_sha256")!=brief_sha
+            or journal.get("reference_configuration")!=plan["configuration"]
+            or report.get("request_sha256")!=sha or report.get("brief_sha256")!=brief_sha
+            or report.get("job_id")!=journal.get("job_id") or not journal.get("job_id")
+            or report.get("song_id")!=journal.get("song_id") or not journal.get("song_id")
+            or report.get("audio_sha256")!=journal.get("audio_sha256")
+            or report.get("generation_path")!="reviewed_native" or report.get("saved_score_verified") is not True
+            or report.get("actual_lyric_conditioning_verified") is not True
+            or report.get("artistic_intent")!=intent):
+        raise ValueError("Reviewed draft provenance differs")
+    audio=Path(report["audio"])
+    if not audio.is_absolute() or nd._sha(audio)!=report["audio_sha256"]:
+        raise ValueError("Reviewed audio identity differs")
+    direct={**intent,"route":"auto","budget":{"score_jobs":0,"song_jobs":1,"recognition_calls":1}}
+    validate_intent(direct)
+    folder=root/"direct-native-comparison"
+    identity={"schema":"matched-native-comparison-v1","reviewed_job_id":report["job_id"],
+              "reviewed_audio_sha256":report["audio_sha256"],
+              "reviewed_request_sha256":sha,"direct_request_sha256":digest(_canonical(request)),
+              "reference_configuration":plan["configuration"],"direct_intent":direct,
+              "difference":"omit_explicit_abc_from_song_request",
+              "budget":direct["budget"]}
+    path=folder/"comparison.json"
+    if folder.exists():
+        if nd.read(path)!=identity:
+            raise ValueError("Retained comparison identity differs")
+    else:
+        folder.mkdir(parents=True,exist_ok=False)
+        nd.atomic_write(path,identity)
+    print("Matched comparison: same brief, seed and verified reference configuration.",flush=True)
+    print("No separate planning job or supplied ABC.",flush=True)
+    baseline=nd.execute(brief,folder/"draft",url,artist=direct,
+                        expected_configuration=plan["configuration"])
+    # Read actual saved score evidence, not a speculative claim about the two
+    # generation routes. Missing or unsupported notation stays unassessable.
+    saved=folder/"draft"/"saved-score.abc"
+    score_identity="unassessable"
+    if saved.is_file():
+        try:
+            score_identity=("identical" if nd.score_signature(saved.read_text(encoding="utf-8"),native=True)
+                            ==nd.score_signature(abc,native=True) else "different")
+        except ValueError:
+            pass
+    summary={"schema":"matched-native-result-v1","comparison":identity,
+             "reviewed":report,"direct":baseline,"saved_score_identity":score_identity,
+             "listening_verdict":"pending","automatic_winner":False,
+             "warnings":["One matched pair, not proof of general improvement.",
+                         "Reviewed ABC was retained unchanged; route differs, not an edited melody.",
+                         "Same seed and configuration do not guarantee identical native planning or audio."]}
+    nd.atomic_write(folder/"comparison-result.json",summary)
+    print("Saved score identity:",score_identity,flush=True)
+    return baseline
+
+
+def launch(repo,url,*,confirm=False,demo=False,recover=False,compare=False):
+    if (recover or compare) and (not demo or not confirm or (recover and compare)):
+        raise ValueError("Recovery/comparison requires the artist demo and explicit confirmation")
     folder=repo/("examples/artist-demo" if demo else "local")
     brief=nd.load_brief(folder/"brief.json")
     path=folder/"intent.json"
@@ -291,8 +382,8 @@ def launch(repo,url,*,confirm=False,demo=False,recover=False):
         if path.stat().st_size>800_000:
             raise ValueError("Explicit score exceeds size limit")
         abc=path.read_text(encoding="utf-8-sig")
-    print("Artist:",brief["title"],"| route:",route,flush=True)
-    print("Budget:",{"score_jobs":0,"song_jobs":1,"recognition_calls":1} if recover else intent["budget"],flush=True)
+    print("Artist:",brief["title"],"| route:","direct_native" if compare else route,flush=True)
+    print("Budget:",{"score_jobs":0,"song_jobs":1,"recognition_calls":1} if recover or compare else intent["budget"],flush=True)
     if not confirm:
         if abc is not None:
             print("Offline plan decision:",evaluate_plan(abc,brief,intent)["decision"],flush=True)
@@ -305,12 +396,19 @@ def launch(repo,url,*,confirm=False,demo=False,recover=False):
     os.close(fd)
     root=drafts/("artist-"+digest(_canonical(brief)))
     try:
-        report=recover_oom(brief,intent,root,url) if recover else run(brief,intent,root,url,explicit_abc=abc)
+        if compare:
+            report=comparison_arm(brief,intent,root,url)
+        elif recover:
+            report=recover_oom(brief,intent,root,url)
+        else:
+            report=run(brief,intent,root,url,explicit_abc=abc)
     finally:
         lock.unlink()
     print("Artist result:",report["status"],flush=True)
     if recover:
         root=root/"oom-recovery-1"
+    elif compare:
+        root=root/"direct-native-comparison"
     print("Run folder:",root,flush=True)
     if report["status"]=="artistic_plan_stopped":
         print("No full song authorized by review. Retained plan; no automatic retry.",flush=True)
