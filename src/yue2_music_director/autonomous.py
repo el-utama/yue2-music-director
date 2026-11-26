@@ -11,6 +11,8 @@ from .creative_provider import TextProvider, ROLES
 from .mcp import MCPError, configured_endpoint
 from .prosody import parse_lyrics
 
+POLICY="reviewed-score-v1"
+
 
 def freeze(path, value):
     if path.exists():
@@ -27,10 +29,10 @@ def make_inputs(result, identity):
            "seed":int(nd.digest(nd._canonical(identity))[:8],16) % (2**31)}
     purposes={f"{g['name']}#{g['occurrence']}":"Native musical development within the creative brief."
               for g in parse_lyrics(brief["lyrics"])}
-    intent=artist_run.validate_intent({"schema":"artist-intent-v1","route":"auto",
+    intent=artist_run.validate_intent({"schema":"artist-intent-v1","route":"reviewed_native",
           "concept":music["concept"],"emotional_arc":music["emotional_arc"],"performance":music["performance"],
-          "section_purposes":purposes,"constraints":{},"retain_soft_flags":{},"follow_lyrics":False,
-          "budget":{"score_jobs":0,"song_jobs":1,"recognition_calls":1}})
+          "section_purposes":purposes,"constraints":{},"retain_soft_flags":{},"follow_lyrics":True,
+          "budget":{"score_jobs":1,"song_jobs":1,"recognition_calls":1}})
     return brief,intent
 
 
@@ -39,7 +41,7 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
     cc.validate_job(job,request,language,duration)
     url=configured_endpoint(url)
     print("Job:",job,flush=True)
-    print("Budget: four text stages, one native song, one explicit ASR, two CPU excerpts.",flush=True)
+    print("Budget: up to four text stages, one native composition plan, one native song, one explicit ASR, two CPU excerpts.",flush=True)
     if retry_role is not None and (retry_role not in ROLES or not confirm):
         raise ValueError("Retry requires a valid text role and explicit confirmation")
     if not confirm:
@@ -50,20 +52,23 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
     root=jobs/job
     with ld.lock(jobs/".active"):
         identity={"schema":"autonomous-job-v1","job":job,"request":request,"language":language,
-                  "duration_seconds":duration,"provider":provider.identity(),"studio_url":url}
+                  "duration_seconds":duration,"provider":provider.identity(),"studio_url":url,"production_policy":POLICY}
         if retry_role is not None:
             if (not (root/(retry_role+".attempt.json")).is_file()
                     or (root/(retry_role+".json")).exists()
                     or (root/(retry_role+".retry-1.attempt.json")).exists()):
                 raise ValueError("Only one explicit retry of an existing unresolved text stage is permitted")
         if root.exists():
-            if nd.read(root/"job.json")!=identity:
+            previous=nd.read(root/"job.json")
+            if previous.get("production_policy")!=POLICY:
+                raise ValueError("Legacy job retained unchanged; use --inspect-ending, not a new production route on this job")
+            if previous!=identity:
                 raise ValueError("Retained job identity differs")
         else:
             root.mkdir(parents=True,exist_ok=False)
             nd.atomic_write(root/"job.json",identity)
         print("Creative stages",flush=True)
-        result=cc.prepare(root,provider,request,language,duration,retry_role=retry_role)
+        result=cc.prepare(root,provider,request,language,duration,retry_role=retry_role,duration_guidance=True)
         freeze(root/"creative-result.json",result)
         if result["review"]["decision"]!="retain":
             print("Editorial stop. No native generation:",root/"creative-result.json",flush=True)
@@ -78,6 +83,14 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
         with ld.lock(repo/"results/drafts/.active"), ld.lock(repo/"results/.critic-active"):
             print("Native production",flush=True)
             report=artist_run.run(brief,intent,production,url)
+            if report["status"]=="artistic_plan_stopped":
+                stopped={"schema":"autonomous-plan-stop-v1","status":"plan_review_required",
+                         "decision":report["decision"],"automatic_acceptance":False,
+                         "song_jobs":0,"recognition_calls":0,"revision_authorized":False}
+                freeze(root/"plan-stop.json",stopped)
+                print("Plan blocked before song synthesis; see",root/"plan-stop.json",flush=True)
+                print("No song, ASR, MOSS or Director calls; no automatic retry.",flush=True)
+                return 2
             row=ld.verify_take(production/"draft",brief,report)
             if report.get("artistic_intent")!=intent:
                 raise ValueError("Native artistic intent mismatch")
@@ -118,7 +131,7 @@ def main():
     p.add_argument("--language",choices=sorted(cc.SUPPORTED))
     p.add_argument("--duration",type=int)
     p.add_argument("--confirm-run",action="store_true",
-                   help="Authorize four external text stages and one local song, ASR and two CPU excerpts")
+                   help="Authorize up to four external text stages, one native score plan, one local song, ASR and two CPU excerpts")
     p.add_argument("--retry-text",choices=ROLES,help="One explicitly authorized retry of the named unresolved text stage")
     a=p.parse_args()
     try:

@@ -2,6 +2,7 @@
 from pathlib import Path
 import argparse
 import re
+import time
 import sys
 
 from . import composer, lyricist, creative_reviewer, native_draft as nd
@@ -18,7 +19,9 @@ def stage(root, role, module, provider, data, *, retry=False):
         saved=nd.read(receipt)
         if not attempt.exists() or nd.read(attempt)!=identity or saved.get("identity")!=identity:
             raise ValueError("Retained stage identity differs: "+role)
-        return module.validate(saved["result"])
+        value=module.validate(saved["result"])
+        print(role.capitalize()+": retained",flush=True)
+        return value
     recovery=root/(role+".retry-1.attempt.json")
     if attempt.exists():
         if nd.read(attempt)!=identity:
@@ -32,13 +35,22 @@ def stage(root, role, module, provider, data, *, retry=False):
         if retry or recovery.exists():
             raise ValueError("No original unresolved stage to retry: "+role)
         nd.create_journal(attempt,identity)
+    print(role.capitalize()+": requesting text",flush=True)
+    started=time.monotonic()
     result=module.validate(provider.complete(role,module.PROMPT,data))
     nd.atomic_write(receipt,{"identity":identity,"result":result})
+    print(role.capitalize()+": complete ("+str(round(time.monotonic()-started,1))+" s)",flush=True)
     return result
 
 
-def prepare(root, provider, request, language, duration, *, retry_role=None):
+def prepare(root, provider, request, language, duration, *, retry_role=None, duration_guidance=False):
     data={"request":request,"language":language,"duration_seconds":duration}
+    if duration_guidance:
+        # Advisory target only; the actual native score clock is screened before rendering.
+        reserve=min(15,max(3,round(duration*0.08)))
+        data["duration_plan"]={"hard_cap_seconds":duration,"target_score_seconds":duration-reserve,
+              "ending_reserve_seconds":reserve,
+              "guidance":"Plan a compact complete song, with a resolved final sung phrase and short instrumental tail inside the target. Allow room for introductions, instrumental breaks, breathing and sustained notes. Avoid redundant verses, long repeated choruses or extended outros. Lyricist should adapt line and section count to pacing; reviewer should stop implausibly long plans. Do not treat duration as an exact target or omit necessary closure."}
     music=stage(root,"composer",composer,provider,data,retry=retry_role=="composer")
     words=stage(root,"lyricist",lyricist,provider,{**data,"composition":music},retry=retry_role=="lyricist")
     review=stage(root,"reviewer",creative_reviewer,provider,{**data,"composition":music,
