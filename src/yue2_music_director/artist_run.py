@@ -207,7 +207,75 @@ def run(brief,intent,root,url,*,explicit_abc=None):
     return nd.execute(brief,root/"draft",url,abc=abc,artist=intent,expected_configuration=config)
 
 
-def launch(repo,url,*,confirm=False,demo=False):
+def recover_oom(brief,intent,root,url):
+    """One separately authorized synthesis of the identical failed demo request."""
+    validate_intent(intent)
+    manifest={"schema":"artist-run-v1","brief":brief,"intent":intent,
+              "route":"reviewed_native","explicit_score_sha256":None}
+    if nd.read(root/"manifest.json")!=manifest or route_for(intent)!="reviewed_native":
+        raise ValueError("Recovery requires the original reviewed-native demo")
+    # All evidence must already exist. Do not call native_plan: it can submit.
+    plan=nd.read(root/"journal_plan.json")
+    result=nd.read(root/"plan-result.json")
+    if (plan.get("state")!="COMPLETED" or not isinstance(plan.get("id"),str)
+            or not plan["id"] or result.get("id")!=plan["id"]
+            or plan.get("request_sha256")!=digest(_canonical(plan_request(brief,intent)))
+            or not isinstance(plan.get("configuration"),dict)):
+        raise ValueError("Retained completed plan identity differs")
+    abc=result_score(result,brief["seed"])
+    if (plan.get("score_sha256")!=digest(abc.encode("utf-8"))
+            or (root/"native-plan.abc").read_bytes()!=abc.encode("utf-8")):
+        raise ValueError("Retained plan hash differs")
+    decision=evaluate_plan(abc,brief,intent)
+    if decision["decision"]!="retain" or nd.read(root/"plan-decision.json")!=decision:
+        raise ValueError("Retained review does not authorize this composition")
+    original=root/"draft"
+    request={**nd.request_for(brief),"abc":abc}
+    journal=nd.read(original/"journal_song.json")
+    if ((original/"report.json").exists() or (original/"recognition").exists()
+            or journal.get("state")!="SUBMITTED"
+            or not isinstance(journal.get("job_id"),str) or not journal["job_id"]
+            or journal.get("brief_sha256")!=digest(_canonical(brief))
+            or journal.get("request_sha256")!=digest(_canonical(request))
+            or nd.read(original/"brief.json")!=brief
+            or nd.read(original/"request.json")!=request
+            or journal.get("reference_configuration")!=plan["configuration"]
+            or nd.read(original/"artist-policy.json")!={"intent":intent,"planner_configuration":plan["configuration"]}):
+        raise ValueError("Original failed draft identity differs")
+    recovery=root/"oom-recovery-1"
+    identity={"schema":"artist-oom-recovery-v1","original_job_id":journal["job_id"],
+              "original_request_sha256":journal["request_sha256"],
+              "plan_id":plan["id"],"score_sha256":plan["score_sha256"],
+              "budget":{"score_jobs":0,"song_jobs":1,"recognition_calls":1}}
+    record=recovery/"recovery.json"
+    evidence=recovery/"original-failure.json"
+    if recovery.exists():
+        if nd.read(record)!=identity:
+            raise ValueError("Retained OOM recovery identity differs")
+        failed=nd.read(evidence)
+    else:
+        client=Client(configured_endpoint(url),timeout=90).connect()
+        failed=nd.read_job(client,journal["job_id"])
+    message=failed.get("message")
+    if (failed.get("id")!=journal["job_id"] or failed.get("status")!="failed"
+            or failed.get("songs")!=[] or not isinstance(message,str)
+            or "ran out of memory while the engine was loading the models" not in message.lower()):
+        raise ValueError("Original job is not a verified terminal model-loading OOM with no songs")
+    if not recovery.exists():
+        recovery.mkdir(parents=True,exist_ok=False)
+        nd.atomic_write(record,identity)
+        nd.atomic_write(evidence,failed)
+    print("Recovery: retained native composition; zero new score jobs.",flush=True)
+    print("Original terminal job:",journal["job_id"],flush=True)
+    # execute checks the live stock reference against the original planning
+    # configuration, uses native MIDI, and journals before any new song POST.
+    return nd.execute(brief,recovery/"draft",url,abc=abc,artist=intent,
+                      expected_configuration=plan["configuration"])
+
+
+def launch(repo,url,*,confirm=False,demo=False,recover=False):
+    if recover and (not demo or not confirm):
+        raise ValueError("OOM recovery requires the artist demo and explicit confirmation")
     folder=repo/("examples/artist-demo" if demo else "local")
     brief=nd.load_brief(folder/"brief.json")
     path=folder/"intent.json"
@@ -222,7 +290,7 @@ def launch(repo,url,*,confirm=False,demo=False):
             raise ValueError("Explicit score exceeds size limit")
         abc=path.read_text(encoding="utf-8-sig")
     print("Artist:",brief["title"],"| route:",route,flush=True)
-    print("Budget:",intent["budget"],flush=True)
+    print("Budget:",{"score_jobs":0,"song_jobs":1,"recognition_calls":1} if recover else intent["budget"],flush=True)
     if not confirm:
         if abc is not None:
             print("Offline plan decision:",evaluate_plan(abc,brief,intent)["decision"],flush=True)
@@ -235,10 +303,12 @@ def launch(repo,url,*,confirm=False,demo=False):
     os.close(fd)
     root=drafts/("artist-"+digest(_canonical(brief)))
     try:
-        report=run(brief,intent,root,url,explicit_abc=abc)
+        report=recover_oom(brief,intent,root,url) if recover else run(brief,intent,root,url,explicit_abc=abc)
     finally:
         lock.unlink()
     print("Artist result:",report["status"],flush=True)
+    if recover:
+        root=root/"oom-recovery-1"
     print("Run folder:",root,flush=True)
     if report["status"]=="artistic_plan_stopped":
         print("No full song authorized by review. Retained plan; no automatic retry.",flush=True)
