@@ -101,3 +101,60 @@ class EndingV2Tests(unittest.TestCase):
         self.assertTrue(fields["continue_semantic_tokens"])
         self.assertEqual(replay["semantic_tokens"],tokens)
         self.assertTrue(payload["title"].endswith("Ending candidate v2"))
+
+
+class EndingV3Tests(unittest.TestCase):
+    def fixtures(self):
+        from yue2_music_director.outro_repair import V3_JOB_ID
+        outro="[Outro]\nSemoga damai menemanimu\nKulepas engkau dengan cinta"
+        lyrics="[Verse 1]\nSenja jatuh di bahumu\n\n"+outro
+        fields={"lyrics":lyrics,"abc":"score","cot":"full","semantic_tokens":"1,2",
+                "continue_semantic_tokens":True,"seed":42,"lm_seed":42,
+                "duration":185.32758620689654,"semantic_sampling":{"min_tokens":4413,"max_tokens":4634}}
+        payload={"title":"Test - Ending candidate v2","replay_request":fields}
+        schedule={"mode":"bias","bias":-4.0,"sections":[
+            {"start_sec":24.828,"lyric":[0,29]},
+            {"start_sec":165.517,"lyric":[lyrics.index("[Outro]"),len(lyrics)]}]}
+        receipt={"id":V3_JOB_ID,"generation_settings":{**fields,"lyric_schedule":schedule}}
+        return payload,receipt,outro
+
+    def test_only_lyric_conditioning_changes(self):
+        from yue2_music_director.outro_repair import prepare_replay_v3
+        import copy
+        payload,receipt,outro=self.fixtures()
+        before=copy.deepcopy(payload)
+        candidate=prepare_replay_v3(payload,receipt)
+        self.assertEqual(candidate["replay_request"],{**before["replay_request"],"lyrics":outro})
+        self.assertEqual(candidate["title"],"Test - Ending candidate v3")
+        self.assertEqual(payload,before)
+
+    def test_mismatched_v2_evidence_blocks(self):
+        from yue2_music_director.outro_repair import prepare_replay_v3
+        import copy
+        payload,receipt,_=self.fixtures()
+        for key,value in (("seed",43),("semantic_tokens","3,4"),("abc","different")):
+            bad=copy.deepcopy(receipt)
+            bad["generation_settings"][key]=value
+            with self.subTest(key=key),self.assertRaises(ValueError):
+                prepare_replay_v3(payload,bad)
+        bad=copy.deepcopy(receipt)
+        bad["generation_settings"]["lyric_schedule"]["sections"][-1]["start_sec"]=187.586
+        with self.assertRaises(ValueError):
+            prepare_replay_v3(payload,bad)
+        with self.assertRaises(ValueError):
+            prepare_replay_v3(payload,{**receipt,"id":"wrong"})
+
+    def test_v3_schedule_rebuilt_over_isolated_lyrics(self):
+        from yue2_music_director.outro_repair import prepare_replay_v3,verify_v3_receipt
+        import copy
+        payload,receipt,outro=self.fixtures()
+        candidate=prepare_replay_v3(payload,receipt)
+        settings={**candidate["replay_request"],"lyric_schedule":{"mode":"bias","bias":-4.0,
+                  "sections":[{"start_sec":165.517,"lyric":[0,len(outro)]}]}}
+        verify_v3_receipt({"generation_settings":settings},candidate)
+        bad=copy.deepcopy(settings)
+        bad["lyric_schedule"]["sections"][0]["lyric"]=[640,699]
+        with self.assertRaises(ValueError):
+            verify_v3_receipt({"generation_settings":bad},candidate)
+        with self.assertRaises(ValueError):
+            verify_v3_receipt(receipt,candidate)
