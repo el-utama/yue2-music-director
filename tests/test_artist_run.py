@@ -156,3 +156,32 @@ class IntegratedDraftTests(unittest.TestCase):
                 self.assertEqual(result["lyric_screen"]["WER"]["edits"],0)
                 self.assertEqual(result,nd.execute(BRIEF,run,URL,abc=ABC,artist=chosen,expected_configuration=config))
                 self.assertEqual(sum(c.args[0]=="song_create" for c in client.call.call_args_list),1)
+
+
+class FailureInspectionTests(unittest.TestCase):
+    def test_existing_demo_inspection_is_read_only(self):
+        source=Path(__file__).resolve().parents[1]/"examples/artist-demo/brief.json"
+        brief=nd.load_brief(source)
+        with tempfile.TemporaryDirectory() as tmp, patch.object(nd,"Client") as factory:
+            repo=Path(tmp)
+            fixture=repo/"examples/artist-demo"
+            fixture.mkdir(parents=True)
+            nd.atomic_write(fixture/"brief.json",brief)
+            root=repo/"results/drafts"/("artist-"+nd.digest(nd._canonical(brief)))
+            draft=root/"draft"
+            draft.mkdir(parents=True)
+            request=nd.request_for(brief)
+            nd.atomic_write(root/"manifest.json",{"brief":brief,"route":"reviewed_native"})
+            nd.atomic_write(root/"plan-decision.json",{"score_review":{"metrics":{"score_seconds":180}}})
+            nd.atomic_write(draft/"brief.json",brief)
+            nd.atomic_write(draft/"request.json",request)
+            nd.atomic_write(draft/"journal_song.json",{"job_id":"known","state":"SUBMITTED",
+                "brief_sha256":nd.digest(nd._canonical(brief)),
+                "request_sha256":nd.digest(nd._canonical(request))})
+            client=factory.return_value.connect.return_value
+            job={"id":"known","status":"failed","phase":"generation","message":"fixture engine error"}
+            client.call.return_value=job
+            self.assertEqual(nd.inspect_artist_demo(repo,URL),0)
+            client.call.assert_called_once_with("song_job_get",{"job_id":"known","response_format":"concise"})
+            self.assertEqual(nd.read(draft/"job-inspection.json"),job)
+            self.assertEqual(nd.read(draft/"journal_song.json")["state"],"SUBMITTED")
