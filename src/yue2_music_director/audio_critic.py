@@ -184,7 +184,7 @@ def freeze_contract(repo, rows, installed):
     return out, contract
 
 
-def evaluate(out, rows, installed):
+def evaluate(out, rows, installed, *, parse=parse_response, before_excerpt=None):
     if os.name != "nt":
         raise ValueError("Studio Windows captioner required")
     if not installed["ready"]:
@@ -229,6 +229,8 @@ def evaluate(out, rows, installed):
                     raise ValueError("Unresolved previous critic attempt; retain logs, no automatic retry")
                 if nd._sha(Path(row["audio"])) != row["audio_sha256"]:
                     raise ValueError("Source changed before critic evaluation")
+                if before_excerpt is not None:
+                    before_excerpt()
                 nd.create_journal(marker,identity)
                 print(f"Recording {i}/{len(rows)}, excerpt {j}/2: CPU analysis",flush=True)
                 # Explicit subprocess arguments, not the captioner's FLAC shell wrapper.
@@ -253,7 +255,7 @@ def evaluate(out, rows, installed):
                 nd.atomic_write(receipt,{"identity":identity,"response_sha256":nd._sha(raw),
                                         "excerpt_sha256":nd._sha(wav)})
                 wav.unlink()
-            status,checks = parse_response(raw.read_text(encoding="utf-8",errors="replace"))
+            status,checks = parse(raw.read_text(encoding="utf-8",errors="replace"))
             evidence.append({"arm":row["arm"],"start_seconds":start,"duration_seconds":duration,
                              "format_status":status,"checks":checks,
                              "raw_response":raw.read_text(encoding="utf-8",errors="replace")})

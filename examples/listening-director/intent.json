@@ -1,0 +1,22 @@
+{
+  "schema": "artist-intent-v1",
+  "route": "direct_native",
+  "concept": "An ordinary late train ride becomes a small moment of self-acceptance after separation. The empty seat is an image of new independence, not a demand for reconciliation.",
+  "emotional_arc": "Quiet observation moves into tentative acceptance; the second verse widens perspective, the bridge offers a moment of insight, the final refrain feels warmer rather than louder for its own sake.",
+  "performance": "Intimate conversational lead, natural breathing and space; acoustic instrumental responses, small dynamic shifts, understated final release. Native engine chooses melody, harmony and tempo.",
+  "section_purposes": {
+    "verse#1": "Place the listener in a lonely station.",
+    "chorus#1": "Introduce the central image of the empty seat.",
+    "verse#2": "Let familiar places feel less painful.",
+    "bridge#1": "Turn grief toward acceptance.",
+    "chorus#2": "Return with greater warmth and agency."
+  },
+  "constraints": {},
+  "retain_soft_flags": {},
+  "follow_lyrics": false,
+  "budget": {
+    "score_jobs": 0,
+    "song_jobs": 1,
+    "recognition_calls": 1
+  }
+}
