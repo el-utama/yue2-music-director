@@ -13,6 +13,9 @@ SMOKE_SCHEMA = {"type":"object","properties":{"ready":{"type":"boolean","enum":[
 
 
 def role_schema(role):
+    if role=="cover_art":
+        from .cover_art import SCHEMA
+        return SCHEMA
     from . import composer, lyricist, creative_reviewer, director_decision
     return {"composer":composer.SCHEMA,"lyricist":lyricist.SCHEMA,
             "reviewer":creative_reviewer.SCHEMA,"director":director_decision.SCHEMA}[role]
@@ -98,10 +101,13 @@ class TextProvider:
             raise ValueError("NVIDIA catalog connection or response failed") from None
 
     def complete(self, role, prompt, data, *, smoke=False):
-        body = {"model":self.models[role], "messages":[{"role":"system","content":prompt},
+        # Optional visual direction uses the configured Composer model without
+        # changing existing music job/provider identities or setup requirements.
+        model=self.models["composer" if role=="cover_art" else role]
+        body = {"model":model, "messages":[{"role":"system","content":prompt},
                 {"role":"user","content":json.dumps(data, ensure_ascii=False)}],
                 "max_tokens":4096,"stream":False}
-        if self.url==NVIDIA_URL and self.models[role]==NEMOTRON_VL:
+        if self.url==NVIDIA_URL and model==NEMOTRON_VL:
             schema=SMOKE_SCHEMA if smoke else role_schema(role)
             body["response_format"]={"type":"json_schema","json_schema":{
                 "name":"provider_check" if smoke else role+"_result","strict":True,"schema":schema}}
