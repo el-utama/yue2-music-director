@@ -414,9 +414,12 @@ def main():
     choices.add_argument("--artist",action="store_true",help="Use local brief and artistic intent")
     parser.add_argument("--select-stock",action="store_true",help="Explicitly clear own-model override before a new draft")
     parser.add_argument("--inspect",action="store_true",help="Read existing artist-demo job status only")
+    parser.add_argument("--recover-oom",action="store_true",help="One separate retry of the verified retained demo after model-loading OOM")
     args=parser.parse_args()
     try:
         repo=args.repo.resolve()
+        if args.recover_oom and (not args.artist_demo or not args.confirm_run or args.inspect or args.select_stock):
+            raise ValueError("--recover-oom requires --artist-demo --confirm-run and no other operation")
         if args.inspect:
             if not args.artist_demo or args.confirm_run or args.select_stock:
                 raise ValueError("--inspect requires --artist-demo without confirmation or stock selection")
@@ -425,7 +428,7 @@ def main():
             if args.select_stock:
                 raise ValueError("Artistic run does not change model selection")
             from .artist_run import launch
-            return launch(repo,args.url,confirm=args.confirm_run,demo=args.artist_demo)
+            return launch(repo,args.url,confirm=args.confirm_run,demo=args.artist_demo,recover=args.recover_oom)
         abc=None
         if args.director_demo:
             if args.select_stock:
