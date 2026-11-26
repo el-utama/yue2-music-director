@@ -45,6 +45,15 @@ class TextProvider:
         return cls(os.environ.get("MUSIC_LLM_URL", ""), os.environ.get("MUSIC_LLM_KEY", ""),
                    {r: os.environ.get("MUSIC_LLM_"+r.upper()+"_MODEL", default) for r in ROLES})
 
+    @classmethod
+    def for_repo(cls, repo):
+        names=("MUSIC_LLM_URL","MUSIC_LLM_KEY","MUSIC_LLM_MODEL",*("MUSIC_LLM_"+r.upper()+"_MODEL" for r in ROLES))
+        if any(name in os.environ for name in names):
+            # Never mix credentials from different configuration sources.
+            return cls.from_env()
+        from .provider_setup import load
+        return load(repo)
+
     def identity(self):
         return {"url":self.url, "models":dict(self.models)}
 
@@ -66,7 +75,10 @@ class TextProvider:
             content=choice["message"]["content"]
             if not isinstance(content,str):
                 raise ValueError("Missing final text")
-            return strict_json(content)
+            text=content.strip()
+            if text.startswith("```json\n") and text.endswith("\n```"):
+                text=text[len("```json\n"):-len("\n```")]
+            return strict_json(text)
         except urllib.error.HTTPError as exc:
             raise ValueError("Provider HTTP status "+str(exc.code)) from None
         except (OSError,ValueError,KeyError,IndexError,TypeError):

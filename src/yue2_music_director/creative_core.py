@@ -10,7 +10,7 @@ from .listening_director import lock
 from .multilingual_fidelity import SUPPORTED
 
 
-def stage(root, role, module, provider, data):
+def stage(root, role, module, provider, data, *, retry=False):
     identity={"role":role,"provider":provider.identity(),"prompt":module.PROMPT,"input":data}
     receipt=root/(role+".json")
     attempt=root/(role+".attempt.json")
@@ -19,20 +19,30 @@ def stage(root, role, module, provider, data):
         if not attempt.exists() or nd.read(attempt)!=identity or saved.get("identity")!=identity:
             raise ValueError("Retained stage identity differs: "+role)
         return module.validate(saved["result"])
+    recovery=root/(role+".retry-1.attempt.json")
     if attempt.exists():
-        raise ValueError("Unresolved stage attempt; no blind retry: "+role)
-    nd.create_journal(attempt,identity)
+        if nd.read(attempt)!=identity:
+            raise ValueError("Original stage identity differs: "+role)
+        if not retry:
+            raise ValueError("Unresolved stage attempt; explicit one-time text retry required: "+role)
+        if recovery.exists():
+            raise ValueError("Text retry already attempted; retain evidence: "+role)
+        nd.create_journal(recovery,identity)
+    else:
+        if retry or recovery.exists():
+            raise ValueError("No original unresolved stage to retry: "+role)
+        nd.create_journal(attempt,identity)
     result=module.validate(provider.complete(role,module.PROMPT,data))
     nd.atomic_write(receipt,{"identity":identity,"result":result})
     return result
 
 
-def prepare(root, provider, request, language, duration):
+def prepare(root, provider, request, language, duration, *, retry_role=None):
     data={"request":request,"language":language,"duration_seconds":duration}
-    music=stage(root,"composer",composer,provider,data)
-    words=stage(root,"lyricist",lyricist,provider,{**data,"composition":music})
+    music=stage(root,"composer",composer,provider,data,retry=retry_role=="composer")
+    words=stage(root,"lyricist",lyricist,provider,{**data,"composition":music},retry=retry_role=="lyricist")
     review=stage(root,"reviewer",creative_reviewer,provider,{**data,"composition":music,
-                 "lyrics":words["lyrics"],"diagnostics":lyricist.diagnostics(words["lyrics"],language)})
+                 "lyrics":words["lyrics"],"diagnostics":lyricist.diagnostics(words["lyrics"],language)},retry=retry_role=="reviewer")
     return {"composition":music,"lyrics":words["lyrics"],"review":review}
 
 
@@ -44,12 +54,12 @@ def validate_job(job, request, language, duration):
         raise ValueError("Invalid creative request, language or duration")
 
 
-def launch(repo, job, request, language, duration, *, confirm_text=False, provider_factory=TextProvider.from_env):
+def launch(repo, job, request, language, duration, *, confirm_text=False, provider_factory=None):
     validate_job(job, request, language, duration)
     if not confirm_text:
         print("Plan only; no provider or Studio calls.")
         return 0
-    provider=provider_factory()
+    provider=provider_factory() if provider_factory else TextProvider.for_repo(repo)
     jobs=repo/"results/creative"
     root=jobs/job
     with lock(jobs/".active"):
