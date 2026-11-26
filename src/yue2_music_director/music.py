@@ -28,6 +28,74 @@ class ScoreError(ValueError):
     """Invalid or unsupported YuE2 ABC subset."""
 
 
+class NativeUnsupported(ScoreError):
+    """Native review subset cannot assess this feature; not a native rejection."""
+
+
+NATIVE_MINOR = dict(zip(
+    ("Abm","Ebm","Bbm","Fm","Cm","Gm","Dm","Am","Em","Bm","F#m","C#m","G#m","D#m","A#m"),
+    range(-7,8)))
+NATIVE_LENGTHS = {1,2,3,4,6,8,12,16,24,32,48}
+NATIVE_CHORD = re.compile(r"[A-G](?:bb|##|b|#)?(?:m\(maj7\)|m7b5|7sus4|maj7|dim7|sus4|sus2|dim|aug|m7|m6|7|6|m)?(?:/[A-G](?:bb|##|b|#)?)?")
+NATIVE_VOICES = ('V: Vocal clef=treble name="Vocal Melody" snm="Vocal"',
+                 'V: Ins clef=treble name="Ins Melody" snm="Inst."')
+
+
+def native_section(name):
+    # Aliases only for this versioned review; historical section matching stays intact.
+    value=name.strip().lower().replace("_","-")
+    if re.fullmatch(r"(?:final|last)\s+chorus(?:\s+\d+)?",value):
+        return "chorus"
+    return normalize_section(name)
+
+
+def _native_layout(source):
+    """Conservative fixed-meter/key subset of the pinned Studio grammar."""
+    if len(source)>200_000:
+        raise ScoreError("Score exceeds native review size limit")
+    lines=source.splitlines()
+    if len(lines)<12 or lines[:2]!=["X:1","T:"] or tuple(lines[5:7])!=NATIVE_VOICES:
+        raise NativeUnsupported("Expected native eight-line header; format unassessed")
+    m=re.fullmatch(r"M:([1-9][0-9]*)/([1-9][0-9]*)",lines[2])
+    u=re.fullmatch(r"L:1/([1-9][0-9]*)",lines[3])
+    q=re.fullmatch(r"Q:1/4=([1-9][0-9]*)",lines[4])
+    if not m or not u or not q or not lines[7].startswith("K:"):
+        raise NativeUnsupported("Unsupported native header")
+    for n in (int(m[2]),int(u[1])):
+        if n>1024 or n&(n-1):
+            raise ScoreError("Invalid native meter denominator or unit")
+    if int(m[1])>2**32-1 or int(q[1])>2**32-1:
+        raise ScoreError("Native header exceeds integer range")
+    if lines[7][2:] not in FIFTHS and lines[7][2:] not in NATIVE_MINOR:
+        raise NativeUnsupported("Unsupported native key")
+    i=8
+    while i<len(lines):
+        while i<len(lines) and lines[i].startswith("% "):
+            i+=1
+        counts=[]
+        for voice in ("Vocal","Ins"):
+            if i>=len(lines) or lines[i]!=f"V: {voice}":
+                raise NativeUnsupported("Expected paired native voice group")
+            i+=1
+            if i>=len(lines):
+                raise ScoreError("Missing music line")
+            line=lines[i]
+            if line.startswith(("M:","K:")) or "[K:" in line:
+                raise NativeUnsupported("Meter/key changes not assessed by fixed-grid review")
+            if not line.endswith("|") or any(not b.strip() for b in line[:-1].split("|")):
+                raise ScoreError("Invalid plain barline layout")
+            count=0
+            for bar in line[:-1].split("|"):
+                rest=re.fullmatch(r"Z([2-4])?",bar.strip())
+                if bar.strip().startswith("Z") and not rest:
+                    raise NativeUnsupported("Unsupported whole-bar rest")
+                count+=int(rest[1] or 1) if rest else 1
+            counts.append(count)
+            i+=1
+        if counts[0]!=counts[1] or not 1<=counts[0]<=4:
+            raise ScoreError("Native groups require 1–4 equal bars")
+
+
 @dataclass(frozen=True)
 class Event:
     voice: str
@@ -61,10 +129,11 @@ def duration(symbol: str | None) -> Fraction:
     return Fraction(int(symbol))
 
 
-def key_signature(key: str) -> dict[str, int]:
-    if key not in FIFTHS:
+def key_signature(key: str, *, native=False) -> dict[str, int]:
+    keys = {**FIFTHS, **NATIVE_MINOR} if native else FIFTHS
+    if key not in keys:
         raise ScoreError('unsupported key: '+key)
-    n = FIFTHS[key]
+    n = keys[key]
     order = SHARP_ORDER if n > 0 else FLAT_ORDER
     return {letter: (1 if n > 0 else -1) for letter in order[:abs(n)]}
 
@@ -82,14 +151,15 @@ def chord_tones(chord: str) -> set[int] | None:
 
 
 def note_pitch(letter: str, octave_marks: str, acc: str, signature: dict,
-               carried: dict[tuple, int]) -> int:
+               carried: dict[tuple, int], *, native=False) -> int:
     upper = letter.upper()
     octave = (5 if letter.islower() else 4) + octave_marks.count("'") - octave_marks.count(',')
+    carry_key = upper if native else (upper, octave)
     if acc:
         adjustment = {'^':1,'^^':2,'_':-1,'__':-2,'=':0}[acc]
-        carried[(upper, octave)] = adjustment
+        carried[carry_key] = adjustment
     else:
-        adjustment = carried.get((upper, octave), signature.get(upper, 0))
+        adjustment = carried.get(carry_key, signature.get(upper, 0))
     return 12 * (octave + 1) + NATURAL[upper] + adjustment
 
 
@@ -122,7 +192,10 @@ class Score:
         return {v:len(bars) for v, bars in self.bar_events.items()}
 
 
-def parse_score(source: str) -> Score:
+def parse_score(source: str, *, native=False) -> Score:
+    if native:
+        _native_layout(source)
+    pending = {}
     lines = source.splitlines(keepends=True)
     headers: dict[str, str] = {}
     bar_events: dict[str, list[list[Event]]] = defaultdict(list)
@@ -138,7 +211,7 @@ def parse_score(source: str) -> Score:
         if not trimmed:
             continue
         if trimmed.startswith('%'):
-            section = normalize_section(trimmed[1:])
+            section = (native_section if native else normalize_section)(trimmed[1:])
             section_counts[section] += 1
             current_section = f'{section}#{section_counts[section]}'
             continue
@@ -154,7 +227,7 @@ def parse_score(source: str) -> Score:
             continue
         if current_voice is None:
             raise ScoreError(f'line {i+1}: notes without V: declaration')
-        signature = key_signature(headers.get('K', ''))
+        signature = key_signature(headers.get('K', ''), native=native)
         pieces = content.split('|')
         cursor = 0
         for piece in pieces:
@@ -177,6 +250,10 @@ def parse_score(source: str) -> Score:
                     if not cm:
                         raise ScoreError(f'line {i+1}: unclosed chord symbol')
                     active_chord = cm.group()[1:-1]
+                    if native and (current_voice!='Vocal' or not NATIVE_CHORD.fullmatch(active_chord)):
+                        raise ScoreError('Invalid native chord or chord in Ins')
+                    if native and offset>=Fraction(headers['M'])/Fraction(headers['L']):
+                        raise ScoreError('Chord after bar end')
                     chords.append(active_chord)
                     at = cm.end()
                     continue
@@ -186,12 +263,17 @@ def parse_score(source: str) -> Score:
                     m = REST.match(piece, at)
                     kind = 'rest'
                 if not m:
-                    raise ScoreError(f'line {i+1}: unsupported token {piece[at:at+14]!r}')
+                    error=NativeUnsupported if native else ScoreError
+                    raise error(f'line {i+1}: unsupported token {piece[at:at+14]!r}')
                 raw = m.group()
                 dur = duration(m.group('dur'))
                 if dur <= 0:
                     raise ScoreError('zero or negative note length')
                 symbol = m.group('sym') if kind == 'rest' else ''
+                if native and symbol!='Z' and (dur not in NATIVE_LENGTHS or '/' in raw or symbol=='x'):
+                    raise NativeUnsupported('Unsupported native note/rest token')
+                if native and kind=='rest' and pending.get(current_voice):
+                    raise ScoreError('Native tie enters a rest')
                 if symbol == 'Z':
                     if found or piece[m.end():].strip():
                         raise ScoreError('Z multibar rest must occupy entire measure')
@@ -218,7 +300,20 @@ def parse_score(source: str) -> Score:
                     octave_marks = m.group('oct')
                     accidental = m.group('acc') or ''
                     tied = bool(m.group('tie'))
-                    pitch = note_pitch(letter,octave_marks,accidental,signature,carried)
+                    pitch = note_pitch(letter,octave_marks,accidental,signature,carried,native=native)
+                    if native:
+                        if ',' in octave_marks and "'" in octave_marks:
+                            raise ScoreError('Mixed octave marks')
+                        written=note_pitch(letter,octave_marks,'',{}, {})
+                        old=pending.get(current_voice)
+                        if old:
+                            if not accidental and written==old[1]:
+                                pitch=old[0]
+                            if pitch!=old[0]:
+                                raise ScoreError('Native tie changes pitch')
+                        if not 0<=pitch<=127:
+                            raise ScoreError('Pitch outside MIDI range')
+                        pending[current_voice]=(pitch,written) if tied else None
                 ev = Event(current_voice,bar_index,current_section,kind,raw,i,
                            cursor+at,cursor+m.end(),offset,dur,active_chord,
                            pitch,letter,octave_marks,tied,accidental)
@@ -255,14 +350,16 @@ def parse_score(source: str) -> Score:
         raise ScoreError(f'expected Vocal and Ins, found {sorted(bar_events)}')
     if len(bar_events['Vocal']) != len(bar_events['Ins']):
         raise ScoreError('Vocal/Ins bar counts differ')
-    for voice in ('Vocal','Ins'):
+    if native and any(pending.values()):
+        raise ScoreError('Unresolved native tie')
+    for voice in (() if native else ('Vocal','Ins')):
         notes = [e for e in all_events if e.voice==voice and e.kind != 'multirest']
         for idx,e in enumerate(notes):
             if e.tied:
                 if idx+1 == len(notes) or notes[idx+1].kind!='note' or notes[idx+1].pitch!=e.pitch:
                     raise ScoreError(f'invalid tie at {voice} bar {e.bar+1}')
     warnings = []
-    if not headers.get('T'):
+    if not native and not headers.get('T'):
         warnings.append('Empty ABC title')
     warnings.append('No proven syllable-to-note mapping; do not infer exact vocal prosody')
     return Score(source,lines,headers,all_events,dict(bar_events),bar_chords,
