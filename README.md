@@ -55,6 +55,10 @@ py -3 -m unittest discover -s tests -v
 
 See [Generation Control Study](docs/GENERATION_CONTROL_STUDY.md). Compare default native score planning against section-aware planning with the existing private brief. The Windows launcher `generation-control.cmd` plans without inference; `generation-control.cmd --confirm-plans` permits two native planning jobs, no full-song renders. Review results before selecting any generation policy.
 
+## Generation-first artistic runner (experimental)
+
+See [Artistic Run](docs/ARTISTIC_RUN.md). `draft.cmd --artist-demo` plans offline; `draft.cmd --artist-demo --confirm-run` authorizes one reviewed native plan, one full song and one local recognition. Original emotional blues-soul fixture, no user assets or additional model settings. `draft.cmd --artist` uses a private brief and companion intent. The new routing and recovery policy is deterministic; live musical quality is unverified.
+
 ## Director-authored first-song study (experimental)
 
 Run `draft.cmd --director-demo` to inspect the bundled original research composition offline, or `draft.cmd --director-demo --confirm-run` to authorize one new song and one local lyric recognition. Uses an explicit pre-reviewed score, native MIDI preflight and retained score verification; no repair or edits to the private brief. See [Study 2](docs/GENERATION_CONTROL_STUDY.md#study-2--new-song-director-authored-composition). Live synthesis and resumed recognition completed; the operator rejected the musical result. Retain the demo as a research fixture, not a recommended artistic default.
