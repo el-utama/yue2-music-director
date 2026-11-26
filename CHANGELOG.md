@@ -1,5 +1,10 @@
 # Changelog and research milestones
 
+## Unreleased — bounded artist-demo OOM recovery
+
+- Confirmed model-loading GPU memory failure by read-only native job inspection; retained score clock 200.28 s under 210 s cap. Writing-assistant involvement not established.
+- Add explicit one-shot recovery of the exact retained reviewed score in a separate journal, after the user frees competing VRAM; verify original terminal failure and configuration, no new planning or automatic setting changes. Live recovery unverified.
+
 ## Unreleased — native terminal job evidence
 
 - First live artist demo completed one plan and passed native MIDI; song job failed. Cause not established by the operator log. No additional generation authorized.
