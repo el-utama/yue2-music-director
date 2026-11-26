@@ -121,6 +121,18 @@ def check(repo):
     print("Provider host:",urlsplit(p.url).hostname,flush=True)
     # No credential value, prefix, fingerprint, URL path or raw error body in output.
     print("Credential loaded: yes (not yet authenticated)",flush=True)
+    if p.url==PRESETS["1"]:
+        status, models=p.nvidia_catalog()
+        print("NVIDIA model catalog HTTP:",status,flush=True)
+        if status in (401,403):
+            raise ValueError("Provider HTTP status "+str(status)+"; catalog access rejected. No completion attempted. Check NVIDIA key scope/account; not a song-generation failure.")
+        if status!=200:
+            raise ValueError("Provider HTTP status "+str(status)+"; catalog unavailable. No completion attempted.")
+        missing=set(p.models.values())-models
+        if missing:
+            print("Configured model absent from catalog; checking exact requested model anyway.",flush=True)
+        else:
+            print("Configured model present in catalog (inference permission still unverified).",flush=True)
     seen=set()
     for role,model in p.models.items():
         if model in seen:
