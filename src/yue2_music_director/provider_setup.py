@@ -15,6 +15,7 @@ from .native_draft import atomic_write
 
 PRESETS={"1":"https://integrate.api.nvidia.com/v1/chat/completions",
          "2":"https://openrouter.ai/api/v1/chat/completions"}
+NVIDIA_DEFAULT="nvidia/nemotron-3.5-super-vl-120b-a12b"
 
 
 class Blob(ctypes.Structure):
@@ -92,7 +93,12 @@ def setup(repo):
     if choice not in ("1","2","3"):
         raise ValueError("Select a provider")
     url=PRESETS.get(choice) or input("Full HTTPS chat/completions URL: ").strip()
-    model=input("Exact model ID from your provider: ").strip()
+    prompt="Exact model ID from your provider"
+    if choice=="1":
+        prompt+=" ["+NVIDIA_DEFAULT+"]"
+    model=input(prompt+": ").strip()
+    if choice=="1" and not model:
+        model=NVIDIA_DEFAULT
     if choice=="2" and not model.endswith(":free"):
         raise ValueError("OpenRouter preset requires an explicit :free model ID; no auto-router")
     if not model:

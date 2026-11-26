@@ -1,4 +1,6 @@
 import os
+import json
+import urllib.error
 import tempfile
 from pathlib import Path
 import unittest
@@ -82,3 +84,25 @@ class RetryTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     cc.stage(*args,retry=retry)
             self.assertTrue((Path(tmp)/"composer.retry-1.attempt.json").is_file())
+
+class ProviderTransportTests(unittest.TestCase):
+    def test_request_uses_exact_model_and_json_response(self):
+        p=TextProvider(ps.PRESETS["1"],"fixture-secret",{r:"fixture-"+r for r in ROLES})
+        with patch("urllib.request.build_opener") as opener:
+            response=opener.return_value.open.return_value.__enter__.return_value
+            response.read.return_value=json.dumps({"choices":[{"finish_reason":"stop",
+                "message":{"content":'{"ready":true}',"reasoning_content":"not the final answer"}}]}).encode()
+            self.assertEqual(p.complete("composer","JSON only",{}),{"ready":True})
+            request=opener.return_value.open.call_args.args[0]
+            self.assertEqual(json.loads(request.data)["model"],"fixture-composer")
+            self.assertEqual(request.get_header("Authorization"),"Bearer fixture-secret")
+            self.assertNotIn("fixture-secret",str(p.identity()))
+            self.assertEqual(opener.return_value.open.call_count,1)
+
+    def test_rate_limit_no_fallback_or_retry(self):
+        p=TextProvider(ps.PRESETS["1"],"fixture-secret",{r:"fixture" for r in ROLES})
+        with patch("urllib.request.build_opener") as opener:
+            opener.return_value.open.side_effect=urllib.error.HTTPError(p.url,429,"limit",{},None)
+            with self.assertRaisesRegex(ValueError,"429"):
+                p.complete("composer","JSON only",{})
+            self.assertEqual(opener.return_value.open.call_count,1)
