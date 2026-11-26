@@ -51,3 +51,7 @@ Next actionable work: provider and creative-role contract + small YuE2 knowledge
 ### Live score-first milestone and next artistic increment
 
 PR #84 live recovery completed without new synthesis/ASR; duration 184.358667 s, score 188.333333 s, native completion not_flagged, WER disagreement 0.0405, true peak -0.19 dBTP. Operator rated lyrics/vocals/melody/arrangement/ending all good; noted immediate vocal entry, confirmed female vocalist. MOSS judged static arrangement and incomplete ending, conflicting with operator's artistic judgment. Preserve take, no regeneration. Next use versioned intentional opening and separate vocalist/narrator direction with a local opening gate; MOSS remains advisory. One favorable take does not establish general quality. Non-destructive finishing and persistent artist profiles remain pending.
+
+### Optional release artwork (P0 adjunct, not a music acceptance blocker)
+
+Add an independent Cover Art Specialist for single or ordered album projects, using existing text provider with a separate visual-direction contract and durable receipts. Export a square artwork prompt for Google Flow and editable typography direction. No Flow credentials or image generation by default; optional audited adapters later. See [cover art](COVER_ART.md). Audio finishing, knowledge bases and Artist Memory remain separate priorities.
