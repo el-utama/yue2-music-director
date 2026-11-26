@@ -11,7 +11,7 @@ from .listening_director import lock
 from .multilingual_fidelity import SUPPORTED
 
 
-def stage(root, role, module, provider, data, *, retry=False):
+def stage(root, role, module, provider, data, *, retry=False, semantic_check=None):
     identity={"role":role,"provider":provider.identity(),"prompt":module.PROMPT,"input":data}
     receipt=root/(role+".json")
     attempt=root/(role+".attempt.json")
@@ -19,7 +19,11 @@ def stage(root, role, module, provider, data, *, retry=False):
         saved=nd.read(receipt)
         if not attempt.exists() or nd.read(attempt)!=identity or saved.get("identity")!=identity:
             raise ValueError("Retained stage identity differs: "+role)
+        if saved.get("schema") not in (None,"creative-stage-semantic-v1"):
+            raise ValueError("Unknown retained stage receipt schema: "+role)
         value=module.validate(saved["result"])
+        if semantic_check is not None:
+            semantic_check(value)
         print(role.capitalize()+": retained",flush=True)
         return value
     recovery=root/(role+".retry-1.attempt.json")
@@ -35,10 +39,26 @@ def stage(root, role, module, provider, data, *, retry=False):
         if retry or recovery.exists():
             raise ValueError("No original unresolved stage to retry: "+role)
         nd.create_journal(attempt,identity)
+    rejected=root/(role+(".retry-1" if retry else "")+".rejected.json")
+    if rejected.exists():
+        raise ValueError("Rejected response already retained: "+role)
     print(role.capitalize()+": requesting text",flush=True)
     started=time.monotonic()
-    result=module.validate(provider.complete(role,module.PROMPT,data))
-    nd.atomic_write(receipt,{"identity":identity,"result":result})
+    response=provider.complete(role,module.PROMPT,data)
+    try:
+        result=module.validate(response)
+        if semantic_check is not None:
+            semantic_check(result)
+    except ValueError as exc:
+        # Evidence of rejection is not a successful receipt. The existing attempt
+        # journal still requires explicit, bounded recovery before another call.
+        nd.atomic_write(rejected,{"schema":"creative-stage-rejected-v1",
+                                  "identity":identity,"response":response,"reason":str(exc)})
+        raise
+    saved={"identity":identity,"result":result}
+    if semantic_check is not None:
+        saved["schema"]="creative-stage-semantic-v1"
+    nd.atomic_write(receipt,saved)
     print(role.capitalize()+": complete ("+str(round(time.monotonic()-started,1))+" s)",flush=True)
     return result
 
@@ -54,12 +74,10 @@ def prepare(root, provider, request, language, duration, *, retry_role=None, dur
     if direction_guidance:
         from . import creative_direction as cd
         data["direction_guidance"]=cd.GUIDANCE
-    music=stage(root,"composer",composer,provider,data,retry=retry_role=="composer")
-    if direction_guidance:
-        cd.parse_direction(music)
-    words=stage(root,"lyricist",lyricist,provider,{**data,"composition":music},retry=retry_role=="lyricist")
-    if direction_guidance:
-        cd.validate_opening(music,words["lyrics"])
+    music=stage(root,"composer",composer,provider,data,retry=retry_role=="composer",
+                semantic_check=cd.parse_direction if direction_guidance else None)
+    words=stage(root,"lyricist",lyricist,provider,{**data,"composition":music},retry=retry_role=="lyricist",
+                semantic_check=(lambda value: cd.validate_opening(music,value["lyrics"])) if direction_guidance else None)
     review=stage(root,"reviewer",creative_reviewer,provider,{**data,"composition":music,
                  "lyrics":words["lyrics"],"diagnostics":lyricist.diagnostics(words["lyrics"],language)},retry=retry_role=="reviewer")
     return {"composition":music,"lyrics":words["lyrics"],"review":review}
