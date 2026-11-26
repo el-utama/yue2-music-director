@@ -1,5 +1,7 @@
 # Native song draft
 
+**Status update (2026-11-26):** the explicit-score demo completed one native full-song generation, verified saved conditioning and resumed ASR without a new song job. It was rejected musically. The [generation-first architecture and implementation roadmap](MUSIC_DIRECTOR_ARCHITECTURE.md) defines the future native-first routing and review policy; this guide still describes the existing commands. Do not regenerate the demo or reopen the closed repair series. See [empirical results](GENERATION_CONTROL_STUDY.md).
+
 The first unified production path uses native YuE2 composition and rendering. It does not depend on experimental phoneme recognition, external alignment, AudioBox, LoRA, stem separation, custom ABC changes or manual listening.
 
 ## Input and authorization
