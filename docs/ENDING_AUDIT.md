@@ -1,0 +1,7 @@
+# Autonomous ending inspection
+
+First live autonomous take (main 53c73a5, 2026-11-26): lyrics and vocals good; melody and arrangement ordinary; ending poor, operator confirms song ends before completion. Measured duration 194.998667 s against cap 195 s. Exact cause not established. Near-cap flag is a review trigger, not a diagnosis. Do not assume MOSS boundary observations or aggregate ASR prove omitted lyrics.
+
+After CI, inspect the existing job locally with `music.cmd --inspect-ending JOB`. It uses the retained brief, verified audio and native report, local saved score and completed listening packet; no network, inference, export or audio mutation. Transcript at results/ending-output.txt. Reports section count, final sung section, score clock and final score sections if locally assessable, aggregate ASR disagreement and cap proximity. No lyrics, raw recognition, raw audio or credentials printed. No automatic repair. Existing historic outro-repair templates are tied to specific prior scores and must not be reused blindly.
+
+The next engineering decision depends on the retained score: if intended score extends beyond the cap, improve duration-aware planning (reserve ending time and explicitly screen score length before synthesis); if the score fits but audio truncates, investigate native generation/semantic completion before choosing repair. Preserve strong lyric/vocal characteristics; a fade cannot restore missing content. The current inspection does not itself improve or repair audio. No live inference authorized.
