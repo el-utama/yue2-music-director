@@ -112,3 +112,45 @@ class AutonomousTests(unittest.TestCase):
                     au.launch(repo,"old","idea","en",195,"http://127.0.0.1:8791/mcp",confirm=True,provider_factory=lambda:f)
                 native.assert_not_called()
             self.assertEqual(f.calls,[])
+
+    def test_continuation_plan_only_no_calls(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(au.continue_plan(Path(tmp),"one","http://127.0.0.1:8791/mcp",
+                             provider_factory=lambda:self.fail("provider called")),0)
+
+    def test_continuation_reuses_exact_plan_and_creative_receipts(self):
+        import hashlib
+        from yue2_music_director import retained_plan_review as rp
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            f=Provider()
+            url="http://127.0.0.1:8791/mcp"
+            args=(repo,"one","A quiet goodbye","en",150,url)
+            old={"decision":"stop","score_review":{"status":"unassessable","unknowns":[{"code":"unsupported_local_notation"}]}}
+            with patch.object(au.artist_run,"run",return_value={"status":"artistic_plan_stopped","decision":old}):
+                self.assertEqual(au.launch(*args,confirm=True,provider_factory=lambda:f),2)
+            parent=repo/"results/autonomous/one"
+            source=parent/"production"
+            source.mkdir()
+            brief=nd.read(parent/"brief.json")
+            intent=nd.read(parent/"intent.json")
+            manifest={"schema":"artist-run-v1","brief":brief,"intent":intent,"route":"reviewed_native","explicit_score_sha256":None}
+            nd.atomic_write(source/"manifest.json",manifest)
+            nd.atomic_write(source/"plan-decision.json",old)
+            for name in ("journal_plan.json","plan-result.json","plan-receipt.json"):
+                nd.atomic_write(source/name,{"fixture":name})
+            (source/"native-plan.abc").write_text("synthetic fixture")
+            before={p:hashlib.sha256(p.read_bytes()).hexdigest() for p in parent.rglob("*") if p.is_file()}
+            recheck={"previous_status":"unassessable","current_decision":{"decision":"retain"}}
+            with patch.object(rp,"inspect",return_value=recheck),patch.object(au,"produce",return_value=0) as produce:
+                for _ in range(2):
+                    self.assertEqual(au.continue_plan(repo,"one",url,confirm=True,provider_factory=lambda:f),0)
+                self.assertEqual(produce.call_count,2)
+                self.assertEqual(produce.call_args.args[1],parent/"continuation-1")
+                self.assertEqual(f.calls,["composer","lyricist","reviewer"])
+                for path,digest in before.items():
+                    self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),digest)
+                (parent/"continuation-1/production/native-plan.abc").write_text("changed")
+                with self.assertRaisesRegex(ValueError,"source differs"):
+                    au.continue_plan(repo,"one",url,confirm=True,provider_factory=lambda:f)
+                self.assertEqual(produce.call_count,2)
