@@ -7,7 +7,7 @@ import uuid
 
 from . import creative_core as cc, director_decision as dd, listening_director as ld
 from . import native_draft as nd, artist_run
-from .creative_provider import TextProvider
+from .creative_provider import TextProvider, ROLES
 from .mcp import MCPError, configured_endpoint
 from .prosody import parse_lyrics
 
@@ -35,20 +35,27 @@ def make_inputs(result, identity):
 
 
 def launch(repo, job, request, language, duration, url, *, confirm=False,
-           provider_factory=TextProvider.from_env):
+           provider_factory=None, retry_role=None):
     cc.validate_job(job,request,language,duration)
     url=configured_endpoint(url)
     print("Job:",job,flush=True)
     print("Budget: four text stages, one native song, one explicit ASR, two CPU excerpts.",flush=True)
+    if retry_role is not None and (retry_role not in ROLES or not confirm):
+        raise ValueError("Retry requires a valid text role and explicit confirmation")
     if not confirm:
         print("Plan only; zero provider or Studio calls.",flush=True)
         return 0
-    provider=provider_factory()
+    provider=provider_factory() if provider_factory else TextProvider.for_repo(repo)
     jobs=repo/"results/autonomous"
     root=jobs/job
     with ld.lock(jobs/".active"):
         identity={"schema":"autonomous-job-v1","job":job,"request":request,"language":language,
                   "duration_seconds":duration,"provider":provider.identity(),"studio_url":url}
+        if retry_role is not None:
+            if (not (root/(retry_role+".attempt.json")).is_file()
+                    or (root/(retry_role+".json")).exists()
+                    or (root/(retry_role+".retry-1.attempt.json")).exists()):
+                raise ValueError("Only one explicit retry of an existing unresolved text stage is permitted")
         if root.exists():
             if nd.read(root/"job.json")!=identity:
                 raise ValueError("Retained job identity differs")
@@ -56,7 +63,7 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
             root.mkdir(parents=True,exist_ok=False)
             nd.atomic_write(root/"job.json",identity)
         print("Creative stages",flush=True)
-        result=cc.prepare(root,provider,request,language,duration)
+        result=cc.prepare(root,provider,request,language,duration,retry_role=retry_role)
         freeze(root/"creative-result.json",result)
         if result["review"]["decision"]!="retain":
             print("Editorial stop. No native generation:",root/"creative-result.json",flush=True)
@@ -78,7 +85,7 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
             print("Neutral audio evaluation",flush=True)
             packet=ld.listen(production,brief,intent,row,url)
         print("Director judgment",flush=True)
-        decision=cc.stage(root,"director",dd,provider,dd.context(request,brief,intent,report,packet))
+        decision=cc.stage(root,"director",dd,provider,dd.context(request,brief,intent,report,packet),retry=retry_role=="director")
         technical=report["headroom_pass"] and report["duration_cap_screen_pass"]
         status=("provisional" if technical and decision["decision"]=="retain_provisional"
                 else "review_required")
@@ -107,9 +114,12 @@ def main():
     p.add_argument("--duration",type=int)
     p.add_argument("--confirm-run",action="store_true",
                    help="Authorize four external text stages and one local song, ASR and two CPU excerpts")
+    p.add_argument("--retry-text",choices=ROLES,help="One explicitly authorized retry of the named unresolved text stage")
     a=p.parse_args()
     try:
         repo=a.repo.resolve()
+        if a.retry_text and not a.job:
+            raise ValueError("Text recovery requires the existing --job ID")
         job=a.job or ("song-"+uuid.uuid4().hex[:12])
         # Validate path component before reading an existing job.
         cc.validate_job(job,"placeholder","en",195)
@@ -127,7 +137,7 @@ def main():
                 request=a.request
             language=a.language or "en"
             duration=a.duration if a.duration is not None else 195
-        return launch(repo,job,request,language,duration,a.url,confirm=a.confirm_run)
+        return launch(repo,job,request,language,duration,a.url,confirm=a.confirm_run,retry_role=a.retry_text)
     except (OSError,ValueError,KeyError,TypeError,MCPError,subprocess.SubprocessError,EOFError) as e:
         print("ERROR:",e,file=sys.stderr,flush=True)
         print("Preserve job and receipts. Resume only the same job; no blind retry.",file=sys.stderr,flush=True)
