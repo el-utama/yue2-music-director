@@ -25,6 +25,9 @@ def extract_midi(response) -> bytes:
         if depth>6:
             return None
         if isinstance(item,dict):
+            if item.get('ok') is False:
+                reason=item.get('error')
+                raise ValueError('Studio rejected score: '+str(reason or 'No reason supplied')[:1000])
             if item.get('type')=='text':
                 value=item.get('text','')
                 try:return seek(json.loads(value),depth+1)
