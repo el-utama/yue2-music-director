@@ -20,6 +20,10 @@ If an independent music-AI detector is available, its reported result may be rec
 
 Research ordering: complete the current bounded lyric-conditioning experiment without automatic retries; then audit already available native expressive controls and retained A/B evidence, establish a humanization evaluation protocol, and separately evaluate compatible custom-trained models/adapters when their provenance and local configuration are verified. No training, inference, model change or detector upload is authorized by this roadmap update.
 
+## Generation-first control study
+
+The bounded lyric-repair trial is closed. [Generation Control Study](GENERATION_CONTROL_STUDY.md) is the next empirical gate: compare native planning with and without section-order steering on the existing private brief, before committing to any full-song synthesis. This is an experiment, not a default production policy or a proven naturalness improvement.
+
 ## Architecture and operating paths
 
 | Layer | Current implementation | Evidence |
