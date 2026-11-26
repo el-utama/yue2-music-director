@@ -70,12 +70,52 @@ def verify_completed_settings(job,brief):
         raise ValueError("Completed job does not confirm disabled adapters")
 
 
+def verify_native_directed_layout(abc):
+    """Conservative subset of pinned Studio abc::parse for authored scores."""
+    import re
+    lines=abc.splitlines()
+    voices=('V: Vocal clef=treble name="Vocal Melody" snm="Vocal"',
+            'V: Ins clef=treble name="Ins Melody" snm="Inst."')
+    if (len(lines)<12 or lines[:2]!=["X:1","T:"] or tuple(lines[5:7])!=voices
+            or not re.fullmatch(r"M:[1-9][0-9]*/[1-9][0-9]*",lines[2])
+            or not re.fullmatch(r"L:1/(?:4|8|16|32)",lines[3])
+            or not re.fullmatch(r"Q:1/4=[1-9][0-9]*",lines[4])
+            or not lines[7].startswith("K:")):
+        raise ValueError("Directed score failed native layout: expected exact eight-line native header")
+    i=8
+    while i<len(lines):
+        if lines[i].startswith("% "):
+            i+=1
+        if i+3>=len(lines) or lines[i]!="V: Vocal" or lines[i+2]!="V: Ins":
+            raise ValueError("Directed score failed native layout: expected paired Vocal/Ins group")
+        counts=[]
+        for line in (lines[i+1],lines[i+3]):
+            if not line.endswith("|") or any(not b.strip() for b in line[:-1].split("|")):
+                raise ValueError("Directed score failed native layout: invalid barlines")
+            count=0
+            for bar in line[:-1].split("|"):
+                rest=re.fullmatch(r"Z([2-4])?",bar.strip())
+                count+=int(rest[1] or 1) if rest else 1
+            counts.append(count)
+        if counts[0]!=counts[1] or not 1<=counts[0]<=4:
+            raise ValueError("Directed score failed native layout: groups require 1–4 equal bars")
+        i+=4
+    # The local structural parser permits arbitrary numeric durations. Native
+    # only allows the following token lengths; native MIDI is still the authority.
+    from .music import parse_score
+    score=parse_score(abc)
+    for e in score.events:
+        if e.kind!="multirest" and e.duration not in (1,2,3,4,6,8,12,16,24,32,48):
+            raise ValueError("Directed score failed native layout: unsupported note/rest duration")
+
+
 def verify_directed_score(abc,brief):
     # Lazy import: generation_control reuses this module's brief helpers.
     from .generation_control import inspect_plan
     review=inspect_plan(abc,brief)
     if not review["eligible_for_render"]:
         raise ValueError("Directed score failed structural review: "+repr(review))
+    verify_native_directed_layout(abc)
     return review
 
 
@@ -85,7 +125,7 @@ def score_signature(abc):
     return (tuple(score.headers.get(k) for k in ("M","L","K","Q")),
             score.sections,score.bar_chords,
             [(e.voice,e.bar,e.section,e.kind,e.offset,e.duration,e.pitch,e.tied)
-             for e in score.events])
+             for e in sorted(score.events,key=lambda e:(e.voice,e.bar,e.offset))])
 
 
 def verify_saved_directed_score(saved,abc,song_id,job_id,brief):
@@ -156,7 +196,9 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None):
             from .midi import extract_midi,midi_header
             if "abc" not in tools["score_to_midi"].get("properties",{}):
                 raise ValueError("Native MIDI tool schema mismatch")
-            midi=midi_header(extract_midi(client.call("score_to_midi",{"abc":abc})))
+            response=client.call("score_to_midi",{"abc":abc})
+            atomic_write(root/"score-midi-response.json",response)
+            midi=midi_header(extract_midi(response))
             atomic_write(root/"score-review.json",{"structural_review":review,"midi":midi,
                          "score_sha256":digest(abc.encode("utf-8"))})
             print("Directed score: structural and native MIDI compatibility passed.",flush=True)
