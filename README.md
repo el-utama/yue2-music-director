@@ -49,6 +49,10 @@ py -3 -m unittest discover -s tests -v
 - [Native Process Audio integration contract](docs/NATIVE_PROCESS_AUDIO.md): source audit, transaction design and outstanding blockers.
 - [Historical v0.6.1 acceptance protocol](docs/MUSICAL_ACCEPTANCE_V061.md): frozen score and original research design; superseded for routine human listening by the ASR-primary policy.
 
+## Generation control study (experimental)
+
+See [Generation Control Study](docs/GENERATION_CONTROL_STUDY.md). Compare default native score planning against section-aware planning with the existing private brief. The Windows launcher `generation-control.cmd` plans without inference; `generation-control.cmd --confirm-plans` permits two native planning jobs, no full-song renders. Review results before selecting any generation policy.
+
 ## Native song draft (experimental)
 
 See [Native Song Draft](docs/NATIVE_DRAFT.md). A private six-field brief and one explicit authorization drive one native stock reference generation and one local recognition, with a resumable journal, technical QA and automatic TXT handoff. No optional evaluator is required. Combined live validation is pending.
