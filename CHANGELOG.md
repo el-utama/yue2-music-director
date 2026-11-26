@@ -1,5 +1,10 @@
 # Changelog and research milestones
 
+## Unreleased — stable Studio handoff gates
+
+- Wait for reported background activities to finish, including automatic karaoke, before native planning, synthesis or ASR. Require three idle observations five seconds apart, bounded native wait, and final submission checks. Preserve journals and never cancel unrelated jobs.
+- Synthetic regression coverage for delayed activity, native wait completion with persistent busy state and malformed status. No proof of the OOM cause or sufficient VRAM.
+
 ## Unreleased — bounded artist-demo OOM recovery
 
 - Confirmed model-loading GPU memory failure by read-only native job inspection; retained score clock 200.28 s under 210 s cap. Writing-assistant involvement not established.
