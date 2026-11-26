@@ -258,3 +258,68 @@ class OOMRecoveryTests(unittest.TestCase):
                 ar.recover_oom(BRIEF,self.intent,self.root,URL)
             factory.assert_not_called()
             execute.assert_not_called()
+
+
+class NativeComparisonTests(unittest.TestCase):
+    def setUp(self):
+        OOMRecoveryTests.setUp(self)
+        self.reviewed=self.root/"oom-recovery-1"/"draft"
+        self.reviewed.mkdir(parents=True)
+        for name in ("brief.json","request.json","artist-policy.json"):
+            (self.reviewed/name).write_bytes((self.draft/name).read_bytes())
+        self.audio=self.root/"reviewed.flac"
+        self.audio.write_bytes(b"reviewed fixture")
+        sha=nd._sha(self.audio)
+        journal={**self.journal,"state":"COMPLETED","job_id":"reviewed-job",
+                 "song_id":"reviewed-song","audio_sha256":sha}
+        nd.atomic_write(self.reviewed/"journal_song.json",journal)
+        self.report={"brief_sha256":journal["brief_sha256"],"request_sha256":journal["request_sha256"],
+                     "job_id":journal["job_id"],"song_id":journal["song_id"],
+                     "audio":str(self.audio),"audio_sha256":sha,
+                     "generation_path":"reviewed_native","saved_score_verified":True,
+                     "actual_lyric_conditioning_verified":True,"artistic_intent":self.intent}
+        nd.atomic_write(self.reviewed/"report.json",self.report)
+
+    def test_matched_direct_request_and_frozen_identity(self):
+        baseline={"status":"provisional_draft","generation_path":"direct_native"}
+        with patch.object(nd,"execute",return_value=baseline) as execute, \
+             patch.object(ar,"native_plan") as planner,patch.object(ar,"Client") as client:
+            for _ in range(2):
+                self.assertEqual(ar.comparison_arm(BRIEF,self.intent,self.root,URL),baseline)
+            planner.assert_not_called()
+            client.assert_not_called()
+            folder=self.root/"direct-native-comparison"
+            self.assertEqual(execute.call_args.args,(BRIEF,folder/"draft",URL))
+            self.assertIsNone(execute.call_args.kwargs.get("abc"))
+            self.assertEqual(ar.route_for(execute.call_args.kwargs["artist"]),"direct_native")
+            self.assertEqual(execute.call_args.kwargs["expected_configuration"],{"profile":"same"})
+            evidence=nd.read(folder/"comparison-result.json")
+            self.assertEqual(evidence["comparison"]["difference"],"omit_explicit_abc_from_song_request")
+            self.assertEqual(evidence["comparison"]["budget"]["score_jobs"],0)
+            self.assertEqual(evidence["saved_score_identity"],"unassessable")
+            self.assertFalse(evidence["automatic_winner"])
+            self.assertEqual(nd.read(self.reviewed/"report.json"),self.report)
+
+    def test_changed_audio_stops_before_execution(self):
+        self.audio.write_bytes(b"modified")
+        with patch.object(nd,"execute") as execute:
+            with self.assertRaisesRegex(ValueError,"audio identity differs"):
+                ar.comparison_arm(BRIEF,self.intent,self.root,URL)
+            execute.assert_not_called()
+
+    def test_missing_reviewed_take_stops_before_execution(self):
+        (self.reviewed/"report.json").unlink()
+        with patch.object(nd,"execute") as execute:
+            with self.assertRaisesRegex(ValueError,"Exactly one completed"):
+                ar.comparison_arm(BRIEF,self.intent,self.root,URL)
+            execute.assert_not_called()
+
+    def test_equal_saved_score_not_claimed_as_new_composition(self):
+        folder=self.root/"direct-native-comparison"/"draft"
+        def finish(*args,**kwargs):
+            folder.mkdir()
+            (folder/"saved-score.abc").write_bytes(ABC.encode("utf-8"))
+            return {"status":"provisional_draft"}
+        with patch.object(nd,"execute",side_effect=finish):
+            ar.comparison_arm(BRIEF,self.intent,self.root,URL)
+        self.assertEqual(nd.read(folder.parent/"comparison-result.json")["saved_score_identity"],"identical")
