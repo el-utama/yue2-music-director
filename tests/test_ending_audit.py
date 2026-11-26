@@ -46,3 +46,9 @@ class NativeCompletionTests(unittest.TestCase):
         self.assertTrue(blocks_provisional(inspect_completion({**song,"replay_request":{"truncated":True}},"s","j")))
         with self.assertRaises(ValueError):
             inspect_completion(song,"other","j")
+
+    def test_replay_classifier_matches_studio(self):
+        from yue2_music_director.native_completion import replay_cut_reason
+        self.assertEqual(replay_cut_reason({"truncated":True,"duration":195,"semantic_tokens":",".join(["1"]*4875)}),"length")
+        self.assertEqual(replay_cut_reason({"truncated":True,"duration":240,"semantic_tokens":",".join(["1"]*3537)}),"memory")
+        self.assertIsNone(replay_cut_reason({"truncated":True}))

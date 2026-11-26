@@ -75,10 +75,27 @@ def inputs(repo, demo=False):
 def verify_take(draft, brief, report):
     journal = nd.read(draft / "journal_song.json")
     request = nd.request_for(brief)
+    route=report.get("generation_path")
+    if route=="reviewed_native":
+        abc=(draft.parent/"native-plan.abc").read_text(encoding="utf-8")
+        plan=nd.read(draft.parent/"journal_plan.json")
+        decision=nd.read(draft.parent/"plan-decision.json")
+        score_sha=nd.digest(abc.encode("utf-8"))
+        if (plan.get("state")!="COMPLETED" or plan.get("score_sha256")!=score_sha
+                or decision.get("decision")!="retain"
+                or decision.get("score_review",{}).get("score_sha256")!=score_sha
+                or report.get("saved_score_verified") is not True
+                or report.get("actual_lyric_conditioning_verified") is not True
+                or (draft/"saved-score.abc").read_bytes()!=abc.encode("utf-8")
+                or report.get("score_review",{}).get("score_sha256")!=score_sha):
+            raise ValueError("Retained reviewed score identity mismatch")
+        request["abc"]=abc
+    elif route!="direct_native":
+        raise ValueError("Unsupported retained artistic generation route")
     sha = nd.digest(nd._canonical(request))
     if (nd.read(draft / "report.json") != report or
             nd.read(draft / "brief.json") != brief or nd.read(draft / "request.json") != request or
-            report.get("schema") != "native-draft-v1" or report.get("generation_path") != "direct_native" or
+            report.get("schema") != "native-draft-v1" or
             report.get("automatic_acceptance") is not False or
             report.get("brief_sha256") != nd.digest(nd._canonical(brief)) or
             report.get("request_sha256") != sha or journal.get("request_sha256") != sha or
