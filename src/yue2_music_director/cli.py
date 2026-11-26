@@ -55,6 +55,12 @@ def main(argv=None) -> int:
     aud=sub.add_parser('audit',help='Validate ABC without contacting Studio')
     aud.add_argument('abc',type=Path)
     aud.add_argument('--lyrics',type=Path)
+    review=sub.add_parser('score-review',help='Offline musical descriptors and versioned constraint review')
+    review.add_argument('abc',type=Path)
+    review.add_argument('--lyrics',required=True,type=Path)
+    review.add_argument('--constraints',type=Path)
+    review.add_argument('--max-seconds',type=float)
+    review.add_argument('--out',required=True,type=Path)
     variation=sub.add_parser('humanize',help='Produce a new ABC with chord-aware phrase variation')
     variation.add_argument('abc',type=Path)
     variation.add_argument('--lyrics',type=Path,required=True)
@@ -287,6 +293,19 @@ def main(argv=None) -> int:
                 result['warnings']+=alignment(score,groups)
                 if not any(w.startswith('SECTION MISMATCH') for w in result['warnings']):
                     result['phrases']=phrase_diagnostics(score,groups)
+        elif args.command=='score-review':
+            from .musical_review import review_score
+            for source,limit in ((args.abc,800_000),(args.lyrics,100_000),(args.constraints,100_000)):
+                if source is not None and source.stat().st_size>limit:
+                    raise ValueError('Review input exceeds size limit')
+            constraints=json.loads(args.constraints.read_text(encoding='utf-8-sig')) if args.constraints else None
+            result=review_score(args.abc.read_text(encoding='utf-8-sig'),
+                                args.lyrics.read_text(encoding='utf-8-sig'),
+                                constraints=constraints,max_seconds=args.max_seconds)
+            args.out.parent.mkdir(parents=True,exist_ok=True)
+            with args.out.open('x',encoding='utf-8') as f:
+                json.dump(result,f,indent=2,ensure_ascii=False,allow_nan=False)
+                f.write('\n')
         elif args.command=='humanize':
             if not 0<=args.max_edits<=100:
                 raise ValueError('max-edits must be 0 to 100')

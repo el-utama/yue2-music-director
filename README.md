@@ -93,6 +93,10 @@ This single command validates ABC, checks lyric-section order, reports approxima
 
 To create audio later, review the manifest and use the separately confirmed `ab-submit` commands below, pointing `--out` to `results/run-001/ab`.
 
+## Offline musical review (generation-first)
+
+See [Musical Review](docs/MUSICAL_REVIEW.md) for the new offline `score-review` command: native fixed-grid major/minor score descriptors, chorus comparison, hard/soft/unknown review and mandatory constraint screening. It does not render or edit scores; existing historical gates are unchanged.
+
 ## Working with ABC, offline
 
 ```powershell

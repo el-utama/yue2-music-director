@@ -1,5 +1,11 @@
 # Changelog and research milestones
 
+## Unreleased — generation-first P1 score review
+
+- Add an opt-in native fixed-grid parser profile for major/minor scores, native paired groups, ties and accidentals, preserving the legacy parser defaults.
+- New offline `score-review` reports musical descriptors and versioned hard/soft/unknown constraints; native MIDI remains mandatory before future supplied-score rendering. No generation, edits, aesthetic grade or render authorization.
+- See [Musical Review](docs/MUSICAL_REVIEW.md). Integrated routing and artistic validation remain pending.
+
 ## Unreleased — generation-first architecture (documentation only)
 
 - Establish [architecture and phased implementation roadmap](docs/MUSIC_DIRECTOR_ARCHITECTURE.md): native composition by default, separate mandatory constraints from artistic preferences and unknowns, selective justified score guidance, independent technical/lyric/artistic evidence, bounded journaled recovery.
