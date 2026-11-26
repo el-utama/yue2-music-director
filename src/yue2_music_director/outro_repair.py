@@ -84,8 +84,20 @@ def codes(value):
 def prepare_replay(song,brief):
     replay=song.get("replay_request")
     settings=song.get("generation_settings")
-    if not isinstance(replay,dict) or not isinstance(settings,dict) or replay.get("cot")!="full":
-        raise ValueError("Expected full-score native replay")
+    if not isinstance(replay,dict) or not isinstance(settings,dict):
+        raise ValueError("Missing native replay or generation settings object")
+    # Studio import_tracks explicitly documents sparse engine replay records:
+    # default-valued fields are omitted. generation_settings starts with the
+    # submitted request, overlays replay and fills engine defaults.
+    # Never assume a missing mode is full, or ignore an explicit conflict.
+    modes=[record["cot"] for record in (settings,replay) if "cot" in record]
+    metadata=song.get("metadata")
+    if isinstance(metadata,dict) and metadata.get("cot") is not None:
+        modes.append(metadata["cot"])
+    if not modes or any(mode!="full" for mode in modes):
+        raise ValueError("Full-score mode not established by retained metadata: "
+                         +"replay="+repr(replay.get("cot"))+", settings="+repr(settings.get("cot")))
+    print("Full-score mode: verified"+(" from generation settings (sparse replay)" if "cot" not in replay else " from replay"),flush=True)
     if (replay.get("backing_song_id") or replay.get("adapters") not in (None,[])
             or replay.get("companion_scale") not in (None,0) or replay.get("seed")!=brief["seed"]
             or replay.get("lm_seed")!=brief["seed"]):
@@ -111,7 +123,7 @@ def prepare_replay(song,brief):
     fields=dict(replay)
     for key in ("truncated","lyric_schedule","abc_continue","score_edit"):
         fields.pop(key,None)
-    fields.update(abc=fixed,semantic_tokens=",".join(original[:cut]),continue_semantic_tokens=True,
+    fields.update(cot="full",abc=fixed,semantic_tokens=",".join(original[:cut]),continue_semantic_tokens=True,
                   duration=end+0.5,lm_batch_size=1,synth_batch_size=1,output_format="flac")
     sampling=dict(fields.get("semantic_sampling") or {})
     sampling.update(min_tokens=cut+int((end-start)*25*0.9),max_tokens=math.ceil((end+0.5)*25))
