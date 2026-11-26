@@ -1,5 +1,7 @@
 # Generation Control Study
 
+**Status update (2026-11-26):** Studies 1 and 2 and the preferred stock reference are retained empirical evidence. The [generation-first architecture and implementation roadmap](MUSIC_DIRECTOR_ARCHITECTURE.md) now governs the next work. Strict study gates described below are historical experiment policies, not universal artistic rules; implementation remains unchanged. Do not rerun these experiments merely for documentation or restart the closed repair series.
+
 First-generation musical naturalness is the product objective. The failed localized lyric-repair series is closed; it is not a prerequisite for generation. The current native draft sends song_create immediately, so its first score cannot be screened before full synthesis. Start with a measured native planning control, not another audio repair or arbitrary score randomizer.
 
 ## Study 1 — section-aware planning
