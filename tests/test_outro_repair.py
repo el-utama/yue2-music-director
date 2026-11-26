@@ -28,6 +28,21 @@ class OutroRepairTests(unittest.TestCase):
         self.assertEqual(replay["semantic_tokens"].split(","),["7"]*850)
         self.assertGreater(payload["replay_request"]["semantic_sampling"]["min_tokens"],cut)
 
+    def test_sparse_replay_recovers_full_mode_and_inputs(self):
+        lyrics="[Chorus]\nOne two\n[Outro]\nThree four\nFive six"
+        # Native import_tracks retains submitted fields in generation_settings
+        # even when the engine's sparse replay omits them.
+        settings={"abc":SCORE,"lyrics":lyrics,"seed":42,"lm_seed":42,"cot":"full","companion_scale":0,"kv_cache":"q8"}
+        replay={"semantic_tokens":",".join(["7"]*850),"seed":42,"lm_seed":42}
+        brief={"lyrics":lyrics,"seed":42,"title":"Test"}
+        payload,cut,_,_=prepare_replay({"replay_request":replay,"generation_settings":settings},brief)
+        self.assertEqual(cut,400)
+        self.assertEqual(payload["replay_request"]["cot"],"full")
+        self.assertNotIn("kv_cache",payload["replay_request"])
+        self.assertNotIn("cot",replay)
+        with self.assertRaisesRegex(ValueError,"effective CoT"):
+            prepare_replay({"replay_request":{**replay,"cot":"off"},"generation_settings":settings},brief)
+
     def test_unexpected_score_fails_closed(self):
         with self.assertRaises(ValueError):
             patch_outro(SCORE.replace('"Em7"z16','"Em7"E16',1))
