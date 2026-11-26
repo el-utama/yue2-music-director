@@ -275,6 +275,8 @@ def parse_score(source: str, *, native=False) -> Score:
                 if native and kind=='rest' and pending.get(current_voice):
                     raise ScoreError('Native tie enters a rest')
                 if symbol == 'Z':
+                    if native and (chords or not re.fullmatch(r'Z[2-4]?',raw)):
+                        raise ScoreError('Native whole-bar rest must stand alone')
                     if found or piece[m.end():].strip():
                         raise ScoreError('Z multibar rest must occupy entire measure')
                     if dur.denominator != 1:
