@@ -11,6 +11,7 @@ from .experiments import _canonical, _sha as digest
 from .mcp import Client, configured_endpoint, unpack
 from .generation_control import result_score
 from .musical_review import review_score, validate_constraints
+from .studio_idle import wait_for_idle, assert_idle
 
 SCHEMA="artist-intent-v1"
 ALLOWED_FLAGS={"section_order_differs","notated_sung_sequence_differs",
@@ -107,7 +108,7 @@ def _preflight(client,brief,request):
     if "harmony" in request and "follow_lyrics" not in tools["score_compose"]["properties"]["harmony"].get("properties",{}):
         raise ValueError("Native section steering unavailable")
     nd.recognition_preflight(client)
-    return nd.reference_configuration(client,unpack(client.call("studio_status",{})),
+    return nd.reference_configuration(client,wait_for_idle(client,"native composition planning"),
         nd.request_for(brief),unpack(client.call("song_defaults",{})),
         unpack(client.call("studio_capabilities",{})))
 
@@ -129,6 +130,7 @@ def native_plan(brief,intent,root,url,*,max_polls=120,sleep=time.sleep):
         client=Client(configured_endpoint(url),timeout=90).connect()
         config=_preflight(client,brief,request)
         journal={"state":"SUBMISSION_ATTEMPTED","request_sha256":sha,"configuration":config}
+        assert_idle(client)
         nd.create_journal(path,journal)
         print("Submitting one native composition plan...",flush=True)
         response=unpack(client.call("score_compose",request))
