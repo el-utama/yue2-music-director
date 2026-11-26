@@ -3,7 +3,6 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
-import zipfile
 
 from yue2_music_director import audio_critic as ac
 from yue2_music_director import native_draft as nd
@@ -28,45 +27,54 @@ class CriticContractTests(unittest.TestCase):
             self.assertEqual(len(parsed),len(ac.RUBRIC))
             self.assertTrue(all(r["status"]=="uncertain" and r["evidence"] is None for r in parsed))
 
-    def test_download_identity_and_no_network_on_cached_asset(self):
+    def test_inventory_uses_only_managed_studio_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp)/"file"
-            path.write_bytes(b"fixture")
-            asset = ("file","https://example.invalid/file",7,nd._sha(path))
-            with patch.object(ac.subprocess,"run") as run:
-                ac.download(path.parent,asset)
-                path.write_bytes(b"altered")
-                with self.assertRaisesRegex(ValueError,"changed pinned asset"):
-                    ac.download(path.parent,asset)
-                run.assert_not_called()
+            data=Path(tmp).resolve()
+            media=data/"media"
+            media.mkdir()
+            rows=[{"audio":str(media/"a.flac")},{"audio":str(media/"b.flac")}]
+            self.assertFalse(ac.inventory(rows)["ready"])
+            engine=data/"hotstep"/ac.TOOLS_FOLDER
+            models=data/"training/models/moss"
+            engine.mkdir(parents=True)
+            models.mkdir(parents=True)
+            for name in ("ace-caption.exe","ggml.dll","ggml-base.dll"):
+                (engine/name).write_bytes(b"fixture")
+            with patch.object(ac,"MODEL_FILES",(("tower.gguf",7),("lm.gguf",7))):
+                for name,size in ac.MODEL_FILES:
+                    (models/name).write_bytes(b"fixture")
+                inventory=ac.inventory(rows)
+                self.assertTrue(inventory["ready"])
+                self.assertEqual(inventory["captioner"],str(engine/"ace-caption.exe"))
+                (models/"lm.gguf").write_bytes(b"bad")
+                self.assertFalse(ac.inventory(rows)["ready"])
 
-    def test_archive_extract_whitelist(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            archive = Path(tmp)/"fixture.zip"
-            with zipfile.ZipFile(archive,"w") as z:
-                for name in ("ace-caption.exe","ggml.dll","ggml-base.dll","ggml-cpu-avx2.dll","ace-server.exe"):
-                    z.writestr("dist/engine/"+name,b"fixture")
-                z.writestr("dist/ui/index.html",b"fixture")
-            self.assertEqual({name for _,name in ac.archive_members(archive)},
-                             {"ace-caption.exe","ggml.dll","ggml-base.dll","ggml-cpu-avx2.dll"})
-            with zipfile.ZipFile(archive,"a") as z:
-                z.writestr("another/ace-caption.exe",b"fixture")
-            with self.assertRaisesRegex(ValueError,"exactly one"):
-                ac.archive_members(archive)
+    def test_excerpts_cover_duration_without_exceeding_cpu_limit(self):
+        for seconds in (1,198.3,200.2,210):
+            (a,d),(b,e)=ac.excerpt_ranges(seconds)
+            self.assertEqual(a,0)
+            self.assertEqual(b,d)
+            self.assertAlmostEqual(b+e,seconds)
+            self.assertLessEqual(max(d,e),120)
+        with self.assertRaises(ValueError):
+            ac.excerpt_ranges(211)
 
-    def test_offline_calibration_plan_uses_no_evaluation_or_setup(self):
+    def test_offline_calibration_plan_uses_no_evaluation_or_subprocess(self):
         with tempfile.TemporaryDirectory() as tmp:
-            repo = Path(tmp).resolve()
-            with patch.object(ac,"retained_pair",return_value=[{"arm":"reviewed"},{"arm":"direct"}]), \
-                 patch.object(ac,"setup") as setup,patch.object(ac,"evaluate") as evaluate, \
+            repo=Path(tmp).resolve()
+            rows=[{"arm":"reviewed"},{"arm":"direct"}]
+            installed={"ready":False,"files":[]}
+            with patch.object(ac,"retained_pair",return_value=rows), \
+                 patch.object(ac,"inventory",return_value=installed), \
+                 patch.object(ac,"evaluate") as evaluate, \
+                 patch.object(ac.subprocess,"run") as run, \
                  patch("sys.argv",["critic","--repo",str(repo)]):
                 self.assertEqual(ac.main(),0)
                 self.assertEqual(ac.main(),0)
-                self.assertTrue((repo/"results/critic-calibration/prompt.txt").exists())
+                self.assertTrue((repo/"results/critic-calibration/inventory.json").exists())
                 self.assertFalse((repo/"results/critic-calibration/report.json").exists())
-                setup.assert_not_called()
                 evaluate.assert_not_called()
-
+                run.assert_not_called()
 
 class PairTests(unittest.TestCase):
     def setUp(self):
