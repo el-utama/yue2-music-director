@@ -1,6 +1,6 @@
 # Development and validation
 
-**Current policy (2026-11-25):** follow [native-first audit and gates](docs/knowledge/DEVELOPMENT_AUDIT.md), [Studio capabilities](docs/knowledge/STUDIO_CAPABILITIES.md), and [community prior art](docs/knowledge/COMMUNITY_AND_EVALUATION.md). No new implementation without an identified gap and acceptance criteria. All technical documentation in English; README also includes Indonesian overview. The foundation and historical milestones below are not an active implementation backlog.
+**Current policy (2026-11-26):** follow the [generation-first architecture and implementation roadmap](docs/MUSIC_DIRECTOR_ARCHITECTURE.md) for new-song development and retain the [native-first audit and gates](docs/knowledge/DEVELOPMENT_AUDIT.md), [Studio capabilities](docs/knowledge/STUDIO_CAPABILITIES.md), and [community prior art](docs/knowledge/COMMUNITY_AND_EVALUATION.md). No new implementation without an identified gap and acceptance criteria. All technical documentation in English; README also includes Indonesian overview. The foundation and historical milestones below are not an active implementation backlog.
 
 ## Current phase: post-alpha 8.post3 development (experimental)
 
@@ -9,9 +9,11 @@ See [research handbook](docs/RESEARCH_HANDBOOK.md) for current architecture, mod
 | Current addition | Evidence |
 |---|---|
 | Native recognition and custom finishing | Real-song execution complete |
+| Director-authored generation | Live MIDI, song synthesis, saved conditioning and resumed ASR verified; musical result rejected |
+| Generation-first routing and expressive review | Design only; P1 offline policy and score descriptors are next |
 | Native Naturalize and headroom continuation | Real-song execution complete; -1.05 dBTP; unchanged ASR |
-| Selection and diagnosis | Offline fixtures, integrated real-song run pending |
-| Temporal evidence | Read-only LRC inspection; live metadata lookup pending |
+| Selection and diagnosis | Real integrated retained-song review complete; no artistic winner |
+| Temporal evidence | Real read-only partial native LRC lookup complete; not phonetic alignment |
 | Optional alignment | Discovery only; no engine or model validated |
 
 Unreleased development commits share package version 0.7.0a8.post3; record the Git commit for reproducibility. No production release claim.
@@ -60,6 +62,8 @@ This is a **working local-first Python toolkit**, not a production-ready autonom
 Earlier v0.1/v0.5.2 stand-alone prototypes were developed and tested in another environment. This repository contains a **restructured implementation** of their key workflows, not a byte-for-byte import of every historical script. Keep old experiment journals and FLAC renders locally. Do not resubmit historical arms A/B or assume they can be imported automatically.
 
 ## Future work
+
+The [current roadmap](docs/MUSIC_DIRECTOR_ARCHITECTURE.md#7-implementation-roadmap-and-exit-criteria) is authoritative. P1 score evidence and hard/soft/unknown policy precede new generation; the following are longer-term research topics, not a queue to execute immediately.
 
 - Verified lyric-to-note and phoneme alignment, to support safe rhythm changes.
 - Bridge recomposition rather than recycling a pre-chorus.
