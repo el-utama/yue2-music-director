@@ -36,12 +36,16 @@ def prepare(root, provider, request, language, duration):
     return {"composition":music,"lyrics":words["lyrics"],"review":review}
 
 
-def launch(repo, job, request, language, duration, *, confirm_text=False, provider_factory=TextProvider.from_env):
+def validate_job(job, request, language, duration):
     if (not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}",job)
             or job.lower() in {"con","prn","aux","nul"} or re.fullmatch(r"(com|lpt)[1-9]",job.lower())):
         raise ValueError("Invalid job name")
     if not request.strip() or len(request)>4000 or language not in SUPPORTED or not 30<=duration<=208:
         raise ValueError("Invalid creative request, language or duration")
+
+
+def launch(repo, job, request, language, duration, *, confirm_text=False, provider_factory=TextProvider.from_env):
+    validate_job(job, request, language, duration)
     if not confirm_text:
         print("Plan only; no provider or Studio calls.")
         return 0
