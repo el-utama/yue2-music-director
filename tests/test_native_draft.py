@@ -112,3 +112,65 @@ class DraftTests(unittest.TestCase):
                 nd.load_brief(path)
         self.assertEqual(nd.request_for(self.brief)["music_source"],{"kind":"local"})
         self.assertNotIn("abc",nd.request_for(self.brief))
+
+    def test_director_demo_structure_and_signature(self):
+        from yue2_music_director.music import parse_score
+        folder=Path(__file__).resolve().parents[1]/"examples/director-demo"
+        brief=nd.load_brief(folder/"brief.json")
+        abc=(folder/"score.abc").read_text(encoding="utf-8")
+        review=nd.verify_directed_score(abc,brief)
+        self.assertEqual(review["actual_sung_sections"],["verse#1","chorus#1","verse#2","chorus#2"])
+        self.assertAlmostEqual(review["score_seconds"],40*240/88)
+        score=parse_score(abc)
+        self.assertEqual(score.counts,{"Vocal":40,"Ins":40})
+        pitches=[e.pitch for e in score.events if e.voice=="Vocal" and e.kind=="note"]
+        self.assertEqual((min(pitches),max(pitches)),(60,71))
+        # Each two-bar phrase has an intentionally designed attack count;
+        # these are not inferred acoustic syllable boundaries.
+        expected=[[8,7,8,8],[7,7,10,9],[8,7,9,8],[7,7,10,9]]
+        for index,counts in enumerate(expected):
+            for line,count in enumerate(counts):
+                bars=score.bar_events["Vocal"][4+8*index+2*line:6+8*index+2*line]
+                self.assertEqual(sum(e.kind=="note" for b in bars for e in b),count)
+        saved={"id":"song","metadata":{"job_id":"job"},
+               "generation_settings":{"abc":abc,"cot":"full","lyrics":brief["lyrics"]}}
+        nd.verify_saved_directed_score(saved,abc,"song","job",brief)
+        saved["generation_settings"]["abc"]=abc.replace("E2E2G4G4A4","D2E2G4G4A4",1)
+        with self.assertRaisesRegex(ValueError,"differ"):
+            nd.verify_saved_directed_score(saved,abc,"song","job",brief)
+
+    def test_directed_draft_rejects_bad_score_before_connecting(self):
+        with patch.object(nd,"Client") as client:
+            with self.assertRaisesRegex(ValueError,"failed structural review"):
+                nd.execute(self.brief,self.run,"unused",abc="invalid")
+            client.assert_not_called()
+
+    def test_directed_draft_uses_explicit_score_and_native_compatibility(self):
+        abc='X:1\nM:4/4\nL:1/16\nQ:1/4=80\nK:C\n% verse\nV: Vocal\n"C"C8D8|\nV: Ins\nZ|\n'
+        with patch.object(nd,"Client") as factory,patch.object(nd,"reference_configuration",return_value={}), \
+             patch.object(nd,"recognition_preflight"),patch.object(nd.shutil,"which",return_value="fixture"), \
+             patch.object(nd,"_measure",return_value={"sha256":nd._sha(self.audio),
+                  "true_peak_dbtp":-1.2,"integrated_lufs":-17,"duration_seconds":30}), \
+             patch.object(nd,"capture",side_effect=self.fake_capture), \
+             patch("yue2_music_director.midi.extract_midi",return_value=b"fixture"), \
+             patch("yue2_music_director.midi.midi_header",return_value={"tracks":2}), \
+             patch("yue2_music_director.temporal_evidence.native_song_read",return_value={
+                 "id":"song","metadata":{"job_id":"job"},
+                 "generation_settings":{"abc":abc,"lyrics":self.brief["lyrics"],"cot":"full"}}):
+            client=factory.return_value.connect.return_value
+            self.setup_client(client)
+            tools=client.tools.return_value
+            for t in tools:
+                if t["name"]=="song_create":
+                    t["inputSchema"]["properties"]["abc"]={}
+            tools.append({"name":"score_to_midi","inputSchema":{"properties":{"abc":{}}}})
+            old=client.call.side_effect
+            client.call.side_effect=lambda name,args: {} if name=="score_to_midi" else old(name,args)
+            report=nd.execute(self.brief,self.run,"http://127.0.0.1:8791/mcp",abc=abc)
+            self.assertTrue(report["saved_score_verified"])
+            calls=client.call.call_args_list
+            self.assertLess([c.args[0] for c in calls].index("score_to_midi"),
+                            [c.args[0] for c in calls].index("song_create"))
+            self.assertEqual(next(c.args[1]["abc"] for c in calls if c.args[0]=="song_create"),abc)
+            self.assertEqual(nd.execute(self.brief,self.run,"unused",abc=abc),report)
+

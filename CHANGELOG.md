@@ -1,5 +1,10 @@
 # Changelog and research milestones
 
+## Unreleased — director-authored first song
+
+- Opt-in research composition and explicit-score draft path; reuse existing journal, reference preflight and recognition, verify native score compatibility and saved conditioning.
+- One full generation maximum, no model change or repair. Musical naturalness and live runtime remain unverified.
+
 ## Unreleased — generation control study
 
 - Add a bounded, journaled comparison of native score planning with and without section-order steering, before full synthesis.

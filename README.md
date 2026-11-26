@@ -53,6 +53,10 @@ py -3 -m unittest discover -s tests -v
 
 See [Generation Control Study](docs/GENERATION_CONTROL_STUDY.md). Compare default native score planning against section-aware planning with the existing private brief. The Windows launcher `generation-control.cmd` plans without inference; `generation-control.cmd --confirm-plans` permits two native planning jobs, no full-song renders. Review results before selecting any generation policy.
 
+## Director-authored first-song study (experimental)
+
+Run `draft.cmd --director-demo` to inspect the bundled original research composition offline, or `draft.cmd --director-demo --confirm-run` to authorize one new song and one local lyric recognition. Uses an explicit pre-reviewed score, native MIDI preflight and retained score verification; no repair or edits to the private brief. See [Study 2](docs/GENERATION_CONTROL_STUDY.md#study-2--new-song-director-authored-composition).
+
 ## Native song draft (experimental)
 
 See [Native Song Draft](docs/NATIVE_DRAFT.md). A private six-field brief and one explicit authorization drive one native stock reference generation and one local recognition, with a resumable journal, technical QA and automatic TXT handoff. No optional evaluator is required. Combined live validation is pending.

@@ -70,8 +70,41 @@ def verify_completed_settings(job,brief):
         raise ValueError("Completed job does not confirm disabled adapters")
 
 
-def execute(brief,root,url,*,max_waits=20,restore_stock=False):
+def verify_directed_score(abc,brief):
+    # Lazy import: generation_control reuses this module's brief helpers.
+    from .generation_control import inspect_plan
+    review=inspect_plan(abc,brief)
+    if not review["eligible_for_render"]:
+        raise ValueError("Directed score failed structural review: "+repr(review))
+    return review
+
+
+def score_signature(abc):
+    from .music import parse_score
+    score=parse_score(abc)
+    return (tuple(score.headers.get(k) for k in ("M","L","K","Q")),
+            score.sections,score.bar_chords,
+            [(e.voice,e.bar,e.section,e.kind,e.offset,e.duration,e.pitch,e.tied)
+             for e in score.events])
+
+
+def verify_saved_directed_score(saved,abc,song_id,job_id,brief):
+    if (saved.get("id")!=song_id or not isinstance(saved.get("metadata"),dict)
+            or saved["metadata"].get("job_id")!=job_id):
+        raise ValueError("Directed song provenance mismatch")
+    settings=saved.get("generation_settings")
+    if (not isinstance(settings,dict) or settings.get("cot")!="full"
+            or settings.get("lyrics")!=brief["lyrics"]
+            or not isinstance(settings.get("abc"),str)
+            or score_signature(settings["abc"])!=score_signature(abc)):
+        raise ValueError("Saved directed score or lyrics differ; retain song, do not regenerate")
+
+
+def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None):
     request=request_for(brief)
+    if abc is not None:
+        review=verify_directed_score(abc,brief)
+        request["abc"]=abc
     request_sha=digest(_canonical(request))
     brief_sha=digest(_canonical(brief))
     if not root.exists():
@@ -99,6 +132,8 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False):
               "engine_options_get"}
     if not required<=tools.keys():
         raise ValueError("Native draft capabilities missing")
+    if abc is not None and "score_to_midi" not in tools:
+        raise ValueError("Native score compatibility tool unavailable")
     journal_path=root/"journal_song.json"
     if journal_path.exists():
         journal=read(journal_path)
@@ -117,6 +152,14 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False):
         capabilities=unpack(client.call("studio_capabilities",{}))
         status=unpack(client.call("studio_status",{}))
         configuration=reference_configuration(client,status,request,defaults,capabilities)
+        if abc is not None:
+            from .midi import extract_midi,midi_header
+            if "abc" not in tools["score_to_midi"].get("properties",{}):
+                raise ValueError("Native MIDI tool schema mismatch")
+            midi=midi_header(extract_midi(client.call("score_to_midi",{"abc":abc})))
+            atomic_write(root/"score-review.json",{"structural_review":review,"midi":midi,
+                         "score_sha256":digest(abc.encode("utf-8"))})
+            print("Directed score: structural and native MIDI compatibility passed.",flush=True)
         journal={"state":"SUBMISSION_ATTEMPTED","brief_sha256":brief_sha,
                  "request_sha256":request_sha,"reference_configuration":configuration}
         create_journal(journal_path,journal)
@@ -160,6 +203,10 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False):
     else:
         journal.update(state="COMPLETED",song_id=song_id,audio_sha256=audio_sha)
         atomic_write(journal_path,journal)
+    if abc is not None:
+        from .temporal_evidence import native_song_read
+        verify_saved_directed_score(native_song_read(url,song_id),abc,song_id,job_id,brief)
+        print("Saved native score and lyric conditioning verified.",flush=True)
     print("Measuring existing native draft...",flush=True)
     acoustic_path=root/"acoustic.json"
     if acoustic_path.exists():
@@ -201,6 +248,10 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False):
                         "Duration is a generation cap, not guaranteed song length.",
                         "Reference policy is stock Balanced only, not a universal model preference.",
                         "No automatic regeneration, finishing, export, or further model changes."]}
+    if abc is not None:
+        report["generation_path"]="director_authored_score"
+        report["saved_score_verified"]=True
+        report["score_review"]=read(root/"score-review.json")
     atomic_write(report_path,report)
     return report
 
@@ -210,16 +261,28 @@ def main():
     parser.add_argument("--repo",type=Path,required=True)
     parser.add_argument("--url",required=True)
     parser.add_argument("--confirm-run",action="store_true")
+    parser.add_argument("--director-demo",action="store_true",help="Use the original research brief and precomposed score")
     parser.add_argument("--select-stock",action="store_true",help="Explicitly clear own-model override before a new draft")
     args=parser.parse_args()
     try:
         repo=args.repo.resolve()
-        brief=load_brief(repo/"local/brief.json")
-        key=digest(_canonical(brief))
+        abc=None
+        if args.director_demo:
+            if args.select_stock:
+                raise ValueError("Directed demo does not change model selection")
+            example=repo/"examples/director-demo"
+            brief=load_brief(example/"brief.json")
+            abc=(example/"score.abc").read_text(encoding="utf-8")
+            review=verify_directed_score(abc,brief)
+            key="directed-"+digest(_canonical({"brief":brief,"abc":abc}))
+            print("Director composition:",brief["title"],"| planned seconds:",round(review["score_seconds"],2),flush=True)
+        else:
+            brief=load_brief(repo/"local/brief.json")
+            key=digest(_canonical(brief))
         if args.select_stock and not args.confirm_run:
             raise ValueError("Stock selection requires explicit --confirm-run")
         if not args.confirm_run:
-            print("Plan only: one native stock Balanced draft, one local Whisper recognition.")
+            print("Plan only: one native stock Balanced draft, one local Whisper recognition." if abc is None else "Plan only: validated director-authored score, native MIDI check, one new song and one local recognition.")
             print("No GPU job authorized. Use --confirm-run only to approve both operations.")
             return 0
         drafts=repo/"results/drafts"
@@ -228,7 +291,7 @@ def main():
         fd=os.open(lock,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
         os.close(fd)
         try:
-            report=execute(brief,drafts/key,args.url,restore_stock=args.select_stock)
+            report=execute(brief,drafts/key,args.url,restore_stock=args.select_stock,abc=abc)
         finally:
             lock.unlink()
         metric=report["lyric_screen"]["primary_metric"]
