@@ -208,6 +208,57 @@ def prepare_replay_v2(song,brief):
     return payload,cut,start,end
 
 
+V3_JOB_ID = "cb9bc21c468e3c9d"
+
+
+def prepare_replay_v3(v2_payload, v2_receipt):
+    """Change only lyric conditioning; keep V2 score, prefix and budget."""
+    if v2_receipt.get("id") != V3_JOB_ID:
+        raise ValueError("V3 requires the observed V2 submission receipt")
+    fields = v2_payload["replay_request"]
+    settings = v2_receipt.get("generation_settings")
+    if not isinstance(settings, dict):
+        raise ValueError("Missing V2 generation settings")
+    expected = dict(fields)
+    actual = dict(settings)
+    schedule = actual.pop("lyric_schedule", None)
+    if actual != expected:
+        raise ValueError("V2 submitted settings differ from reconstructed request")
+    lyrics = fields["lyrics"]
+    marker = "[Outro]"
+    if lyrics.count(marker) != 1:
+        raise ValueError("Expected one exact Outro marker")
+    start = lyrics.index(marker)
+    isolated = lyrics[start:].strip()
+    if (isolated != "[Outro]\nSemoga damai menemanimu\nKulepas engkau dengan cinta"
+            or len(isolated.splitlines()) != 3):
+        raise ValueError("V3 intended outro text mismatch")
+    if (not isinstance(schedule,dict) or schedule.get("mode")!="bias"
+            or schedule.get("bias")!=-4.0 or not schedule.get("sections")
+            or schedule["sections"][-1] != {"start_sec":165.517,"lyric":[start,start+len(isolated)]}):
+        raise ValueError("V2 receipt does not confirm the original outro schedule")
+    result = dict(fields)
+    result["lyrics"] = isolated
+    # Studio regenerates its own lyric_schedule. Never submit the old spans.
+    return {"title":v2_payload["title"].removesuffix(" v2")+" v3",
+            "replay_request":result}
+
+
+def verify_v3_receipt(raw,payload):
+    """Verify Studio rebuilt the schedule over the isolated lyric text."""
+    settings=raw.get("generation_settings")
+    if not isinstance(settings,dict):
+        raise ValueError("V3 receipt missing generation settings; do not resubmit")
+    actual=dict(settings)
+    schedule=actual.pop("lyric_schedule",None)
+    fields=payload["replay_request"]
+    expected={"mode":"bias","bias":-4.0,
+              "sections":[{"start_sec":165.517,"lyric":[0,len(fields["lyrics"])]}]}
+    if actual!=fields or schedule!=expected:
+        raise ValueError("V3 receipt does not match isolated conditioning; job may exist, do not resubmit")
+    print("V3 receipt: only the intended Outro text; single schedule entry verified.",flush=True)
+
+
 def submit(url,payload):
     endpoint=urlsplit(configured_endpoint(url))
     if endpoint.path!="/mcp":
@@ -221,7 +272,7 @@ def submit(url,payload):
     return json.loads(raw)
 
 
-def run(repo,url,confirm,v2=False):
+def run(repo,url,confirm,v2=False,v3=False):
     brief=load_brief(repo/"local/brief.json")
     root=repo/"results/drafts"/_sha(_canonical(brief))
     original=read(root/"journal_song.json")
@@ -243,7 +294,7 @@ def run(repo,url,confirm,v2=False):
     if not audio.is_absolute() or not audio.is_file() or audio.suffix.lower()!=".flac":
         raise ValueError("Original FLAC unavailable")
     sha=file_sha(audio)
-    if v2:
+    if v2 or v3:
         prior=read(root/"outro-repair"/"report.json")
         if (prior.get("original_job_id")!=job_id or prior.get("original_song_id")!=song_id
                 or prior.get("original_audio_sha256")!=sha or prior.get("original_unchanged") is not True
@@ -252,14 +303,32 @@ def run(repo,url,confirm,v2=False):
         payload,cut,start,end=prepare_replay_v2(song,brief)
     else:
         payload,cut,start,end=prepare_replay(song,brief)
-    out=root/("outro-repair-v2" if v2 else "outro-repair")
+    if v3:
+        prior_dir=root/"outro-repair-v2"
+        previous=read(prior_dir/"report.json")
+        previous_journal=read(prior_dir/"journal.json")
+        if (previous.get("original_job_id")!=job_id
+                or previous.get("original_song_id")!=song_id
+                or previous.get("original_audio_sha256")!=sha
+                or previous.get("original_unchanged") is not True
+                or previous.get("semantic_prefix_equal") is not True
+                or not previous.get("candidate_song_id")
+                or previous_journal.get("job_id")!=V3_JOB_ID
+                or previous.get("payload_sha256")!=_sha(_canonical(payload))
+                or read(prior_dir/"request.json")!=payload):
+            raise ValueError("V3 requires completed, matching V2 evidence")
+        payload=prepare_replay_v3(payload,read(prior_dir/"receipt.json"))
+    out=root/("outro-repair-v3" if v3 else "outro-repair-v2" if v2 else "outro-repair")
     out.mkdir(exist_ok=True)
     path=out/"journal.json"
     plan={"original_job_id":job_id,"original_song_id":song_id,"original_audio_sha256":sha,
           "payload_sha256":_sha(_canonical(payload)),"prefix_frames":cut,"planned_outro_start":start,
           "planned_score_end":end,"acoustic_boundary_verified":False}
     print("Planned outro:",round(start,3),"to",round(end,3),"seconds; retained frames:",cut,flush=True)
-    if v2:
+    if v3:
+        print("V3: isolated remaining lyrics; V2 score, prefix, seeds and budget unchanged.",flush=True)
+        print(payload["replay_request"]["lyrics"],flush=True)
+    elif v2:
         print("V2: remove redundant chorus; two sung phrases and three instrumental cadence bars.",flush=True)
         print("Reported humming ~163 s; planned recompose 160 s; score outro 165.517 s.",flush=True)
     else:
@@ -274,8 +343,8 @@ def run(repo,url,confirm,v2=False):
         if not confirm:
             print("Plan only. No generation.")
             return
-        if not v2:
-            raise ValueError("V1 rejected musically; new submission disabled. Do not reset its journal.")
+        if not v3:
+            raise ValueError("V1 and V2 rejected musically; new submissions disabled. Do not reset journals.")
         status=unpack(client.call("studio_status",{}))
         reference_configuration(client,status,request_for(brief),unpack(client.call("song_defaults",{})),
                                 unpack(client.call("studio_capabilities",{})))
@@ -291,6 +360,11 @@ def run(repo,url,confirm,v2=False):
             raise ValueError("Candidate receipt ambiguous; never resubmit")
         j.update(job_id=candidate_id,state="SUBMITTED")
         _write(path,j)
+    if v3:
+        receipt=read(out/"receipt.json")
+        if receipt.get("id")!=j["job_id"]:
+            raise ValueError("V3 receipt/job identity mismatch; never resubmit")
+        verify_v3_receipt(receipt,payload)
     for i in range(21):
         result=unpack(client.call("song_job_get",{"job_id":j["job_id"],"response_format":"concise"}))
         if result.get("id")!=j["job_id"]:
@@ -326,10 +400,12 @@ def main():
     parser.add_argument("--repo",type=Path,required=True)
     parser.add_argument("--url",required=True)
     parser.add_argument("--confirm",action="store_true")
-    parser.add_argument("--v2",action="store_true",help="Evidence-scoped revised ending; separate trial journal")
+    versions=parser.add_mutually_exclusive_group()
+    versions.add_argument("--v2",action="store_true",help="Historical V2 trial")
+    versions.add_argument("--v3",action="store_true",help="Isolated outro conditioning; separate trial journal")
     args=parser.parse_args()
     try:
-        run(args.repo.resolve(),args.url,args.confirm,args.v2)
+        run(args.repo.resolve(),args.url,args.confirm,args.v2,args.v3)
         return 0
     except (ValueError,OSError,KeyError,TypeError,MCPError) as exc:
         print("ERROR:",exc,file=sys.stderr)
