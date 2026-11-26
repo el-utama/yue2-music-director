@@ -8,6 +8,10 @@ from yue2_music_director import native_draft as nd
 
 class DraftTests(unittest.TestCase):
     def setUp(self):
+        for name in ('wait_for_idle','assert_idle'):
+            guard=patch.object(nd,name,return_value={})
+            guard.start()
+            self.addCleanup(guard.stop)
         tmp=tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         self.root=Path(tmp.name).resolve()
