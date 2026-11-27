@@ -1,0 +1,69 @@
+{
+  "schema": "fma-album-candidates-v1",
+  "snapshot": "2026-11-27",
+  "sources": [
+    {
+      "id": "fma-holiznacc0-ivy-vol1",
+      "url": "https://freemusicarchive.org/music/holiznacc0/ivy-vol1",
+      "artist": "HoliznaCC0",
+      "category": "lofihop",
+      "count": 5,
+      "evidence": "FMA indexed album track list and genre/artist description; album-level CC0, track-specific license and audio not independently checked"
+    },
+    {
+      "id": "fma-holiznacc0-ivy-vol2",
+      "url": "https://freemusicarchive.org/music/holiznacc0/ivy-vol2",
+      "artist": "HoliznaCC0",
+      "category": "lofihop",
+      "count": 5,
+      "evidence": "FMA indexed album track list and genre/artist description; album-level CC0, track-specific license and audio not independently checked"
+    },
+    {
+      "id": "fma-holiznacc0-spring-at-last-lofi-tape",
+      "url": "https://freemusicarchive.org/music/holiznacc0/spring-at-last-lofi-tape",
+      "artist": "HoliznaCC0",
+      "category": "lofihop",
+      "count": 4,
+      "evidence": "FMA indexed album track list and genre/artist description; album-level CC0, track-specific license and audio not independently checked"
+    },
+    {
+      "id": "fma-holiznacc0-summer-air-lo-fi",
+      "url": "https://freemusicarchive.org/music/holiznacc0/summer-air-lo-fi",
+      "artist": "HoliznaCC0",
+      "category": "lofihop",
+      "count": 5,
+      "evidence": "FMA indexed album track list and genre/artist description; album-level CC0, track-specific license and audio not independently checked"
+    },
+    {
+      "id": "fma-holiznacc0-after-dark",
+      "url": "https://freemusicarchive.org/music/holiznacc0/after-dark",
+      "artist": "HoliznaCC0",
+      "category": "trap",
+      "count": 5,
+      "evidence": "FMA indexed album track list and genre/artist description; album-level CC0, track-specific license and audio not independently checked"
+    },
+    {
+      "id": "fma-johnbartmann-happy-trappy-positive-urban-beats",
+      "url": "https://freemusicarchive.org/music/John_Bartmann/happy-trappy-positive-urban-beats",
+      "artist": "John Bartmann",
+      "category": "trap",
+      "count": 6,
+      "evidence": "FMA indexed album track list and genre/artist description; album-level CC0, track-specific license and audio not independently checked"
+    }
+  ],
+  "counts": {
+    "blues": 100,
+    "jazz": 100,
+    "lofi": 100,
+    "pop": 100,
+    "indie": 100,
+    "folk": 100,
+    "backsound": 100,
+    "hiphop": 100,
+    "lofihop": 27,
+    "trap": 26
+  },
+  "added": 30,
+  "distinct_candidate_ids": 853,
+  "lyrics": 0
+}
