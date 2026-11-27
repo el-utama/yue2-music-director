@@ -5,8 +5,9 @@
 - Preserve original/reference audio and historic receipts; validate role semantics before acceptance, version opening score evidence and correct Director LRA context.
 - Verify timing against exact retained source; centralize continuation/creative/listening provenance; preserve historical score receipts and append human feedback/explicit decisions separately.
 - Add stable cross-type release IDs, safe Windows paths and immutable versioned snapshots. Local owned-lock inspection and exact-marker recovery preserve journals; explicit continuation Director retry uses frozen inputs without replaying completed upstream stages.
-- Add standalone fixed-gain lossless finishing with decoded sample count and PCM verification, no-change receipt and interruption-safe candidate retention. Windows and Linux CI require real synthetic FFmpeg tests; no claim of live finishing or artistic improvement.
+- Add standalone fixed-gain lossless finishing with decoded sample count and PCM verification, no-change receipt and interruption-safe candidate retention. Windows and Linux CI require real synthetic FFmpeg tests; the authorized Windows reference run subsequently passed the technical finishing gate (see docs/LOCAL_RELEASE_CHECKPOINT.md), with no claim of artistic improvement.
 
+- Add separate approved-variant assembly, actual local artwork import, immutable release delivery, explicit package review and a bounded resumable local coordinator. Optional typed creative requirements preserve exact supplied lyrics; legacy v3 default retained. Omitted legacy artist credits can be completed explicitly without replaying export. These downstream features have CI evidence, not live release-package acceptance.
 
 ## Unreleased — matched direct-native comparison
 
