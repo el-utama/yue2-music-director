@@ -195,8 +195,15 @@ serializes that flag in track JSON. Absence of truncation is not proof
 of lyrical/section completeness or musical ending quality. Preserve
 engine provenance, separate observed truncation from human ending
 judgment, and do not invent missing signals when historical records
-lack them. Further audit must trace Studio propagation and Director
-consumption of the actual track flag before changing acceptance logic.
+lack them. Studio imports the engine replay request into the stored track; the library
+list adds cut_short (length/memory) from its frame-budget heuristic. The
+Director reads the full song record, validates song/job identity, and uses
+native_completion to block provisional status for flagged or unknown
+completion in the autonomous artist path. The existing gate is retained.
+The memory label is not a measured out-of-memory diagnosis: the engine
+combines score and semantic truncation, while Studio classifies by frame
+count. New malformed flags or invalid semantic streams are treated as
+unknown, not as unflagged completion; retained receipts are not rewritten.
 
 Scope: source review of pinned prompt assembly, request parsing,
 sampling, pipeline and server track output, not compiled engine tests,
