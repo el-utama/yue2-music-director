@@ -34,6 +34,10 @@ YuE2 Music Director adalah agent pendamping YuE2 Studio yang bertugas memahami t
 
 **Rencana terkini:** baca [roadmap agent otonom](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md). Pertahankan hasil musik lama, verifikasi spesialis downstream tanpa regenerasi, dan integrasikan release manifest secara terpisah. Web app, katalog ribuan lagu dan Artist Memory menyusul; tidak perlu mengulang demo lama.
 
+## Readiness check (Windows)
+
+Run `music.cmd --ready` for a read-only preflight before new production. It verifies local configuration and the existing native reference gate without spending a provider completion or running music inference. See [readiness check](docs/AUTONOMOUS_CLI.md#read-only-readiness-check) for limits and optional MOSS file check.
+
 ## Setup
 
 Requires Python 3.10+; no mandatory third-party Python runtime dependencies. Audio commands require installed FFmpeg/ffprobe, Studio commands require local Studio, and optional MIDI render QA requires FluidSynth and a SoundFont. Optional alignment discovery does not install a backend.

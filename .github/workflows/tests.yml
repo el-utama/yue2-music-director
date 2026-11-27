@@ -62,6 +62,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: |
+          call music.cmd --ready --help || exit /b 1
           call music.cmd --feedback --help || exit /b 1
           call music.cmd --export --help || exit /b 1
           call music.cmd --cover --help || exit /b 1

@@ -14,6 +14,27 @@ Tests inject provider and listening failures and mock native stage reuse; existi
 
 Provider endpoint/model references: [NVIDIA NIM LLM API](https://docs.api.nvidia.com/nim/reference/llm-apis), [Nemotron 3.5 Super VL](https://build.nvidia.com/nvidia/nemotron-3.5-super-vl-120b-a12b?section=deploy), [OpenRouter chat completion](https://openrouter.ai/docs/api/api-reference/chat/send-chat-completion-request). The default model name is not proof of the operator's account access or free quota.
 
+## Read-only readiness check
+
+Run `music.cmd --ready` on the Windows Studio host before starting a new
+song if readiness is uncertain. It checks local provider configuration
+without contacting the provider, FFmpeg/ffprobe presence, local production
+mutex markers, the live advertised native schema, idle status, Whisper
+readiness and the existing stock reference gate. It does not wait for a busy
+Studio, download, generate, reserve a job or modify configuration. Add
+`--media-dir PATH` only if you want to check the MOSS managed files using
+the exact existing Studio media directory; never scan drives.
+
+Exit 0 means the checks performed passed, not that inference or the hosted
+provider is guaranteed ready. Exit 2 means a blocker was observed. The
+report distinguishes untested provider authentication, available GPU
+memory, and uninspected MOSS files from observed readiness. It is a
+point-in-time snapshot, not a reservation; existing submission guards still
+apply. No keys, private paths, raw tool responses or raw errors are printed.
+No automatic repairs. For a lock blocker inspect the named lock, never
+delete a marker blindly. For provider authentication only, the existing
+separately authorized `--check-provider` makes a synthetic completion.
+
 ## Provider authentication troubleshooting
 
 Live Windows report 2026-11-26: configuration saved, then HTTP 403 and repeated HTTP 401. No successful provider completion; no Studio inference. NVIDIA's [model API reference](https://build.nvidia.com/nvidia/nemotron-3.5-super-vl-120b-a12b/apireference) confirms the preset endpoint and model ID. HTTP 401 means authentication rejected, HTTP 403 means access denied; the exact cause is not known. The prior working agent may use a different provider or credential. Verify the provider first, not only the model name. For NVIDIA use a valid [NVIDIA API key](https://build.nvidia.com/settings/api-keys) with [Public API Endpoints access](https://docs.nvidia.com/ngc/latest/ngc-user-guide.html), not a key from another API. Do not rotate or revoke credentials used by another working agent unnecessarily. `music.cmd --check-provider` shows configuration source, host and model without exposing credential bytes. Environment settings override saved local config; setup warns when this is the case. No automatic retry or provider change. This diagnostic update does not fix account-side access or establish that the key was entered correctly. Never paste keys into a chat or support log.

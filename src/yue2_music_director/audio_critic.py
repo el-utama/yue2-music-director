@@ -128,7 +128,19 @@ def inventory(rows):
     media = {Path(row["audio"]).resolve().parent for row in rows}
     if len(media) != 1 or next(iter(media)).name.lower() != "media":
         raise ValueError("Retained audio must share Studio's managed media directory")
-    data = next(iter(media)).parent
+    return _inventory_media(next(iter(media)))
+
+
+def inventory_media(media):
+    """Inspect only the explicitly selected managed media directory siblings."""
+    media=Path(media).resolve()
+    if media.name.lower()!="media" or not media.is_dir():
+        raise ValueError("Expected an existing Studio managed media directory")
+    return _inventory_media(media)
+
+
+def _inventory_media(media):
+    data=media.parent
     models = data/"training/models/moss"
     engine = data/"hotstep"/TOOLS_FOLDER
     exe = engine/"ace-caption.exe"
