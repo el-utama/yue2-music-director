@@ -1,0 +1,42 @@
+{
+  "schema": "musiccaps-style-annotations-v1",
+  "source": "MusicCaps by Google Research (Agostinelli et al., MusicLM, 2023)",
+  "official_url": "https://huggingface.co/datasets/google/MusicCaps",
+  "license": "CC-BY-SA-4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "snapshot": {
+    "repository": "https://github.com/simonw/musiccaps-datasette",
+    "revision": "ecbb5a1f52e52cf09a38dd7698578ccca7cef353",
+    "blob_sha": "7982a549b8f2e244f2ada7227cf1076491b1725c",
+    "path": "data/musiccaps-public.csv",
+    "source_examples": 5521
+  },
+  "changes": "Subset; one category per YouTube ID; genre assignment by AudioSet label or annotation keyword; normalized tags extracted from aspect list only; no original captions, audio, or lyrics copied. Selection prioritized rare categories and matching label+keyword, with quota caps.",
+  "counts": {
+    "blues": 89,
+    "jazz": 26,
+    "lofi": 5,
+    "pop": 82,
+    "indie": 100,
+    "folk": 100,
+    "backsound": 0,
+    "hiphop": 100,
+    "lofihop": 0,
+    "trap": 15
+  },
+  "combined_candidates": {
+    "blues": 100,
+    "jazz": 100,
+    "lofi": 5,
+    "pop": 100,
+    "indie": 100,
+    "folk": 100,
+    "backsound": 100,
+    "hiphop": 100,
+    "lofihop": 0,
+    "trap": 15
+  },
+  "distinct_clips": 517,
+  "recording_rights_reviewed": 0,
+  "lyrics": 0
+}
