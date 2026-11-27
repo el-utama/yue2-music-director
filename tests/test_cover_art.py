@@ -181,3 +181,18 @@ class CoverTests(unittest.TestCase):
             self.assertEqual(body["model"],NEMOTRON_VL)
             self.assertEqual(body["response_format"]["json_schema"]["schema"],ca.SCHEMA)
             self.assertEqual(body["response_format"]["json_schema"]["name"],"cover_art_result")
+
+    def test_explicit_ep_distinct_from_album(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            make_song(repo,"one")
+            make_song(repo,"two")
+            provider=Fake()
+            self.assertEqual(ca.launch(repo,"ep",["one","two"],title="EP",kind="ep",confirm=True,
+                                       provider_factory=lambda:provider),0)
+            self.assertEqual(provider.calls[0][1]["release_type"],"ep")
+            self.assertEqual(nd.read(repo/"results/artwork/ep/cover-brief.json")["release_type"],"ep")
+            with self.assertRaisesRegex(ValueError,"job differs"):
+                ca.launch(repo,"ep",["one","two"],title="EP",kind="album",confirm=True,
+                          provider_factory=lambda:provider)
+            self.assertEqual(len(provider.calls),1)
