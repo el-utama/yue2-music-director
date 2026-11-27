@@ -8,6 +8,10 @@ For an intentional user-approved switch: when Studio has no active work, Setting
 
 LoRA is a goal-specific optional intervention, not a required part of the agent. Native controls (e.g. voice/tempo, score planning, instrumental conversion, harmony, processing, export) must be considered first. If a capability still has an unmet acceptance criterion, evaluate an already available or public compatible adapter, then a fine-tune, and consider training only as a last resort on supported hardware. Existing adapters do not have to be used, retained in the active request, or individually benchmarked. Do not delete installed files merely to disable them.
 
+## Restricted remote audit
+
+An operator-owned private Mac tunnel bridge has been verified for read-only identity/guides and synthetic velocity conversion. It is not a production remote service and does not replace the local Windows CLI. See [Restricted audit bridge](RESTRICTED_AUDIT_BRIDGE.md) for safe restart and scope; keep private endpoint configuration and secrets out of Git.
+
 ## General policy for other configurations
 
 Use YuE2 Studio's native local YuE2 engine as the primary integration target. Original YuE2-3B weights are a reference baseline, not a mandatory installation. A supported community fine-tune may remain active outside the reference experiment; determine compatibility from the actual engine, checkpoint, decoder, companion, adapter slots and effective settings. Never switch model, quantization, cache type, decoder, companion, provider or adapter silently. The same seed does not guarantee the same audio when these change. For controlled comparisons freeze all non-treatment settings and retain the exact request and model identity. Base-model tests are optional, justified experiments; do not repeat previous generations for setup.

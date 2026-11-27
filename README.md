@@ -13,6 +13,8 @@ Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, developing a ge
 Music Director is an evidence-driven decision and orchestration layer for YuE2 Studio, not a replacement generator, trainer, DAW or Studio UI. The [generation-first architecture and roadmap](docs/MUSIC_DIRECTOR_ARCHITECTURE.md) governs native execution and evidence; the active product roadmap above governs next milestones; the earlier native-first audit remains the capability and safety reference.
 
 - [Studio capability knowledge](docs/knowledge/STUDIO_CAPABILITIES.md): native workflows, requirements, side effects, limits and reuse decisions.
+- [Current native audit checkpoint](docs/NATIVE_AUDIT_CHECKPOINT.md): verified PRs, test evidence, remaining artistic work and no-repeat rules.
+- [Restricted audit bridge recovery](docs/RESTRICTED_AUDIT_BRIDGE.md): existing private Mac-to-Studio audit connection, scope and restart procedure.
 - [Native control contract audit](docs/knowledge/NATIVE_CONTROL_CONTRACT.md): UI-to-engine score/MIDI control trace, velocity loss, generation routes and remaining review scope.
 - [MCP tool index](docs/knowledge/MCP_TOOL_INDEX.md): 339 static definitions at the audited upstream revision; not live availability.
 - [Community and official evaluation research](docs/knowledge/COMMUNITY_AND_EVALUATION.md): existing agent skill, model/LoRA prior art, evaluator protocols and license gates.
