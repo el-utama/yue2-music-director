@@ -23,7 +23,7 @@ def _art_hash(path):
 
 
 def launch(repo,release,*,workflow_id="release-v1",snapshot=None,variants=None,
-           artwork=None,confirm=False):
+           artwork=None,confirm=False,artist=None):
     ra._id(release)
     ra._id(workflow_id)
     base=repo/"results/release-workflow"
@@ -44,6 +44,8 @@ def launch(repo,release,*,workflow_id="release-v1",snapshot=None,variants=None,
             raise ValueError("Workflow selection differs; choose a new workflow ID")
         snapshot=old["snapshot"]
         variants=old["variants"]
+        if artist is None and "artist_completion" in old:
+            artist=old["artist_completion"]["artist"]
     else:
         snapshot=snapshot or "v1"
         variants=variants or {}
@@ -56,6 +58,7 @@ def launch(repo,release,*,workflow_id="release-v1",snapshot=None,variants=None,
         export,manifest,_,selections=ra.prepare(repo,release,snapshot,variants)
         return manifest,ra.assembly_contract(export,release,snapshot,stage_id,selections)
     manifest,contract=resolve()
+    credit,completion=rd.complete_credit(manifest["contract"]["artist"],artist)
     missing=[t["identity"]["job"] for t in contract["tracks"] if t["approval"] is None]
     if missing:
         print("Awaiting explicit audio approvals:",", ".join(missing),flush=True)
@@ -69,10 +72,12 @@ def launch(repo,release,*,workflow_id="release-v1",snapshot=None,variants=None,
     plan={"schema":"release-workflow-v1","release":release,"workflow_id":workflow_id,
           "snapshot":snapshot,"variants":variants,"assembly_contract":contract,
           "artwork_sha256":sha,"release_type":manifest["contract"]["type"],
-          "title":manifest["contract"]["title"],"artist":manifest["contract"]["artist"],
+          "title":manifest["contract"]["title"],"artist":credit,
           "stage_ids":{"assembly":stage_id,"delivery":stage_id},
           "budgets":{"provider_calls":0,"native_jobs":0,"recognition_calls":0,
                      "image_generation_calls":0,"finishing_renders":0,"publishing_calls":0}}
+    if completion is not None:
+        plan["artist_completion"]=completion
     if old is not None and old!=plan:
         raise ValueError("Frozen workflow differs; select another workflow ID")
     if old is None and (assembly.exists() or delivery.exists() or root.exists()):
@@ -85,7 +90,7 @@ def launch(repo,release,*,workflow_id="release-v1",snapshot=None,variants=None,
             raise ValueError("Workflow assembly identity differs")
         # Existing delivery is verified read-only, with current approvals.
         code=rd.launch(repo,release,assembly_id=stage_id,delivery_id=stage_id,
-                       expected_artwork_sha256=sha,expected_assembly_sha256=nd._sha(assembly_path/"assembly.json"))
+                       artist=artist,expected_artwork_sha256=sha,expected_assembly_sha256=nd._sha(assembly_path/"assembly.json"))
         saved_delivery=nd.read(delivery/"delivery.json")
         result={"schema":"release-workflow-result-v1","plan_sha256":nd._sha(plan_path),
                 "stages":{"audio_assembly":{"status":saved["status"],"manifest_sha256":nd._sha(assembly_path/"assembly.json")},
@@ -125,7 +130,7 @@ def launch(repo,release,*,workflow_id="release-v1",snapshot=None,variants=None,
             raise ValueError("Workflow assembly contract differs")
         rd.launch(repo,release,assembly_id=stage_id,delivery_id=stage_id,
                   artwork=None if delivery.exists() else artwork,confirm=True,
-                  expected_artwork_sha256=sha,expected_assembly_sha256=nd._sha(assembly_path/"assembly.json"))
+                  artist=artist,expected_artwork_sha256=sha,expected_assembly_sha256=nd._sha(assembly_path/"assembly.json"))
         code,result=retained_result()
         nd.create_journal(result_path,result)
     print("Workflow:",root,"; package approval remains a separate human decision.",flush=True)
@@ -140,6 +145,7 @@ def main():
     p.add_argument("--snapshot")
     p.add_argument("--variant",action="append",metavar="JOB=VARIANT")
     p.add_argument("--artwork",type=Path)
+    p.add_argument("--artist",help="Explicitly fill an omitted original export artist credit")
     p.add_argument("--confirm-run",action="store_true")
     a=p.parse_args()
     try:
@@ -152,7 +158,7 @@ def main():
                     raise ValueError("Use one JOB=VARIANT selection per track")
                 variants[job]=variant
         return launch(a.repo.resolve(),a.release,workflow_id=a.workflow_id,snapshot=a.snapshot,
-                      variants=variants,artwork=a.artwork,confirm=a.confirm_run)
+                      variants=variants,artwork=a.artwork,confirm=a.confirm_run,artist=a.artist)
     except (OSError,ValueError,KeyError,TypeError) as exc:
         print("ERROR:",exc,file=sys.stderr)
         print("Retain completed stages and retry only the same workflow; no external replay.",file=sys.stderr)
