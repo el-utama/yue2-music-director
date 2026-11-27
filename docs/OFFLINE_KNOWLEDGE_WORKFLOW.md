@@ -123,3 +123,5 @@ The main production CLI never automatically uses observed references or historic
 - Remaining: 147 metadata slots; individual rights/genre/identity review; broader legitimate lyrics and deeper linguistic/musical features; live and artistic evaluation of explicit historical context, integration of approved observed data; independent artistic evaluation; live validation of the new preset option. No repeat of retained Unreachable, ASR, MOSS, cover or export.
 
 The historical index now uses v3 descriptive craft metrics; rebuild before a new historical query. Existing v1 context jobs resume from frozen receipts. See [craft analysis](KNOWLEDGE_BANK.md#descriptive-craft-analysis-v3) for limitations.
+
+Optional brief-derived retrieval: `--knowledge-auto` uses a bounded local lexical query and freezes an explicit match or abstention; see [automatic retrieval](AUTONOMOUS_CLI.md#automatic-lexical-retrieval-from-the-song-brief). Separate transfer consent remains mandatory. Not semantic retrieval.
