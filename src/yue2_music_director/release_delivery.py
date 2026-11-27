@@ -52,6 +52,22 @@ def assembly(repo,release,assembly_id):
     return root,saved,files,metadata
 
 
+def complete_credit(original,requested):
+    """Fill an omitted credit only; never rename an established artist."""
+    if requested is None:
+        return original,None
+    if (not isinstance(requested,str) or not requested.strip()
+            or len(requested)>150 or requested!=requested.strip()
+            or any(ord(c)<32 or ord(c)==127 for c in requested)):
+        raise ValueError("Supply an explicit nonblank artist credit (1–150 characters)")
+    if original.strip():
+        if requested!=original:
+            raise ValueError("Cannot override an established export artist credit")
+        return original,None
+    return requested,{"schema":"delivery-artist-credit-v1","original":original,
+                      "artist":requested,"origin":"explicit_operator_input"}
+
+
 def _history(root,manifest_sha):
     if not root.exists():
         return []
@@ -107,17 +123,32 @@ def _verify(root,manifest,source,metadata):
 
 
 def launch(repo,release,*,assembly_id="package-v1",delivery_id="delivery-v1",artwork=None,
-           confirm=False,decision=None,expected_artwork_sha256=None,expected_assembly_sha256=None):
+           confirm=False,decision=None,expected_artwork_sha256=None,expected_assembly_sha256=None,
+           artist=None):
+    ra._id(release)
     ra._id(delivery_id)
     if decision not in (None,"approve","revoke") or decision and not confirm:
         raise ValueError("Explicit confirmation required for package review")
     base=repo/"results/release-delivery"
     root=base/release.casefold()/delivery_id.casefold()
     ledger=repo/"results/release-review"/release.casefold()/delivery_id.casefold()
+    if any(p.is_symlink() for p in (base,root.parent,root,root/"delivery.json")):
+        raise ValueError("Unexpected delivery symlink")
+    # Resume a completed credited delivery without needing to retype the credit.
+    if artist is None and (root/"delivery.json").is_file():
+        prior=nd.read(root/"delivery.json")["contract"].get("artist_completion")
+        if prior is not None:
+            artist=prior["artist"]
     def resolve():
         source,saved,files,metadata=assembly(repo,release,assembly_id)
+        credit,completion=complete_credit(metadata["artist"],artist)
+        if completion is not None:
+            metadata={**metadata,"artist":credit,
+                      "tracks":[{**t,"artist":credit} for t in metadata["tracks"]]}
         contract={"release":release,"assembly_id":assembly_id,"delivery_id":delivery_id,
                   "assembly_manifest_sha256":nd._sha(source/"assembly.json")}
+        if completion is not None:
+            contract["artist_completion"]=completion
         if expected_assembly_sha256 is not None and contract["assembly_manifest_sha256"]!=expected_assembly_sha256:
             raise ValueError("Frozen workflow assembly hash differs")
         return source,saved,files,metadata,contract
@@ -239,6 +270,7 @@ def main():
     p.add_argument("--assembly-id",default="package-v1")
     p.add_argument("--delivery-id",default="delivery-v1")
     p.add_argument("--artwork",type=Path)
+    p.add_argument("--artist",help="Explicitly fill an omitted export artist credit; cannot replace an existing credit")
     g=p.add_mutually_exclusive_group()
     g.add_argument("--approve",action="store_true")
     g.add_argument("--revoke",action="store_true")
@@ -246,7 +278,7 @@ def main():
     a=p.parse_args()
     try:
         return launch(a.repo.resolve(),a.release_delivery,assembly_id=a.assembly_id,
-                      delivery_id=a.delivery_id,artwork=a.artwork,confirm=a.confirm_run,
+                      delivery_id=a.delivery_id,artwork=a.artwork,confirm=a.confirm_run,artist=a.artist,
                       decision="approve" if a.approve else "revoke" if a.revoke else None)
     except (OSError,ValueError,KeyError,TypeError,EOFError) as exc:
         print("ERROR:",exc,file=sys.stderr)

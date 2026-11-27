@@ -30,8 +30,9 @@ cover.jpg or cover.png, metadata.json (exact title, artist, release type and
 ordered tracks), and delivery.json with all file hashes, artwork validation
 and assembly hash. Metadata is a sidecar, not rewritten FLAC tags. No new
 transcoding. Partial timing remains partial, and an empty artist credit
-prevents final package approval. A changed title/artist requires a new
-release identity; an updated cover requires a new delivery ID.
+prevents final package approval. A changed title or established artist requires a new release identity; an
+updated cover requires a new delivery ID. An omitted artist may be filled
+explicitly at delivery with --artist, without changing the original export.
 
 The separate approve/revoke commands display package identity and require
 typed confirmation of actual human review of contents, typography, exact
@@ -65,3 +66,17 @@ Review the resulting package using `music.cmd --release-delivery RELEASE --assem
 (or the selected workflow ID in both positions). This remains a separate human
 rights/credits/typography and package decision, not publishing. Multi-track
 creative scheduling and automatic external stage execution remain future work.
+
+## Complete a missing artist credit without re-exporting
+
+For an existing export with no artist credit, add `--artist "Artist Name"` to
+`music.cmd --release RELEASE --artwork PATH --confirm-run` (or directly to
+`--release-delivery`). The exact explicit credit is frozen in the delivery
+contract and, for a coordinated run, in its workflow plan. The original
+export, audio, lyrics, timing, and assembly remain unchanged. This does not
+approve the package or assert rights. A prior nonblank artist cannot be
+replaced. A different credit after a delivery/workflow has been frozen
+requires a distinct delivery/workflow ID. On status, resume and review the
+retained credit is restored automatically; it need not be retyped. Existing
+contracts without a credit-completion field remain valid. No automatic
+artist name is inferred from a filename, repository owner or music prompt.

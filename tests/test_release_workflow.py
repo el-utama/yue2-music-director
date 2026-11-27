@@ -91,3 +91,19 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertEqual(nd.read(self.workflow/"result.json")["status"],"partial_missing_timing")
         self.assertEqual(rw.launch(self.repo,"release"),2)
         self.assertFalse((self.delivery/"one.srt").exists())
+
+    def test_legacy_omitted_credit_is_frozen_and_restored_on_resume(self):
+        ex.launch(self.repo,"release",["one"],URL,confirm=True,timing_reader=lambda *a:LRC)
+        self.approve()
+        with patch.object(rd.ci,"inspect",side_effect=ValueError("interruption")),self.assertRaises(ValueError):
+            rw.launch(self.repo,"release",artwork=self.art,artist="Explicit Artist",confirm=True)
+        plan=(self.workflow/"plan.json").read_bytes()
+        with self.assertRaisesRegex(ValueError,"Frozen workflow differs"):
+            rw.launch(self.repo,"release",artwork=self.art,artist="Different",confirm=True)
+        self.assertEqual(rw.launch(self.repo,"release",artwork=self.art,confirm=True),0)
+        self.assertEqual(rw.launch(self.repo,"release"),0)
+        self.assertEqual((self.workflow/"plan.json").read_bytes(),plan)
+        delivery=nd.read(self.delivery/"delivery.json")
+        self.assertEqual(delivery["metadata"]["artist"],"Explicit Artist")
+        self.assertEqual(delivery["contract"]["artist_completion"]["artist"],"Explicit Artist")
+        self.assertFalse(delivery["release_approved"])
