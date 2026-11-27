@@ -41,7 +41,9 @@ def prepare(repo,release,snapshot,variants):
         raise ValueError("Existing original export required; assembly does not run export")
     base_contract=nd.read(original/"release.json")["contract"]
     root,_,_=ri.original(exports,base_contract)
-    if root!=original or base_contract.get("audio_variant")!="original":
+    if (root!=original or base_contract.get("schema")!="release-export-v1"
+            or base_contract.get("audio_variant")!="original"
+            or base_contract.get("type") not in ri.FOLDERS):
         raise ValueError("Original release identity differs")
     ex.verify_export(root,base_contract)
     root,contract=ri.revision(exports,base_contract,root,snapshot)
@@ -54,6 +56,7 @@ def prepare(repo,release,snapshot,variants):
             or set(variants)-set(jobs)):
         raise ValueError("Track or variant selection differs")
     selections=[]
+    expected_files=set()
     for i,(e,t) in enumerate(zip(evidence,tracks),1):
         job=e["job"]
         source=ex.retained(repo,job)
@@ -72,7 +75,12 @@ def prepare(repo,release,snapshot,variants):
         expected=(source["brief"]["lyrics"].rstrip()+"\n").encode("utf-8")
         if (stem+".txt" not in files or files[stem+".txt"].read_bytes()!=expected):
             raise ValueError("Export lyric text differs")
+        if t["timing"]["status"] not in ("exported_unverified_display_anchors","unavailable"):
+            raise ValueError("Unknown source timing status")
         timed=t["timing"]["status"]=="exported_unverified_display_anchors"
+        expected_files.update((name,stem+".txt"))
+        if timed:
+            expected_files.update((stem+".lrc",stem+".srt"))
         if any((stem+suffix in files)!=timed for suffix in (".lrc",".srt")):
             raise ValueError("Incomplete or unexpected timed text pair")
         selected=av.select(repo,source,variants.get(job,"original"))
@@ -80,8 +88,11 @@ def prepare(repo,release,snapshot,variants):
         approval=hf.approval_receipt(repo,key,release)
         selections.append({"track":i,"file":name,"identity":key,"approval":approval,
                            "audio":selected["audio"],"timing":t["timing"]})
-    if set(name for name in files if name.endswith(".flac"))!={s["file"] for s in selections}:
-        raise ValueError("Unexpected audio in source package")
+    if set(files)!=expected_files:
+        raise ValueError("Unexpected files in source package")
+    expected_status="complete" if all(s["timing"]["status"]=="exported_unverified_display_anchors" for s in selections) else "partial_missing_timing"
+    if manifest.get("status")!=expected_status:
+        raise ValueError("Source package timing status differs")
     return root,manifest,files,selections
 
 
