@@ -15,6 +15,8 @@ Main after PR #109: `6fb0d62d6de8fb8f938049844f843399a3c87ffc`. Exact-head PR CI
 | [108](https://github.com/el-utama/yue2-music-director/pull/108) | Exact or native CRLF-normalized saved lyric comparison | [CI](https://github.com/el-utama/yue2-music-director/actions/runs/45938982372), 364 Windows tests |
 | [109](https://github.com/el-utama/yue2-music-director/pull/109) | Optional saved lyric schedule evidence for Director | [CI](https://github.com/el-utama/yue2-music-director/actions/runs/45939412931), 368 Windows tests; no new live synthesis |
 
+Subsequent PR #112 adds the local read-only readiness command ([CI](https://github.com/el-utama/yue2-music-director/actions/runs/45940585806), 372 Windows tests, main dcba058). The existing bridge remains limited to audit; it cannot validate the actual Windows readiness command. See [Autonomous CLI](AUTONOMOUS_CLI.md#read-only-readiness-check).
+
 ## Do not repeat completed work
 
 The retained reference and its separate gain-only candidate are unchanged.

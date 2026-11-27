@@ -1,5 +1,10 @@
 # Changelog and research milestones
 
+## Unreleased — local readiness and Artist Memory
+
+- Add read-only `music.cmd --ready` using existing native preflight, without provider or generation calls; PR #112 CI passed 372 Windows tests.
+- Add private append-only artist profile revisions and explicit typed spec compilation; no automatic learning or application, no alteration of historical jobs.
+
 ## Unreleased — native control and lyric evidence (PRs 104–109)
 
 - Live installed velocity conversion confirms loss across score-mode MIDI/ABC/MIDI; operator confirms UI edits are not retained. Separate MIDI production from native audio conditioning.

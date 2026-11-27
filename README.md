@@ -34,6 +34,10 @@ YuE2 Music Director adalah agent pendamping YuE2 Studio yang bertugas memahami t
 
 **Rencana terkini:** baca [roadmap agent otonom](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md). Pertahankan hasil musik lama, verifikasi spesialis downstream tanpa regenerasi, dan integrasikan release manifest secara terpisah. Web app, katalog ribuan lagu dan Artist Memory menyusul; tidak perlu mengulang demo lama.
 
+## Artist Memory (local, opt-in)
+
+Use `music.cmd --artist-memory ARTIST` to inspect private versioned artist preferences. An explicitly saved profile can be compiled into an existing typed creative specification without provider or Studio calls. See [Artist Memory](docs/ARTIST_MEMORY.md). Inferred observations are never automatically applied.
+
 ## Readiness check (Windows)
 
 Run `music.cmd --ready` for a read-only preflight before new production. It verifies local configuration and the existing native reference gate without spending a provider completion or running music inference. See [readiness check](docs/AUTONOMOUS_CLI.md#read-only-readiness-check) for limits and optional MOSS file check.
