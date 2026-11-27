@@ -6,7 +6,7 @@ Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, developing a ge
 
 ## Active product roadmap
 
-**Next milestone: autonomous Windows agent — one natural-language instruction to one song.** See [Autonomous Music Director roadmap and acceptance gates](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md) and [repository agent instructions](AGENTS.md). The integrated native generation, local ASR and neutral MOSS listening demo has completed live; Composer, Lyricist, LLM orchestration and durable autonomous job management are next, not shipped. The optional arrangement revision has passed CI but has not been live-tested.
+**Current milestone: autonomous score-first Windows CLI and independent release specialists.** The hosted Composer/Lyricist/reviewer, native plan and synthesis, ASR, neutral MOSS and advisory Director pipeline has completed live; a recovered score-first take received favorable human feedback. Cover prompt and original single-song export also completed live. Historical-source hardening, [human feedback](docs/HUMAN_FEEDBACK.md), and [non-destructive audio finishing](docs/AUDIO_FINISHING.md) extend the retained workflow. Finishing is an offline synthetic-test milestone, not a live mastering or release-quality claim. See the [active roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md), [autonomous CLI](docs/AUTONOMOUS_CLI.md) and [repository agent instructions](AGENTS.md).
 
 ## Native-first development policy
 
@@ -23,13 +23,13 @@ Do not add a feature until native and reusable alternatives have been checked. D
 
 YuE2 Music Director adalah agent pendamping YuE2 Studio yang bertugas memahami tujuan musik, memilih fitur native yang sesuai, mengelola eksperimen secara aman, menilai hasil berdasarkan bukti, dan menentukan apakah kandidat perlu dipertahankan atau ditolak. Agent ini bukan pengganti generator, trainer LoRA, DAW, maupun antarmuka Studio.
 
-**Status:** masih dalam tahap riset alpha. Evaluasi AudioBox, review gabungan dan inspeksi timing native telah berhasil pada satu perbandingan audio nyata. Generasi satu lagu dengan score buatan director dan recovery evaluasi telah berhasil secara nyata, tetapi hasil musikal ditolak oleh pendengar. Agent otonom, peningkatan naturalness lintas lagu dan koreksi fonetik otomatis belum tervalidasi. Dokumentasi teknis berbahasa Inggris merupakan sumber utama.
+**Status:** alpha. Pipeline otonom score-first telah menyelesaikan satu lagu dengan evaluasi manusia yang baik; lagu awal yang terpotong tetap menjadi pembanding negatif. Cover prompt dan export asli satu lagu telah berjalan. Feedback berbasis hash dan finishing gain-only merupakan implementasi lokal terpisah; finishing belum divalidasi pada audio operator. Tidak ada klaim naturalness lintas lagu, koreksi fonetik otomatis atau mastering profesional. Dokumentasi teknis berbahasa Inggris merupakan sumber utama.
 
 **Kebijakan:** utamakan fitur bawaan YuE2, skill resmi, model dan adapter komunitas yang kompatibel serta berlisensi sesuai penggunaan. Gunakan eksperimen yang sudah ada sebelum meminta pengguna menjalankan inferensi lagi. Jangan mengunduh model, melatih LoRA, mengubah pengaturan, atau menghapus hasil tanpa izin.
 
 **Penggunaan dasar:** Python 3.10+ dan Git diperlukan. Untuk instalasi editable dan tes offline, ikuti bagian Setup. Jalankan `py -3 -m yue2_music_director.cli --help` untuk melihat perintah aktual. FFmpeg dan Studio lokal diperlukan hanya untuk operasi terkait. Jangan mengulang eksperimen yang sudah selesai; periksa laporan dan jurnal lokal terlebih dahulu. Jangan unggah audio, lirik, dataset atau konfigurasi pribadi ke repository publik.
 
-**Rencana terkini:** baca [roadmap agent otonom](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md). Prioritas berikutnya adalah Composer, Lyricist, provider Nemotron yang dapat diganti, dan orchestrator Windows yang menyelesaikan satu lagu dari instruksi natural. Web app, katalog ribuan lagu dan Artist Memory menyusul; tidak perlu mengulang demo lama.
+**Rencana terkini:** baca [roadmap agent otonom](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md). Pertahankan hasil musik lama, verifikasi spesialis downstream tanpa regenerasi, dan integrasikan release manifest secara terpisah. Web app, katalog ribuan lagu dan Artist Memory menyusul; tidak perlu mengulang demo lama.
 
 ## Setup
 
