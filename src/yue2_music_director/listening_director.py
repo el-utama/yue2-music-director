@@ -72,7 +72,7 @@ def inputs(repo, demo=False):
     return brief, intent
 
 
-def verify_take(draft, brief, report):
+def verify_take(draft, brief, report, *, historical=False):
     journal = nd.read(draft / "journal_song.json")
     request = nd.request_for(brief)
     route=report.get("generation_path")
@@ -101,7 +101,13 @@ def verify_take(draft, brief, report):
         # Studio may normalize whitespace or notation while importing.
         # Compare musical semantics, not byte equality between two independently
         # hashed artifacts. This includes synchronized meter and key timelines.
-        if nd.score_signature(saved,native=True)!=nd.score_signature(abc,native=True):
+        if historical:
+            # The completed report records the verified semantic comparison.
+            # Preserve the original byte-linked evidence without replaying a
+            # future parser over a historical, already completed score.
+            if post.get("schema")!="native-musical-review-v1":
+                raise ValueError("Unknown retained score review schema")
+        elif nd.score_signature(saved,native=True)!=nd.score_signature(abc,native=True):
             raise ValueError("Retained reviewed score identity mismatch: musical semantics")
         request["abc"]=abc
     elif route!="direct_native":

@@ -7,7 +7,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-from . import native_draft as nd, creative_core as cc, cover_art, listening_director as ld
+from . import native_draft as nd, creative_core as cc, listening_director as ld
+from .retained_source import load
 from .mcp import MCPError, configured_endpoint
 from .temporal_evidence import parse_lrc, LINE
 from .export_timing import read_timing
@@ -21,19 +22,7 @@ def safe_title(title):
 
 
 def retained(repo,job):
-    _,evidence=cover_art.track(repo,job)
-    parent=repo/"results/autonomous"/job
-    root=parent if (parent/"result.json").is_file() else parent/"continuation-1"
-    result=nd.read(root/"result.json")
-    brief=nd.load_brief(root/"brief.json")
-    draft=root/"production/draft"
-    report=nd.read(draft/"report.json")
-    row=ld.verify_take(draft,brief,report)
-    audio=Path(row["audio"])
-    if result.get("audio")!=str(audio) or result["audio_sha256"]!=row["audio_sha256"]:
-        raise ValueError("Export audio identity differs")
-    return {"job":job,"brief":brief,"report":report,"result":result,"audio":audio,
-            "evidence":evidence}
+    return load(repo,job)
 
 
 def stamp(ms,*,srt=False):
