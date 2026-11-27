@@ -17,6 +17,7 @@ class RetainedSourceTests(unittest.TestCase):
             before={p:nd._sha(p) for p in parent.rglob("*") if p.is_file()}
             with patch.object(rs.ld.nd,"score_signature",side_effect=AssertionError("replayed parser")), \
                  patch.object(rs.cc,"prepare",side_effect=AssertionError("replayed provider")), \
+                 patch.object(rs.ld.nd,"request_for",side_effect=AssertionError("replayed request builder")), \
                  patch.object(rs.ld,"retained_packet",side_effect=AssertionError("recomputed observations")):
                 source=rs.load(repo,"one")
                 self.assertEqual(source["root"],parent/"continuation-1")
