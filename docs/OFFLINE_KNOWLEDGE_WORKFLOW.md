@@ -121,3 +121,5 @@ The main production CLI never automatically uses observed references or historic
 - For a change to a launcher, test the documented flags, quoted paths, empty inputs and retained-job behavior; include no-call and no-duplicate checks.
 - Update README and relevant user/technical docs, changelog and PROJECT_MEMORY.md in the same PR. Historical checkpoints must be labeled as historical.
 - Remaining: 147 metadata slots; individual rights/genre/identity review; broader legitimate lyrics and deeper linguistic/musical features; live and artistic evaluation of explicit historical context, integration of approved observed data; independent artistic evaluation; live validation of the new preset option. No repeat of retained Unreachable, ASR, MOSS, cover or export.
+
+The historical index now uses v3 descriptive craft metrics; rebuild before a new historical query. Existing v1 context jobs resume from frozen receipts. See [craft analysis](KNOWLEDGE_BANK.md#descriptive-craft-analysis-v3) for limitations.

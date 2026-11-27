@@ -16,7 +16,9 @@ import zipfile
 from collections import Counter
 from contextlib import closing
 
-SCHEMA = "knowledge-index-v2"
+from . import craft_features as cf
+
+SCHEMA = "knowledge-index-v3"
 SOURCE_REV = "38c5db510224d9facdc4b08d741fc788cfb58ea8"
 MAX_ASSET = 2_000_000
 MAX_XML = 8_000_000
@@ -140,6 +142,9 @@ def records(root, *, external_root=None):
         features["unique_text_words"] = len(set(words))
         features["lexical_type_token_ratio"] = round(len(set(words)) / len(words), 4) if words else None
         features["harmony_annotated_measure_lines"] = len(re.findall(r"^m\d+", harmony, re.M))
+        features.update(cf.lyric_features(lyrics))
+        features.update(cf.melody_features(features["notated_melodic_intervals"]))
+        features.update(cf.harmony_features(harmony))
         metadata = {k: work[k] for k in ("work_id", "title", "composer", "lyricist", "language", "genre",
                                         "published_year", "rights")}
         metadata["source_revision"] = SOURCE_REV

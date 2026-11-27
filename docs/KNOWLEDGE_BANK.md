@@ -75,3 +75,7 @@ The opt-in must be repeated on resume. No actual provider or Studio calls were
 made by this PR; mock tests only. The production launcher now supports explicit historical numeric selection with separate confirmation; it does not retrieve historical knowledge automatically. The separate text-only path above retains its own confirmation flags.
 Numerical descriptors are not proof of artistic usefulness; no semantic or
 multilingual query translation is implemented.
+
+## Descriptive craft analysis v3
+
+Rebuild with `music.cmd --knowledge --build` to upgrade a v2 derived index. The seven source works are unchanged. New features measure repeated three-word token sequences, punctuation-delimited group counts/length and repeated group fractions, relative notated melodic step/leap/repeat/ascending events, and conservatively recognized automatic RomanText chord-symbol counts and fractions. Ratios are descriptive, not targets. Empty denominators return null. Slash symbols are not a verified secondary-dominant count. Harmony annotations are machine estimates; no chord duration, cadence, or harmonic-function guarantee. Score-extracted text does not preserve reliable verse/line boundaries, so these are not rhyme, hook, storytelling, sentiment or prosody scores. New explicitly opted-in creative jobs use numeric payload v2; old v1 receipts reproduce the original fields and guidance without changing their saved snapshot or needing the old index. No new provider calls, GPU or live artistic evaluation.
