@@ -1,6 +1,7 @@
 """Durable text-only creative stages. No Studio mutation or generation."""
 from pathlib import Path
 import argparse
+import sqlite3
 import re
 import time
 import sys
@@ -63,8 +64,13 @@ def stage(root, role, module, provider, data, *, retry=False, semantic_check=Non
     return result
 
 
-def prepare(root, provider, request, language, duration, *, retry_role=None, duration_guidance=False, direction_guidance=False, timing_guidance=False, typed_spec=None):
+def prepare(root, provider, request, language, duration, *, retry_role=None, duration_guidance=False, direction_guidance=False, timing_guidance=False, typed_spec=None, knowledge=None):
     data={"request":request,"language":language,"duration_seconds":duration}
+    def role_data(role, data):
+        if knowledge is None:
+            return data
+        from .creative_knowledge import payload
+        return {**data, "knowledge_context": payload(knowledge, role)}
     if duration_guidance:
         # Advisory target only; the actual native score clock is screened before rendering.
         reserve=min(15,max(3,round(duration*0.08)))
@@ -80,7 +86,7 @@ def prepare(root, provider, request, language, duration, *, retry_role=None, dur
         data["typed_guidance"]=tc.GUIDANCE
         from .creative_direction import TIMING_GUIDANCE
         data["opening_timing_guidance"]=TIMING_GUIDANCE
-        music=stage(root,"composer",composer_typed,provider,data,retry=retry_role=="composer",
+        music=stage(root,"composer",composer_typed,provider,role_data("composer",data),retry=retry_role=="composer",
                     semantic_check=lambda value:tc.check_composer(value,spec))
         if spec["lyrics"] is not None:
             if retry_role=="lyricist":
@@ -98,7 +104,7 @@ def prepare(root, provider, request, language, duration, *, retry_role=None, dur
             else:
                 nd.create_journal(path,receipt)
         else:
-            words=stage(root,"lyricist",lyricist,provider,{**data,"composition":music},
+            words=stage(root,"lyricist",lyricist,provider,role_data("lyricist",{**data,"composition":music}),
                         retry=retry_role=="lyricist",semantic_check=lambda value:tc.check_lyrics(music,value["lyrics"],spec))
         review=stage(root,"reviewer",creative_reviewer,provider,{**data,"composition":music,
                      "lyrics":words["lyrics"],"diagnostics":lyricist.diagnostics(words["lyrics"],language)},
@@ -111,9 +117,9 @@ def prepare(root, provider, request, language, duration, *, retry_role=None, dur
             data["opening_timing_guidance"]=cd.TIMING_GUIDANCE
     elif timing_guidance:
         raise ValueError("Timing guidance requires direction guidance")
-    music=stage(root,"composer",composer,provider,data,retry=retry_role=="composer",
+    music=stage(root,"composer",composer,provider,role_data("composer",data),retry=retry_role=="composer",
                 semantic_check=cd.parse_direction if direction_guidance else None)
-    words=stage(root,"lyricist",lyricist,provider,{**data,"composition":music},retry=retry_role=="lyricist",
+    words=stage(root,"lyricist",lyricist,provider,role_data("lyricist",{**data,"composition":music}),retry=retry_role=="lyricist",
                 semantic_check=(lambda value: cd.validate_opening(music,value["lyrics"])) if direction_guidance else None)
     review=stage(root,"reviewer",creative_reviewer,provider,{**data,"composition":music,
                  "lyrics":words["lyrics"],"diagnostics":lyricist.diagnostics(words["lyrics"],language)},retry=retry_role=="reviewer")
@@ -128,9 +134,15 @@ def validate_job(job, request, language, duration):
         raise ValueError("Invalid creative request, language or duration")
 
 
-def launch(repo, job, request, language, duration, *, confirm_text=False, provider_factory=None):
+def launch(repo, job, request, language, duration, *, confirm_text=False, provider_factory=None, knowledge_query=None, confirm_knowledge_context=False):
     validate_job(job, request, language, duration)
+    if confirm_knowledge_context and not confirm_text:
+        raise ValueError("Knowledge transfer confirmation requires --confirm-text")
     if not confirm_text:
+        if knowledge_query is not None:
+            from .creative_knowledge import snapshot
+            import json
+            print(json.dumps(snapshot(repo/"local/knowledge-bank.sqlite", knowledge_query), ensure_ascii=True, indent=2))
         print("Plan only; no provider or Studio calls.")
         return 0
     provider=provider_factory() if provider_factory else TextProvider.for_repo(repo)
@@ -140,13 +152,32 @@ def launch(repo, job, request, language, duration, *, confirm_text=False, provid
         identity={"schema":"creative-job-v1","request":request,"language":language,
                   "duration_seconds":duration,"provider":provider.identity()}
         manifest=root/"job.json"
+        knowledge = None
         if root.exists():
-            if nd.read(manifest)!=identity:
+            saved = nd.read(manifest)
+            knowledge = saved.get("knowledge")
+            if knowledge is not None:
+                if not confirm_knowledge_context:
+                    raise ValueError("Resuming knowledge job requires --confirm-knowledge-context")
+                if knowledge_query is not None and knowledge_query != knowledge["query"]:
+                    raise ValueError("Retained knowledge query differs")
+                identity["knowledge"] = knowledge
+            elif knowledge_query is not None or confirm_knowledge_context:
+                raise ValueError("Cannot add knowledge to a retained legacy job")
+            if saved!=identity:
                 raise ValueError("Retained job differs")
         else:
+            if knowledge_query is not None:
+                if not confirm_knowledge_context:
+                    raise ValueError("Derived knowledge transfer requires --confirm-knowledge-context")
+                from .creative_knowledge import snapshot
+                knowledge = snapshot(repo/"local/knowledge-bank.sqlite", knowledge_query)
+                identity["knowledge"] = knowledge
+            elif confirm_knowledge_context:
+                raise ValueError("New knowledge job needs --knowledge-query")
             root.mkdir(parents=True,exist_ok=False)
             nd.atomic_write(manifest,identity)
-        result=prepare(root,provider,request,language,duration)
+        result=prepare(root,provider,request,language,duration,knowledge=knowledge)
         nd.atomic_write(root/"creative-result.json",result)
         print("Creative result:",root/"creative-result.json")
         print("Editorial decision:",result["review"]["decision"])
@@ -162,10 +193,12 @@ def main():
     p.add_argument("--language",default="en")
     p.add_argument("--duration",type=int,default=195)
     p.add_argument("--confirm-text",action="store_true")
+    p.add_argument("--knowledge-query", help="Local lexical search; preview unless text transfer explicitly confirmed")
+    p.add_argument("--confirm-knowledge-context", action="store_true", help="Allow only bounded numeric reference descriptors to text roles")
     a=p.parse_args()
     try:
-        return launch(a.repo.resolve(),a.job,a.request,a.language,a.duration,confirm_text=a.confirm_text)
-    except (OSError,ValueError,KeyError,TypeError) as e:
+        return launch(a.repo.resolve(),a.job,a.request,a.language,a.duration,confirm_text=a.confirm_text,knowledge_query=a.knowledge_query,confirm_knowledge_context=a.confirm_knowledge_context)
+    except (OSError,ValueError,KeyError,TypeError,sqlite3.Error) as e:
         print("ERROR:",e,file=sys.stderr)
         return 2
 

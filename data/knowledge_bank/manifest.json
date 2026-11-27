@@ -6,9 +6,63 @@
     "license": "CC0-1.0",
     "rights_evidence": "https://www.themorgan.org/music-manuscripts-and-printed-music/115668",
     "license_url": "https://github.com/OpenScore/Lieder/blob/38c5db510224d9facdc4b08d741fc788cfb58ea8/LICENSE.txt",
-    "scope": "1827 Winterreise works by Franz Schubert (d. 1828) and Wilhelm Müller (d. 1827); original German text only; OpenScore CC0 transcriptions and automatic harmonic annotations; no recording rights claimed"
+    "scope": "1827 Winterreise works by Franz Schubert (d. 1828) and Wilhelm Müller (d. 1827); original German text only; OpenScore CC0 transcriptions and automatic harmonic annotations; no recording rights claimed; additionally original English texts and scores of Haydn (d. 1809)/Shakespeare (d. 1616), and Bishop (d. 1855)/Payne (d. 1852), from the pinned OpenScore CC0 transcriptions."
   },
   "works": [
+    {
+      "work_id": "bishop-home-sweet-home",
+      "title": "Home, Sweet Home",
+      "composer": "Henry Bishop",
+      "lyricist": "John Howard Payne",
+      "published_year": 1823,
+      "genre": "Parlour song",
+      "language": "en",
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "lyrics": {
+          "file": "6486038-lc6486038.txt",
+          "git_blob_sha": "b622dd06a3fb15f270bdfcf14f730c09a4ee273e",
+          "source_path": "scores/Bishop,_Henry/_/Home,_Sweet_Home/lc6486038.txt"
+        },
+        "score": {
+          "file": "6486038-lc6486038.mxl",
+          "git_blob_sha": "9cfe0f1a57fea5ea3978512e6febf6979a004047",
+          "source_path": "scores/Bishop,_Henry/_/Home,_Sweet_Home/lc6486038.mxl"
+        },
+        "harmony": {
+          "file": "6486038-analysis_automatic.rntxt",
+          "git_blob_sha": "f4afb1b387ed70324d79f440efbbd3819f91b18d",
+          "source_path": "scores/Bishop,_Henry/_/Home,_Sweet_Home/analysis_automatic.rntxt"
+        }
+      }
+    },
+    {
+      "work_id": "haydn-hob-xxvia34",
+      "title": "She never told her love",
+      "composer": "Joseph Haydn",
+      "lyricist": "William Shakespeare",
+      "published_year": 1795,
+      "genre": "Canzonet",
+      "language": "en",
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "lyrics": {
+          "file": "6474469-lc6474469.txt",
+          "git_blob_sha": "712393862baa10871ff5c7ab98a12f9934de4cbd",
+          "source_path": "scores/Haydn,_Joseph/10_Canzonets/09_She_never_told_her_love,_Hob.XXVIa34/lc6474469.txt"
+        },
+        "score": {
+          "file": "6474469-lc6474469.mxl",
+          "git_blob_sha": "99f462e66340a4f03325a147cee2aa633cbc9c9a",
+          "source_path": "scores/Haydn,_Joseph/10_Canzonets/09_She_never_told_her_love,_Hob.XXVIa34/lc6474469.mxl"
+        },
+        "harmony": {
+          "file": "6474469-analysis_automatic.rntxt",
+          "git_blob_sha": "3e0ddf332dc5e35cdcbcca40385f678efaf98343",
+          "source_path": "scores/Haydn,_Joseph/10_Canzonets/09_She_never_told_her_love,_Hob.XXVIa34/analysis_automatic.rntxt"
+        }
+      }
+    },
     {
       "work_id": "schubert-d911-01",
       "title": "Gute Nacht",
