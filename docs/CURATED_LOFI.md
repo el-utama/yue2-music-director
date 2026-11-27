@@ -1,0 +1,7 @@
+# Curated Lo-fi metadata candidates
+
+95 factual track references from a pinned third-party playlist, https://github.com/ruvnet/AgentBBS/blob/d5cc1f5e15be39270bf03eb7c191ecdd00fdc3a3/docs/design/MUSIC.md, source blob 6ac95df3201aa7fa32f5ae865394b4d4d3624dea. Reported CC0 or CC BY 4.0, individual rights and genre unreviewed; some links identify albums, not tracks. No copied audio, lyrics, or descriptions.
+
+Eight additional Chillhop catalog entries from https://github.com/btahir/open-lofi/blob/49a4aa7266a5974ea721007db1349d5cde2a6c44/catalog.json. The creator's pinned README explicitly reports Suno v5 generation and a CC0 dedication. AI origin is retained; do not treat them as human songwriting evidence or independently cleared recordings. Jazzhop entries are not silently relabeled. No audio downloaded or inference run.
+
+Combined candidate IDs: 823, of which 8 explicitly AI-generated; source overlap and human authorship of other records unverified. Counts: {"blues":100,"jazz":100,"lofi":100,"pop":100,"indie":100,"folk":100,"backsound":100,"hiphop":100,"lofihop":8,"trap":15}. All lyric fields absent. Lo-fi quota is a metadata count only. Trap and lofihop remaining; no approved corpus quotas. WaivOps loop datasets may be separately useful for rhythmic technique but are not full song references. Rebuild via music.cmd --references --build. See curated-manifest.json for source provenance.

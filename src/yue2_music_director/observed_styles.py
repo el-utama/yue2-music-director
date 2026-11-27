@@ -9,7 +9,7 @@ import sqlite3
 import tempfile
 from .style_library import GENRES
 
-SCHEMA = "observed-style-metadata-v2"
+SCHEMA = "observed-style-metadata-v3"
 
 def load(root):
     root = Path(root)
@@ -59,6 +59,31 @@ def load(root):
     counts = {g: counts[g] + clip_counts[g] for g in GENRES}
     if counts != clip_manifest["combined_candidates"] or any(n > 100 for n in counts.values()):
         raise ValueError("Combined inventory mismatch")
+    curated_manifest = json.loads((root / "curated-manifest.json").read_text(encoding="utf-8"))
+    curated = [json.loads(line) for line in (root / "curated.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    if curated_manifest["schema"] != "curated-style-candidates-v1":
+        raise ValueError("Invalid curated manifest")
+    observed_counts = Counter()
+    for row in curated:
+        source = next((s for s in curated_manifest["sources"] if s["revision"] == row["source_snapshot"]), None)
+        if (source is None or row["category"] != source["category"] or row["id"] in ids
+                or not row["source_url"].startswith("https://")
+                or not row["title"] or not row["artist"]
+                or row["lyrics"] is not None or row["lyrics_status"] != "not_supplied"
+                or row["validation"] != "metadata_only_not_listened"
+                or row["reported_license"] not in ("CC0-1.0", "CC-BY-4.0")
+                or row["rights_status"] not in ("playlist_reports_license_individual_review_pending", "creator_claims_cc0_ai_origin_unreviewed")):
+            raise ValueError("Invalid curated candidate")
+        if row["category"] == "lofihop" and (row["metadata_origin"] != "creator_catalog_disclosed_suno_v5" or row["rights_status"] != "creator_claims_cc0_ai_origin_unreviewed"):
+            raise ValueError("AI origin must be explicit")
+        observed_counts[row["source_snapshot"]] += 1
+        ids.add(row["id"])
+        counts[row["category"]] += 1
+    if any(observed_counts[s["revision"]] != s["count"] for s in curated_manifest["sources"]):
+        raise ValueError("Curated source count mismatch")
+    rows += curated
+    if counts != curated_manifest["counts"] or len(rows) != curated_manifest["distinct_candidate_ids"] or any(n > 100 for n in counts.values()):
+        raise ValueError("Curated combined count mismatch")
     return rows, counts
 
 def build(root, database):
@@ -80,6 +105,8 @@ def build(root, database):
     return {"metadata_candidates": len(rows), "by_category": counts,
             "track_metadata": sum("isrc" in row for row in rows),
             "annotated_clips": sum("youtube_id" in row for row in rows),
+            "curated_track_candidates": sum(row.get("metadata_origin") == "third_party_playlist_manifest" for row in rows),
+            "disclosed_ai_track_candidates": sum(row.get("metadata_origin") == "creator_catalog_disclosed_suno_v5" for row in rows),
             "rights_reviewed_tracks": 0, "lyrics": 0,
             "missing_metadata_to_100": {g: max(0, 100-n) for g,n in counts.items()}}
 

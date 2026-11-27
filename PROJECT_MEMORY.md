@@ -37,8 +37,8 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Main `8fb7b97f382d1e356f7efc6884dac8804bf6c841` after PR #122; exact head `4acc73801a91fbb8cb463b314642b86f3afcc84b` passed [four CI jobs](https://github.com/el-utama/yue2-music-director/actions/runs/45958983952). 203 Incompetech metadata candidates indexed, no individual rights acceptance.
-- Follow-up adds 517 MusicCaps annotated clips; combined 720 candidates, CI pending; no recording rights or lyric acceptance.
+- Main `54d56b360886f1b76b91a112eff04daab77d4d93` after PR #123; exact head `202063f5d1690ae65dbd6cd2509f72e3b2dc2834` passed [four CI jobs](https://github.com/el-utama/yue2-music-director/actions/runs/45960070717). 720 candidate identifiers indexed, no recording rights acceptance.
+- Follow-up: 95 third-party Lo-fi playlist candidates and eight disclosed AI-generated Chillhop tracks; combined 823 candidates, CI pending. Rights and cross-source identity review open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
   See [local release checkpoint](docs/LOCAL_RELEASE_CHECKPOINT.md) and
@@ -63,7 +63,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 | R11 | Multi-track/album creative scheduling and consistent artist direction | Release snapshots/assembly; no creative scheduling | Explicit track-level plans/budgets, deterministic resume, independent evidence and approval |
 | R12 | Project documentation, continuity and complete requirement coverage | This register plus native/release docs | Maintain on every substantive change, verify all outstanding rows before readiness |
 | R13 | Privacy, licensing, safe external use | Local private storage and explicit provider boundary | Validate every reference corpus source/rights, permitted use and hosted transfer; preserve originals and no unsupported claims |
-| R14 | 100 music styles per specified category, lyrics if available | 1,000 authored presets merged/CI; 203 Incompetech candidates merged/CI; 517 MusicCaps annotation clips pending CI, recording rights unreviewed; actual quotas open | Rights-reviewed 100 observed records per category; source and lyric availability, deduplication, creative evaluation |
+| R14 | 100 music styles per specified category, lyrics if available | 1,000 authored presets merged/CI; 720 observed candidates merged/CI; 103 further candidates (8 explicitly AI-origin), CI pending. Quotas not accepted. | Rights-reviewed 100 observed records per category; source and lyric availability, deduplication, creative evaluation |
 
 ## Corpus and knowledge inventory — explicit gap, not optional to full product
 
@@ -133,3 +133,5 @@ repeat prior requirements.
 2026-11-27: Observed reference pilot, 203 distinct Incompetech metadata candidates with ISRC and source provenance, blues 11, jazz 74, lofi 0, pop 18, indie 0, folk 0, backsound 100, hiphop 0, lofihop 0, trap 0. Not independently reviewed per-track, no audio or lyrics, not production evidence. MTG-Jamendo raw access now succeeds via Git blob but license prohibits nonresearch use without authorization; excluded. See docs/OBSERVED_STYLES.md. No real reference quota closed.
 
 2026-11-27: MusicCaps annotation dataset CC BY-SA 4.0, source snapshot ecbb5a1f52e52cf09a38dd7698578ccca7cef353. Added 517 unique clip IDs with normalized musical descriptors and category evidence; combined inventory {"blues":100,"jazz":100,"lofi":5,"pop":100,"indie":100,"folk":100,"backsound":100,"hiphop":100,"lofihop":0,"trap":15}. Distinct IDs within each source; cross-source recording overlap unknown. No audio, source captions or lyrics copied; no provider/GPU. Full song identity and recording rights not established. R14 remains open. See data/observed_styles/musiccaps-manifest.json.
+
+2026-11-27: PR #123 merged after CI. Follow-up adds 95 curated Lo-fi track candidates from pinned AgentBBS factual playlist metadata and 8 creator-disclosed Suno v5 Chillhop entries from Open Lo-Fi. Source licensing is reported, not independently verified per track. Combined 823 identifiers (815 excluding AI-disclosed eight), missing 177 category slots including 92 lofihop and 85 trap; no new lyrics. WaivOps CC BY 4.0 drum-loop/chord datasets are useful for technical technique references, not full-track quotas; do not pad with loops. FMA official pages 403 here. R14 remains open.
