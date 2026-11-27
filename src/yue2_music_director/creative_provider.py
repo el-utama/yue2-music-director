@@ -12,7 +12,10 @@ SMOKE_SCHEMA = {"type":"object","properties":{"ready":{"type":"boolean","enum":[
                 "required":["ready"],"additionalProperties":False}
 
 
-def role_schema(role):
+def role_schema(role, data=None):
+    if role=="composer" and isinstance(data,dict) and "typed_requirements" in data:
+        from .composer_typed import SCHEMA
+        return SCHEMA
     if role=="cover_art":
         from .cover_art import SCHEMA
         return SCHEMA
@@ -108,7 +111,7 @@ class TextProvider:
                 {"role":"user","content":json.dumps(data, ensure_ascii=False)}],
                 "max_tokens":4096,"stream":False}
         if self.url==NVIDIA_URL and model==NEMOTRON_VL:
-            schema=SMOKE_SCHEMA if smoke else role_schema(role)
+            schema=SMOKE_SCHEMA if smoke else role_schema(role,data)
             body["response_format"]={"type":"json_schema","json_schema":{
                 "name":"provider_check" if smoke else role+"_result","strict":True,"schema":schema}}
             # Hosted model documents a 16384 default completion budget and reasoning control.

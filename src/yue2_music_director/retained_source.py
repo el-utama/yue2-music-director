@@ -8,7 +8,7 @@ from pathlib import Path
 
 from . import creative_core as cc, native_draft as nd, listening_director as ld
 
-POLICIES={"reviewed-score-v1","reviewed-score-v2","reviewed-score-v3"}
+POLICIES={"reviewed-score-v1","reviewed-score-v2","reviewed-score-v3","reviewed-score-v4-typed"}
 PLAN_FILES={"manifest.json","journal_plan.json","plan-result.json","plan-receipt.json","native-plan.abc"}
 
 
@@ -39,7 +39,21 @@ def _receipt(root,role,provider):
 
 def _creative(parent,identity,brief):
     data,music=_receipt(parent,"composer",identity["provider"])
-    words_input,words=_receipt(parent,"lyricist",identity["provider"])
+    if identity["production_policy"]=="reviewed-score-v4-typed":
+        spec=identity.get("creative_spec")
+        if not isinstance(spec,dict) or data.get("typed_requirements")!=spec:
+            raise ValueError("Retained typed requirements differ")
+    else:
+        spec=None
+    if spec is not None and spec.get("lyrics") is not None:
+        receipt=nd.read(parent/"operator-lyrics.json")
+        words_input={**data,"composition":music}
+        words={"lyrics":spec["lyrics"]}
+        if (receipt!={"schema":"operator-lyrics-v1","input":words_input,"result":words,"provider_calls":0}
+                or any((parent/n).exists() for n in ("lyricist.json","lyricist.attempt.json","lyricist.retry-1.attempt.json"))):
+            raise ValueError("Retained exact operator lyric identity differs")
+    else:
+        words_input,words=_receipt(parent,"lyricist",identity["provider"])
     review_input,review=_receipt(parent,"reviewer",identity["provider"])
     if (any(data.get(k)!=identity.get(k) for k in ("request","language","duration_seconds"))
             or words_input!={**data,"composition":music}
@@ -126,6 +140,17 @@ def _inputs(parent,root,job):
     creative=_creative(parent,identity,brief)
     if any(intent.get(k)!=creative["composition"][k] for k in ("concept","emotional_arc","performance")):
         raise ValueError("Retained creative intent differs")
+    if identity["production_policy"]=="reviewed-score-v4-typed":
+        spec=identity["creative_spec"]
+        direction=creative["composition"]["direction"]
+        if (intent.get("schema")!="artist-intent-v2" or intent.get("direction")!=direction
+                or intent.get("requested")!=spec
+                or intent.get("section_purposes")!={i["section"]:i["purpose"] for i in direction["section_plan"]}
+                or intent.get("constraints")!={**spec["score_constraints"],
+                    "opening":{"mode":"must","value":direction["opening"]},
+                    "opening_timing":{"mode":"must","value":direction["opening"]}}
+                or spec.get("lyrics") is not None and spec["lyrics"]!=brief["lyrics"]):
+            raise ValueError("Retained typed intent lineage differs")
     return identity,brief,intent,creative
 
 

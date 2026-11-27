@@ -63,7 +63,7 @@ def stage(root, role, module, provider, data, *, retry=False, semantic_check=Non
     return result
 
 
-def prepare(root, provider, request, language, duration, *, retry_role=None, duration_guidance=False, direction_guidance=False, timing_guidance=False):
+def prepare(root, provider, request, language, duration, *, retry_role=None, duration_guidance=False, direction_guidance=False, timing_guidance=False, typed_spec=None):
     data={"request":request,"language":language,"duration_seconds":duration}
     if duration_guidance:
         # Advisory target only; the actual native score clock is screened before rendering.
@@ -71,6 +71,39 @@ def prepare(root, provider, request, language, duration, *, retry_role=None, dur
         data["duration_plan"]={"hard_cap_seconds":duration,"target_score_seconds":duration-reserve,
               "ending_reserve_seconds":reserve,
               "guidance":"Plan a compact complete song, with a resolved final sung phrase and short instrumental tail inside the target. Allow room for introductions, instrumental breaks, breathing and sustained notes. Avoid redundant verses, long repeated choruses or extended outros. Lyricist should adapt line and section count to pacing; reviewer should stop implausibly long plans. Do not treat duration as an exact target or omit necessary closure."}
+    if typed_spec is not None:
+        from . import typed_creative as tc, composer_typed
+        if direction_guidance or timing_guidance:
+            raise ValueError("Typed direction uses a separate contract")
+        spec=tc.validate_spec(typed_spec)
+        data["typed_requirements"]=spec
+        data["typed_guidance"]=tc.GUIDANCE
+        from .creative_direction import TIMING_GUIDANCE
+        data["opening_timing_guidance"]=TIMING_GUIDANCE
+        music=stage(root,"composer",composer_typed,provider,data,retry=retry_role=="composer",
+                    semantic_check=lambda value:tc.check_composer(value,spec))
+        if spec["lyrics"] is not None:
+            if retry_role=="lyricist":
+                raise ValueError("Exact operator lyrics do not use a provider stage")
+            if any((root/name).exists() for name in ("lyricist.json","lyricist.attempt.json","lyricist.retry-1.attempt.json")):
+                raise ValueError("Conflicting provider lyric receipts for exact lyrics")
+            words={"lyrics":spec["lyrics"]}
+            tc.check_lyrics(music,words["lyrics"],spec)
+            receipt={"schema":"operator-lyrics-v1","input":{**data,"composition":music},"result":words,
+                     "provider_calls":0}
+            path=root/"operator-lyrics.json"
+            if path.exists():
+                if nd.read(path)!=receipt:
+                    raise ValueError("Retained operator lyric receipt differs")
+            else:
+                nd.create_journal(path,receipt)
+        else:
+            words=stage(root,"lyricist",lyricist,provider,{**data,"composition":music},
+                        retry=retry_role=="lyricist",semantic_check=lambda value:tc.check_lyrics(music,value["lyrics"],spec))
+        review=stage(root,"reviewer",creative_reviewer,provider,{**data,"composition":music,
+                     "lyrics":words["lyrics"],"diagnostics":lyricist.diagnostics(words["lyrics"],language)},
+                     retry=retry_role=="reviewer")
+        return {"composition":music,"lyrics":words["lyrics"],"review":review}
     if direction_guidance:
         from . import creative_direction as cd
         data["direction_guidance"]=cd.GUIDANCE

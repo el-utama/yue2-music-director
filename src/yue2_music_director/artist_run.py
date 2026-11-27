@@ -21,7 +21,20 @@ ALLOWED_FLAGS={"section_order_differs","notated_sung_sequence_differs",
 def validate_intent(intent):
     keys={"schema","route","concept","emotional_arc","performance","section_purposes",
           "constraints","retain_soft_flags","follow_lyrics","budget"}
-    if not isinstance(intent,dict) or set(intent)!=keys or intent["schema"]!=SCHEMA:
+    from . import typed_creative as tc
+    if isinstance(intent,dict) and intent.get("schema")==tc.INTENT_SCHEMA:
+        keys|={"direction","requested"}
+        if set(intent)!=keys:
+            raise ValueError("Invalid typed artistic intent schema")
+        d=tc.validate_direction(intent["direction"])
+        spec=tc.validate_spec(intent["requested"])
+        if (spec!=intent["requested"] or any(spec[k] is not None and spec[k]!=d[k]
+                for k in ("opening","vocal","narrator"))
+                or intent["section_purposes"]!={i["section"]:i["purpose"] for i in d["section_plan"]}
+                or intent["constraints"]!={**spec["score_constraints"],"opening":{"mode":"must","value":d["opening"]},
+                                           "opening_timing":{"mode":"must","value":d["opening"]}}):
+            raise ValueError("Typed artistic intent differs from explicit requirements or direction")
+    elif not isinstance(intent,dict) or set(intent)!=keys or intent["schema"]!=SCHEMA:
         raise ValueError("Invalid artistic intent schema")
     if intent["route"] not in ("auto","reviewed_native","explicit_score"):
         raise ValueError("Unknown artistic route")

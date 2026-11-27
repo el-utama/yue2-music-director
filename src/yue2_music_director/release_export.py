@@ -21,6 +21,15 @@ def retained(repo,job):
     return load(repo,job)
 
 
+def lyric_bytes(track):
+    lyrics=track["brief"]["lyrics"]
+    if track.get("identity",{}).get("production_policy")=="reviewed-score-v4-typed" and track["identity"]["creative_spec"].get("lyrics") is not None:
+        if lyrics!=track["identity"]["creative_spec"]["lyrics"]:
+            raise ValueError("Exact supplied lyric text differs")
+        return lyrics.encode("utf-8")
+    return (lyrics.rstrip()+"\n").encode("utf-8")
+
+
 def stamp(ms,*,srt=False):
     minutes,rest=divmod(ms,60000)
     second,milli=divmod(rest,1000)
@@ -136,7 +145,7 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
                 if nd._sha(target)!=t["result"]["audio_sha256"] or nd._sha(t["audio"])!=t["result"]["audio_sha256"]:
                     raise ValueError("Audio changed during export")
                 lyrics=t["brief"]["lyrics"]
-                (dest/(name+".txt")).write_bytes((lyrics.rstrip()+"\n").encode("utf-8"))
+                (dest/(name+".txt")).write_bytes(lyric_bytes(t))
                 timing={"status":"unavailable","acoustic_timing_verified":False}
                 try:
                     lrc=(timing_reader or read_timing)(t,url)
