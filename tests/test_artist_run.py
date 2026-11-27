@@ -129,7 +129,10 @@ class IntegratedDraftTests(unittest.TestCase):
                  patch("yue2_music_director.midi.midi_header",return_value={"tracks":2}), \
                  patch("yue2_music_director.temporal_evidence.native_song_read",return_value={
                      "id":"song","metadata":{"job_id":"job"},"generation_settings":{
-                         "abc":ABC,"lyrics":BRIEF["lyrics"],"cot":"full"}}):
+                         "abc":ABC,"lyrics":BRIEF["lyrics"],"cot":"full","cfg_scale":-1,
+                         "lyric_schedule":{"mode":"bias","bias":-4,"sections":[
+                             {"start_sec":0,"lyric":[0,len(BRIEF["lyrics"])]}]}},
+                     "replay_request":{"semantic_tokens":"1,2,3"}}):
                 client=factory.return_value.connect.return_value
                 names=["song_create","song_job_get","studio_wait","library_song_files","studio_status",
                        "song_defaults","studio_capabilities","models_status","engine_options_get","score_to_midi"]
@@ -160,6 +163,13 @@ class IntegratedDraftTests(unittest.TestCase):
                 result=nd.execute(BRIEF,run,URL,abc=ABC,artist=chosen,expected_configuration=config)
                 self.assertTrue(result["saved_score_verified"])
                 self.assertEqual(result["generation_path"],"reviewed_native")
+                self.assertEqual(result["native_completion"]["status"],"not_flagged")
+                self.assertEqual(result["native_lyric_schedule"]["status"],"all_blocks_recorded")
+                self.assertEqual(result["native_lyric_schedule"]["scheduled_sung_blocks"],1)
+                self.assertFalse(result["native_lyric_schedule"]["acoustic_alignment_verified"])
+                from yue2_music_director.director_decision import context
+                evidence=context("Fixture request",BRIEF,chosen,result,{"observations":[]})
+                self.assertEqual(evidence["technical"]["native_lyric_schedule"],result["native_lyric_schedule"])
                 self.assertEqual(result["listening_verdict"],"unrated")
                 self.assertFalse(result["automatic_acceptance"])
                 self.assertEqual(result["lyric_screen"]["WER"]["edits"],0)
