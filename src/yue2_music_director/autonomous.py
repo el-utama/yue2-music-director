@@ -14,7 +14,8 @@ from . import creative_direction as cd
 
 LEGACY_POLICY="reviewed-score-v1"
 POLICY=cd.POLICY
-POLICIES=(LEGACY_POLICY,POLICY)
+DIRECTION_POLICIES=(cd.PREVIOUS_POLICY,POLICY)
+POLICIES=(LEGACY_POLICY,*DIRECTION_POLICIES)
 
 
 def freeze(path, value):
@@ -33,9 +34,11 @@ def make_inputs(result, identity):
     purposes={f"{g['name']}#{g['occurrence']}":"Native musical development within the creative brief."
               for g in parse_lyrics(brief["lyrics"])}
     constraints={}
-    if identity.get("production_policy")==POLICY:
+    if identity.get("production_policy") in DIRECTION_POLICIES:
         opening=cd.validate_opening(music,brief["lyrics"])["opening"]
         constraints["opening"]={"mode":"must","value":opening}
+        if identity["production_policy"]==POLICY:
+            constraints["opening_timing"]={"mode":"must","value":opening}
     intent=artist_run.validate_intent({"schema":"artist-intent-v1","route":"reviewed_native",
           "concept":music["concept"],"emotional_arc":music["emotional_arc"],"performance":music["performance"],
           "section_purposes":purposes,"constraints":constraints,"retain_soft_flags":{},"follow_lyrics":True,
@@ -79,7 +82,8 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
             raise ValueError("Stopped plan retained; use --review-plan or explicit --continue-plan")
         print("Creative stages",flush=True)
         result=cc.prepare(root,provider,request,language,duration,retry_role=retry_role,duration_guidance=True,
-                          direction_guidance=identity["production_policy"]==POLICY)
+                          direction_guidance=identity["production_policy"] in DIRECTION_POLICIES,
+                          timing_guidance=identity["production_policy"]==POLICY)
         freeze(root/"creative-result.json",result)
         if result["review"]["decision"]!="retain":
             print("Editorial stop. No native generation:",root/"creative-result.json",flush=True)
@@ -167,7 +171,8 @@ def continue_plan(repo,job,url,*,confirm=False,provider_factory=None):
                 raise ValueError("Retained creative receipt missing")
         result=cc.prepare(parent,provider,identity["request"],identity["language"],
                           identity["duration_seconds"],duration_guidance=True,
-                          direction_guidance=identity["production_policy"]==POLICY)
+                          direction_guidance=identity["production_policy"] in DIRECTION_POLICIES,
+                          timing_guidance=identity["production_policy"]==POLICY)
         if nd.read(parent/"creative-result.json")!=result or result["review"]["decision"]!="retain":
             raise ValueError("Retained creative result differs")
         brief,intent=make_inputs(result,identity)
