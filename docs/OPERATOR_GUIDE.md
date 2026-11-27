@@ -94,7 +94,7 @@ completions, one native score plan, one native song, one explicit ASR and
 two CPU excerpts. The text provider is online if configured as hosted; local
 SQLite and YuE2 are not a promise of wholly offline production. Lyrics/brief
 and selected authorized text evidence are sent as part of confirmed production.
-No automatic observed-reference or raw historical lyric transfer.
+No automatic observed-reference or raw historical lyric transfer. For an explicit historical numeric context preview use `--knowledge-query home`; confirmed production additionally requires `--confirm-knowledge-context`. See [Autonomous CLI](AUTONOMOUS_CLI.md#historical-knowledge-in-autonomous-production-explicit-opt-in).
 
 The confirmed job writes private immutable stage identities under
 `results/autonomous/JOB`. If interrupted, use the same job ID only, not a

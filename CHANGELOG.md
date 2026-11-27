@@ -1,5 +1,10 @@
 # Changelog and research milestones
 
+## Unreleased — opt-in autonomous historical knowledge
+
+- Reuse bounded numerical historical descriptors in Composer/Lyricist for explicitly selected autonomous jobs; local preview, separate transfer consent, frozen checksummed job context, resume without index reread. No new provider stages or inference; observed-reference data remains local. Corpus and artistic acceptance remain open.
+
+
 ## Unreleased — documentation regression gate
 
 - Audit 66 tracked Markdown documents, 263 inline relative link occurrences (11 heading fragments), and all 18 primary launcher routes. Add offline regression tests and Windows style/reference launcher smoke checks plus plan-only selected-style preview. No external-link availability or live validation claim.

@@ -24,7 +24,41 @@ profile. See [Artist Memory](ARTIST_MEMORY.md). No automatic profile choice.
 
 ## Select an original offline style
 
-See [offline knowledge workflow](OFFLINE_KNOWLEDGE_WORKFLOW.md) and [Style Library](STYLE_LIBRARY.md). Build and browse with `music.cmd --styles --build` and `music.cmd --styles --genre folk`. Preview a new job with `music.cmd --job folk-song --request "A quiet goodbye" --style-id folk-001`. Add `--confirm-run` only to authorize actual production, repeating all new-job arguments. Resume using the saved job ID and confirmation; recipe identity is frozen and cannot be changed on an existing job. The Composer receives only the chosen authored recipe as advisory context, not observed-reference metadata or historical lyrics. PR #126 passed CI; no new live production or native control guarantee. Existing default jobs are unchanged. Historical knowledge descriptors are available in the separate text-only CLI, not automatically in this production route.
+See [offline knowledge workflow](OFFLINE_KNOWLEDGE_WORKFLOW.md) and [Style Library](STYLE_LIBRARY.md). Build and browse with `music.cmd --styles --build` and `music.cmd --styles --genre folk`. Preview a new job with `music.cmd --job folk-song --request "A quiet goodbye" --style-id folk-001`. Add `--confirm-run` only to authorize actual production, repeating all new-job arguments. Resume using the saved job ID and confirmation; recipe identity is frozen and cannot be changed on an existing job. The Composer receives only the chosen authored recipe as advisory context, not observed-reference metadata or historical lyrics. PR #126 passed CI; no new live production or native control guarantee. Existing default jobs are unchanged. Historical knowledge descriptors are separately opt-in, never automatic.
+
+
+## Historical knowledge in autonomous production (explicit opt-in)
+
+Build the bundled index, then preview without provider or Studio calls:
+
+```cmd
+music.cmd --knowledge --build
+music.cmd --job knowledge-song --request "A quiet goodbye" --knowledge-query home
+```
+
+Preview prints local source provenance and selected numeric descriptors (up to
+three works per role); it is not a job receipt. A query with no matches in
+either role stops. To authorize a new production job with this context, repeat
+the preview command with both `--confirm-run --confirm-knowledge-context`.
+Only the existing bounded numerical fields and advisory guidance enter
+Composer and Lyricist requests; no source title, query, work ID, hashes,
+raw lyric, melody, recording, or database is sent as the knowledge payload.
+The normal authorized song brief and generated lyrics still enter the existing
+text stages. A role with no matches receives empty observations. Operator
+supplied exact lyrics still bypass the Lyricist provider. No new calls or
+GPU/embedding operations are added by retrieval. The historical corpus is
+seven works, not a representative contemporary genre model.
+
+Resume an existing knowledge job with
+`music.cmd --job knowledge-song --confirm-run --confirm-knowledge-context`.
+Snapshot and checksum are frozen in job identity; the original database need
+not still exist. Do not add/change query on an existing job. Plan-only resume
+may inspect frozen knowledge without consent. The separate retained-plan
+continuation only validates completed creative receipts using frozen context;
+it does not re-send it to Composer/Lyricist or accept query overrides.
+Observed references remain local-only candidates. Original style selection
+can coexist; explicit user constraints take precedence. The optional feature
+does not establish artistic quality or modern genre coverage.
 
 ## Read-only readiness check
 
