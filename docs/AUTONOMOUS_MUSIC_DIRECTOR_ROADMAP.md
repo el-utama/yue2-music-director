@@ -44,7 +44,9 @@ Use a configurable text LLM provider, with the operator's free Nemotron service 
 
 Grow Composer knowledge from documented musical theory, arrangement, production and YuE2-specific empirical conditioning, labeled by version and confidence. Add searchable SQLite/FTS index and optional CPU embeddings only when useful. Lyricist knowledge base should ultimately cover thousands of songs through legally usable sources: metadata, narrative/section patterns, prosody, rhyme and craft annotations; full lyrics only with appropriate rights (owned/licensed/public-domain). Record provenance, licenses, permitted use and data limitations; metadata or bag-of-words is not full lyric structure. No scraping or redistributing copyrighted lyrics without rights. Develop editorial tests, original held-out briefs and cross-model evaluation of Nemotron versus alternatives on identical tasks; measure cost, reliability, and listener preference rather than claim guaranteed no AI-slop. Do not block P0 on corpus acquisition.
 
-## P1 — persistent Artist Memory (after core works)
+## P1 — persistent Artist Memory
+
+The local, explicit profile store and typed-spec compiler are described in [Artist Memory](ARTIST_MEMORY.md). This is a first bounded implementation: no autonomous preference extraction, automatic application, voice identity guarantee or live hosted typed-schema validation.
 
 Versioned, local per-artist profiles, editable by operator; confirmed preferences separate from inferred observations, track provenance and overrides. Example: for the user's own artist profile, a raspy vocal direction may be selected when requested, unless explicitly overridden. Avoid hardcoding an artist, copying private reference lyrics/melody, or treating a style adjective as a guaranteed persistent voice identity. Voice conditioning or LoRA is a separate rights/capability/compute-gated track. Do not publish private profiles in this public repository.
 
@@ -60,7 +62,7 @@ Next actionable work: provider and creative-role contract + small YuE2 knowledge
 
 ### Live score-first milestone and next artistic increment
 
-PR #84 live recovery completed without new synthesis/ASR; duration 184.358667 s, score 188.333333 s, native completion not_flagged, WER disagreement 0.0405, true peak -0.19 dBTP. Operator rated lyrics/vocals/melody/arrangement/ending all good; noted immediate vocal entry, confirmed female vocalist. MOSS judged static arrangement and incomplete ending, conflicting with operator's artistic judgment. Preserve take, no regeneration. Next use versioned intentional opening and separate vocalist/narrator direction with a local opening gate; MOSS remains advisory. One favorable take does not establish general quality. Non-destructive finishing subsequently passed its technical live gate; persistent artist profiles remain pending.
+PR #84 live recovery completed without new synthesis/ASR; duration 184.358667 s, score 188.333333 s, native completion not_flagged, WER disagreement 0.0405, true peak -0.19 dBTP. Operator rated lyrics/vocals/melody/arrangement/ending all good; noted immediate vocal entry, confirmed female vocalist. MOSS judged static arrangement and incomplete ending, conflicting with operator's artistic judgment. Preserve take, no regeneration. Next use versioned intentional opening and separate vocalist/narrator direction with a local opening gate; MOSS remains advisory. One favorable take does not establish general quality. Non-destructive finishing subsequently passed its technical live gate; persistent profiles are now an opt-in local feature, not autonomous learning.
 
 ### Optional release artwork (P0 adjunct, not a music acceptance blocker)
 
