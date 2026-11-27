@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-from contextlib import contextmanager
 import math
 import os
 from pathlib import Path
@@ -12,6 +11,7 @@ import sys
 from . import artist_run, audio_critic as ac, native_draft as nd
 from .mcp import Client, MCPError, configured_endpoint
 from .studio_idle import assert_idle, wait_for_idle
+from .operation_lock import lock
 
 FIELDS = ("VOCAL", "INSTRUMENTS", "PHRASING", "DYNAMICS", "CHANGES", "TAIL", "LIMITS")
 PROMPT = (
@@ -74,7 +74,18 @@ def inputs(repo, demo=False):
 
 def verify_take(draft, brief, report, *, historical=False):
     journal = nd.read(draft / "journal_song.json")
-    request = nd.request_for(brief)
+    if historical:
+        # Bind the frozen request to its original hash and stable brief fields,
+        # not to the evolving current request builder.
+        request=nd.read(draft/"request.json")
+        if (not isinstance(request,dict) or any(request.get(k)!=brief[k] for k in
+                ("title","style","lyrics","duration_seconds","seed"))
+                or request.get("lm_seed")!=brief["seed"]
+                or request.get("music_source")!={"kind":"local"}
+                or request.get("output_format")!="flac"):
+            raise ValueError("Retained native request does not identify the original brief")
+    else:
+        request = nd.request_for(brief)
     route=report.get("generation_path")
     if route=="reviewed_native":
         # Preserve raw source identity (read_text normalizes CRLF on Windows).
@@ -109,8 +120,10 @@ def verify_take(draft, brief, report, *, historical=False):
                 raise ValueError("Unknown retained score review schema")
         elif nd.score_signature(saved,native=True)!=nd.score_signature(abc,native=True):
             raise ValueError("Retained reviewed score identity mismatch: musical semantics")
+        if historical and request.get("abc")!=abc:
+            raise ValueError("Retained native request score differs")
         request["abc"]=abc
-    elif route!="direct_native":
+    elif route!="direct_native" or historical and "abc" in request:
         raise ValueError("Unsupported retained artistic generation route")
     sha = nd.digest(nd._canonical(request))
     if (nd.read(draft / "report.json") != report or
@@ -174,17 +187,6 @@ def review_packet(brief, intent, row, contract, evidence):
                 "Propose a selective revision only with credible evidence and preserve lyrics and strengths; require separate approval.",
                 "Retain original recording; no automated quality score or repair."
             ]}
-
-
-@contextmanager
-def lock(path):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-    os.close(fd)
-    try:
-        yield
-    finally:
-        path.unlink()
 
 
 def retained_packet(root, brief, intent, row):

@@ -45,3 +45,9 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: music.cmd --finish --help
+
+      - run: python -m yue2_music_director.lock_status --help
+      - name: Check Windows read-only lock launcher
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: music.cmd --inspect-lock autonomous
