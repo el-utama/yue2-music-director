@@ -75,16 +75,23 @@ def _history(root,manifest_sha):
 
 
 def _verify(root,manifest,source,metadata):
+    if root.is_symlink() or any(p.is_symlink() for p in root.rglob("*")):
+        raise ValueError("Unexpected delivery symlink")
     contract=manifest["contract"]
     if (manifest.get("schema")!="release-delivery-v1"
             or contract.get("assembly_manifest_sha256")!=nd._sha(source/"assembly.json")
             or manifest.get("metadata")!=metadata
-            or manifest.get("publishing_authorized") is not False):
+            or manifest.get("publishing_authorized") is not False
+            or manifest.get("release_approved") is not False or manifest.get("inference_calls")!=0):
         raise ValueError("Delivery contract differs")
     art=manifest["artwork"]
     if (art.get("schema")!="cover-import-v1" or art.get("file") not in ("cover.jpg","cover.png")
             or art.get("width")!=ci.PIXELS or art.get("height")!=ci.PIXELS
-            or art.get("profile")!="local-3000-square-opaque-v1"):
+            or art.get("profile")!="local-3000-square-opaque-v1"
+            or art.get("rights_review")!="operator_required" or art.get("color_profile_verified") is not False
+            or art.get("codec")!=("png" if art["file"]=="cover.png" else "mjpeg")
+            or type(art.get("size_bytes")) is not int or not 0<art["size_bytes"]<=ci.MAX_BYTES
+            or (root/art["file"]).stat().st_size!=art["size_bytes"]):
         raise ValueError("Retained artwork validation differs")
     assembly_manifest=nd.read(source/"assembly.json")
     expected=dict(assembly_manifest["files"])
