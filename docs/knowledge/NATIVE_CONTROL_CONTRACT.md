@@ -9,14 +9,16 @@ Velocity, Pitch Bend, Volume, Panpot, Expression, Hold Pedal, Modulation,
 Arrange and Tempo controls. The screenshot proves UI exposure only.
 Source review compares the earlier pinned audit ca37d2d3ea96f3c7073167de0e5e1eb3b4ec2f25
 with upstream main 40a4631dcb5203625551b0be37d097c2afb194d1.
-The installed executable's exact build is not independently verified.
+A live restricted bridge identified the installed MCP server as music-server
+5.0.0 on 2026-11-27. The exact executable build and source SHA remain unverified.
 
 Keep separate evidence levels: UI exposure; request schema; handler and
 conversion data flow; actual engine payload; offline executable test;
 installed live behavior; human listening. Never promote one to another.
-No inference, installation, settings change, training or new reference
-render was performed. This is a targeted source audit, not exhaustive
-review of all upstream subsystems.
+No inference, Studio installation, Studio settings change, training or new
+reference render was performed by the audit. A private audit bridge was used
+for native read-only/synthetic conversion calls. This remains a targeted audit,
+not an exhaustive review of every subsystem.
 
 ## Score editor: the velocity finding
 
@@ -39,6 +41,81 @@ midi_set replaces the stored transcription MIDI, not the FLAC. An editor
 round trip may also change note geometry, harmony spelling, sections or
 tempo: import uses 16/32 grid, single-line selection, key/section rebuilding
 and average BPM for variable tempo. Never use it as a lossless no-op.
+
+## Installed velocity verification — 2026-11-27
+
+Actual native MCP server: music-server 5.0.0. A restricted bridge v0.2.0
+submitted two synthetic MIDI inputs through the native score import and
+MIDI export endpoints. Both contained eight identical Vocal notes at
+velocity 100 and eight Ins notes with the same pitches, timing and tempo.
+Baseline Ins velocities were all 90. The varied Ins velocities were
+30, 60, 120, 45, 105, 70, 115, 50.
+
+| Evidence | Observed result |
+|---|---|
+| Native import | Baseline and varied ABC strings identical |
+| Native export | Both Vocal tracks at 100; both Ins tracks at 90 |
+| Operator UI check | Operator reported edits were not saved and were only for MIDI export after the requested Apply/reopen check |
+
+The first two rows are direct tool observations, not a simulation or an
+inference from source. The third is operator-reported, not an automated
+UI trace or independently captured screenshots. No acoustic synthesis
+comparison was run. The result is scoped to score-mode MIDI -> ABC -> MIDI;
+it does not establish identical behavior in standalone MIDI editing or
+every engine. Do not repeat this successful conversion test merely for
+confirmation. No song, existing score, library record or reference audio
+was modified. No credentials, private network locators or tunnel IDs
+belong in the repository.
+
+## Native request boundary — source audit increment
+
+[Studio request builder and dispatcher](https://github.com/timoncool/YuE2-Studio/blob/40a4631dcb5203625551b0be37d097c2afb194d1/crates/music-server/src/lib.rs)
+(`yue_request_from`, `dispatch_music_job`) distinguish input controls from
+the body actually submitted to yue-server:
+
+- A supplied nonempty complete ABC is transposed if requested, stripped of
+  editor metadata and forwarded with a trailing newline; edit-word mismatch
+  can reject it. Opening continuation uses `score::opening::sung` instead.
+  A recognized chord bed with sung words becomes a header plus harmony
+  follow/chord constraints and requests continuation. A complete supplied
+  score is therefore not interchangeable with an opening or chord bed.
+- Lyrics CRLF is normalized to LF at the engine boundary. Do not claim
+  byte-identical operator lyrics at inference just because the retained
+  creative artifact preserves those bytes.
+- Nonnegative explicit lm_seed and seed are retained; missing/negative
+  seeds are drawn separately. ABC and semantic sampling are separate
+  validated presets. Harmony is passed only when the engine writes a score.
+- Steps 1..200, synth batch 1..9, companion scale 0..1; solver midpoint or
+  ab2. A negative CFG is omitted, finite CFG above 10 rejected. LM batch
+  depends on configured/memory limits. These are request controls, not
+  verified artistic recommendations.
+- Before submission, trained style can replace requested style; absent
+  companion scale is resolved according to backbone/adapters. The complete
+  score route can run layout and lyric_schedule (unless explicitly disabled);
+  opening continuation skips both at this boundary. The saved
+  generation_settings is the constructed body, distinct from stored request.
+- Long-duration requests can increase score/semantic token budgets when
+  explicit limits are absent. Duration remains a ceiling, not proof of
+  completed sung structure.
+- [Alternate audio.cpp YuE2](https://github.com/timoncool/YuE2-Studio/blob/40a4631dcb5203625551b0be37d097c2afb194d1/crates/music-server/src/audio_cpp_yue2.rs)
+  has a different task builder and bounds: 1..100 steps, 1..300 seconds,
+  rejects adapters/cover/ABC continuation, maps semantic prefix and sampling
+  into options. Do not transfer native yue-server parameters blindly.
+
+Live installed writing_guide(score) was read directly: it confirms
+monophonic Vocal and Ins; quoted chord symbols in Vocal for full mode only;
+native chord suffixes (major, m, dim, aug, 7, maj7, m7, dim7, m7b5, sus4,
+sus2, 6, m6, 7sus4, m(maj7), optional slash bass); the enumerated duration
+units 1,2,3,4,6,8,12,16,24,32,48; ties for other note lengths, not rests;
+bar sums and accidental scope; no generic dynamics decorations, slurs,
+tuplets, stacked notes or lyric w: lines. This is an installed guide
+contract, not exhaustive parser/tokenizer proof. Preserve unrelated bars
+when editing. Match Q tempo to style BPM.
+
+This increment reaches Studio's engine submission boundary, not actual
+engine internals or live engine payload capture. Inspect the engine-side
+parser, tokenizer, sampling and completion handling before modifying
+production defaults. Do not invoke a generation just to test a schema.
 
 ## Production route and control matrix
 
@@ -88,10 +165,9 @@ The table distinguishes supported input contract from acoustic fidelity.
 5. Audit model/runtime variants, adapter slots, memory limits, training,
    local security/remote controls, and data ownership. Other music models
    offered by Studio are not interchangeable with YuE2.
-6. If a runtime question remains, design a synthetic read-only or zero-GPU
-   fixture first (e.g. two otherwise identical MIDI files with different
-   velocities through score_from_midi); compare ABC and re-exported MIDI.
-   This is proposed, not executed. Only ask for an installed test if it
+6. The synthetic velocity conversion fixture is completed as recorded above.
+   For other unresolved runtime questions, design a narrowly scoped
+   read-only or zero-GPU fixture first. Only ask for an installed test if it
    resolves a remaining material uncertainty, not for evidence already
    established. Preserve the successful reference and its gain-only
    candidate; do not rerender, mutate, or publish.
