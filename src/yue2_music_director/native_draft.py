@@ -344,6 +344,8 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
         if artist is not None:
             from .native_completion import inspect_completion
             completion=inspect_completion(saved,song_id,job_id)
+            from .native_lyric_schedule import inspect_schedule
+            schedule_evidence=inspect_schedule(saved.get("generation_settings"))
             print("Native completion:",completion["status"],completion["cut_short"],flush=True)
             saved_abc=saved["generation_settings"].get("abc")
             if isinstance(saved_abc,str) and saved_abc.strip():
@@ -406,6 +408,7 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
     if artist is not None:
         report["generation_path"]=route
         report["native_completion"]=completion
+        report["native_lyric_schedule"]=schedule_evidence
         if completion["status"]!="not_flagged":
             report["status"]="technical_review_required"
         report["artistic_intent"]=artist

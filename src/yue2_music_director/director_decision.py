@@ -33,6 +33,8 @@ def context(request, brief, intent, report, packet):
                                                   "format_status","checks")} for item in packet["observations"]]}
     if "native_completion" in report:
         result["technical"]["native_completion"]=report["native_completion"]
+    if "native_lyric_schedule" in report:
+        result["technical"]["native_lyric_schedule"]=report["native_lyric_schedule"]
     if any(key in intent.get("constraints",{}) for key in ("opening","opening_timing")):
         saved=report.get("saved_score_review",{})
         metrics=saved.get("metrics") or {}
