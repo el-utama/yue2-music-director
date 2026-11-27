@@ -45,4 +45,6 @@ def context(request, brief, intent, report, packet):
         result["technical"].pop("lra_lu",None)
         result["technical"]["loudness_range_lu"]=acoustic.get("loudness_range_lu")
         result["score_evidence"]["opening_evidence"]=metrics.get("opening_evidence")
+    if intent.get("schema")=="artist-intent-v2":
+        result["context_schema"]="director-context-v4-typed"
     return result
