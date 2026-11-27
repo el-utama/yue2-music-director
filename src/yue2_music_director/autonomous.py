@@ -61,7 +61,7 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
     url=configured_endpoint(url)
     print("Job:",job,flush=True)
     if artist_profile is not None:
-        print("Artist profile:",artist_profile["artist"],"revision",artist_profile["revision"],flush=True)
+        print("Artist profile:",artist_profile.get("display_name",artist_profile["artist"]),"revision",artist_profile["revision"],flush=True)
         print("Typed profile requirements will be sent only during confirmed production.",flush=True)
     print("Budget: up to four text stages, one native composition plan, one native song, one explicit ASR, two CPU excerpts.",flush=True)
     if retry_role is not None and (retry_role not in ROLES or not confirm):
@@ -297,7 +297,7 @@ def main():
     p.add_argument("--continue-plan",metavar="JOB",help="Explicit continuation of a rechecked parser-blocked plan")
     p.add_argument("--request")
     p.add_argument("--creative-spec",type=Path,help="Optional explicit typed requirements and exact lyrics JSON")
-    p.add_argument("--artist-profile",help="Explicit local artist ID for a new typed job; --creative-spec supplies overrides")
+    p.add_argument("--artist-profile",help="Explicit local artist display name or ID for a new typed job; --creative-spec supplies overrides")
     p.add_argument("--profile-revision",type=int,help="Pin an artist profile revision (default: latest)")
     p.add_argument("--language",choices=sorted(cc.SUPPORTED))
     p.add_argument("--duration",type=int)
@@ -333,7 +333,7 @@ def main():
             from .artist_memory import compile_spec
             compiled=compile_spec(repo,a.artist_profile,revision=a.profile_revision,overrides=typed_spec)
             typed_spec=compiled["spec"]
-            artist_profile={k:compiled[k] for k in ("artist","revision","profile_sha256")}
+            artist_profile={k:compiled[k] for k in ("artist","revision","profile_sha256","display_name") if k in compiled}
         if saved.is_file():
             previous=nd.read(saved)
             artist_profile=previous.get("artist_profile")

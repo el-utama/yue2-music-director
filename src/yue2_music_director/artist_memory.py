@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 import re
 import sys
+import unicodedata
 
 from . import typed_creative as tc
 from .creative_provider import strict_json
@@ -17,6 +18,7 @@ from .native_draft import create_journal
 from .operation_lock import now
 
 PROFILE="artist-profile-v1"
+NAMED_PROFILE="artist-profile-v2"
 FIELDS={"opening","vocal","narrator","style","score_constraints"}
 RESERVED={"con","prn","aux","nul",*(f"com{i}" for i in range(1,10)),*(f"lpt{i}" for i in range(1,10))}
 LIMIT=100000
@@ -27,6 +29,17 @@ def artist_id(value):
             or value in RESERVED):
         raise ValueError("Artist ID must be a portable lowercase ID")
     return value
+
+
+def display_name(value):
+    if (not isinstance(value,str) or not value.strip() or value!=value.strip()
+            or len(value)>160 or any(unicodedata.category(c) in ("Cc","Cs") for c in value)):
+        raise ValueError("Enter a nonblank artist display name (up to 160 characters)")
+    return value
+
+
+def _name_key(value):
+    return unicodedata.normalize("NFC",display_name(value)).casefold()
 
 
 def _under(repo,*parts):
@@ -53,8 +66,15 @@ def _notes(value):
 
 
 def validate(value):
-    if (not isinstance(value,dict) or set(value)!={"schema","defaults","confirmed_preferences",
-            "inferred_observations","provenance"} or value["schema"]!=PROFILE):
+    if not isinstance(value,dict):
+        raise ValueError("Invalid artist profile fields")
+    fields={"schema","defaults","confirmed_preferences","inferred_observations","provenance"}
+    if value.get("schema")==NAMED_PROFILE:
+        fields.add("display_name")
+        display_name(value.get("display_name"))
+    elif value.get("schema")!=PROFILE:
+        raise ValueError("Invalid artist profile schema")
+    if set(value)!=fields:
         raise ValueError("Invalid artist profile fields")
     defaults=value["defaults"]
     if (not isinstance(defaults,dict) or not set(defaults)<=FIELDS
@@ -93,6 +113,46 @@ def history(repo,artist):
     return records
 
 
+def resolve_artist(repo,selector,*,allow_new=False):
+    """Resolve exact internal IDs or normalized display names, never raw paths."""
+    key=_name_key(selector)
+    directory=_under(repo,"local","artist-memory")
+    matches=set()
+    if directory.exists():
+        for path in directory.iterdir():
+            aid=artist_id(path.name)
+            records=history(repo,aid)
+            if not records:
+                raise ValueError("Incomplete artist profile; preserve evidence")
+            name=records[-1]["record"]["profile"].get("display_name",aid)
+            if selector==aid or _name_key(name)==key:
+                matches.add(aid)
+    if len(matches)>1:
+        raise ValueError("Ambiguous artist name; select an explicit internal ID")
+    if matches:
+        return next(iter(matches))
+    if not allow_new:
+        raise ValueError("Artist profile not found; save a profile first")
+    # Hash only for storage identity; original Unicode spelling stays in profile.
+    return "artist-"+hashlib.sha256(key.encode("utf-8")).hexdigest()[:32]
+
+
+def save_named(repo,selector,value,expected_revision,*,confirm=False):
+    profile=validate(value)
+    aid=resolve_artist(repo,selector,allow_new=True)
+    records=history(repo,aid)
+    if profile["schema"]==PROFILE:
+        name=records[-1]["record"]["profile"].get("display_name",selector) if records else selector
+        profile={**profile,"schema":NAMED_PROFILE,"display_name":display_name(name)}
+    name=profile["display_name"]
+    if not records and _name_key(name)!=_name_key(selector):
+        raise ValueError("New profile display name must match the selected name")
+    other=resolve_artist(repo,name,allow_new=True)
+    if other!=aid and history(repo,other):
+        raise ValueError("Display name belongs to another profile")
+    return save(repo,aid,profile,expected_revision,confirm=confirm)
+
+
 def save(repo,artist,value,expected_revision,*,confirm=False):
     profile=validate(value)
     if not confirm or type(expected_revision) is not int or expected_revision<0:
@@ -115,16 +175,19 @@ def save(repo,artist,value,expected_revision,*,confirm=False):
 
 def validate_selection(value):
     """Frozen profile provenance; no private notes or live profile lookup."""
-    if (not isinstance(value,dict) or set(value)!={"artist","revision","profile_sha256"}
+    if (not isinstance(value,dict) or set(value) not in ({"artist","revision","profile_sha256"}, {"artist","revision","profile_sha256","display_name"})
             or type(value["revision"]) is not int or value["revision"]<1
             or not isinstance(value["profile_sha256"],str)
             or not re.fullmatch(r"[0-9a-f]{64}",value["profile_sha256"])):
         raise ValueError("Invalid frozen artist profile selection")
     artist_id(value["artist"])
+    if "display_name" in value:
+        display_name(value["display_name"])
     return dict(value)
 
 
 def compile_spec(repo,artist,*,revision=None,overrides=None):
+    artist=resolve_artist(repo,artist)
     records=history(repo,artist)
     if not records:
         raise ValueError("No confirmed artist profile")
@@ -140,6 +203,8 @@ def compile_spec(repo,artist,*,revision=None,overrides=None):
     identity={"schema":"artist-spec-compilation-v1","artist":artist,"revision":revision,
               "profile_sha256":source["sha256"],"spec":spec,"automatic_learning":False,
               "inferred_observations_applied":False,"execution_authorized":False}
+    if "display_name" in source["record"]["profile"]:
+        identity["display_name"]=source["record"]["profile"]["display_name"]
     return identity
 
 
@@ -182,7 +247,7 @@ def main():
         if a.save is not None:
             if a.revision is not None or a.overrides is not None:
                 raise ValueError("Save does not accept compilation arguments")
-            result=save(a.repo,a.artist_memory,_read(a.save)[0],a.expected_revision,confirm=a.confirm_run)
+            result=save_named(a.repo,a.artist_memory,_read(a.save)[0],a.expected_revision,confirm=a.confirm_run)
             print("Saved revision:",result["record"]["revision"])
             print("Profile SHA-256:",result["sha256"])
         elif a.compile:
@@ -200,8 +265,9 @@ def main():
         else:
             if any(x is not None for x in (a.expected_revision,a.revision,a.overrides)) or a.confirm_run:
                 raise ValueError("Select a save or compile action")
-            records=history(a.repo,a.artist_memory)
-            print(json.dumps({"artist":a.artist_memory,"revisions":len(records),
+            aid=resolve_artist(a.repo,a.artist_memory)
+            records=history(a.repo,aid)
+            print(json.dumps({"artist":aid,"revisions":len(records),
                               "latest":records[-1] if records else None},indent=2,ensure_ascii=True))
         return 0
     except (OSError,ValueError,KeyError,TypeError,UnicodeError) as exc:
