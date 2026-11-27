@@ -136,3 +136,20 @@ def verify_candidate(before,after,gain):
             or abs(b["loudness_range_lu"]-a["loudness_range_lu"])>LRA_TOLERANCE):
         raise ValueError("Candidate failed measured gain/headroom/dynamics checks")
     return True
+
+def pcm_hash(path,ffmpeg,*,gain=None):
+    """SHA-256 of decoded 24-bit PCM, with optional exact planned gain."""
+    args=[ffmpeg,"-nostdin","-v","error","-xerror","-f","flac",
+          "-protocol_whitelist","file","-i",str(path),"-map","0:a:0","-vn","-sn","-dn"]
+    if gain is not None:
+        if not -1.5<=gain<0:
+            raise ValueError("Invalid fixed PCM gain")
+        args.extend(["-af",f"volume={gain:.2f}dB:precision=double"])
+    args.extend(["-c:a","pcm_s24le","-f","hash","-hash","sha256","-"])
+    output=ac._run(args,180).stdout.strip()
+    if not output.startswith("SHA256="):
+        raise ValueError("Decoded PCM hash unavailable")
+    digest=output[7:].lower()
+    if len(digest)!=64 or any(c not in "0123456789abcdef" for c in digest):
+        raise ValueError("Invalid decoded PCM hash")
+    return digest
