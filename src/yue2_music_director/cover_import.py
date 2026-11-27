@@ -6,6 +6,8 @@ does not certify artwork quality, embedded color profile or copyright.
 import json
 from pathlib import Path
 import shutil
+import struct
+import zlib
 
 from . import acoustic as ac, native_draft as nd
 
@@ -13,6 +15,34 @@ PIXELS=3000
 MAX_BYTES=25*1024*1024
 FORMATS={".jpg":("mjpeg","mjpeg","jpg"),".jpeg":("mjpeg","mjpeg","jpg"),
          ".png":("png_pipe","png","png")}
+
+
+def _png_chunks(path):
+    # Reject APNG, transparency, corrupt/trailing chunks even when a decoder
+    # would otherwise silently display only the first frame.
+    with path.open("rb") as stream:
+        stream.read(8)
+        remaining=path.stat().st_size-8
+        first=True
+        while remaining>=12:
+            length,kind=struct.unpack(">I4s",stream.read(8))
+            if length>remaining-12:
+                raise ValueError("Invalid PNG chunk length")
+            if first and (kind!=b"IHDR" or length!=13):
+                raise ValueError("Invalid PNG header")
+            first=False
+            if kind in (b"acTL",b"fcTL",b"fdAT",b"tRNS"):
+                raise ValueError("Animated or transparent PNG not supported")
+            data=stream.read(length)
+            crc=struct.unpack(">I",stream.read(4))[0]
+            if zlib.crc32(kind+data)!=crc:
+                raise ValueError("Invalid PNG chunk checksum")
+            remaining-=12+length
+            if kind==b"IEND":
+                if length or remaining:
+                    raise ValueError("Unexpected PNG trailing data")
+                return
+    raise ValueError("Incomplete PNG")
 
 
 def inspect(path):
@@ -28,6 +58,8 @@ def inspect(path):
     if (codec=="png" and magic!=b"\x89PNG\r\n\x1a\n"
             or codec=="mjpeg" and not magic.startswith(b"\xff\xd8\xff")):
         raise ValueError("Cover extension differs from image signature")
+    if codec=="png":
+        _png_chunks(path)
     ffmpeg,ffprobe=shutil.which("ffmpeg"),shutil.which("ffprobe")
     if not ffmpeg or not ffprobe:
         raise ValueError("FFmpeg and ffprobe required for artwork validation")
