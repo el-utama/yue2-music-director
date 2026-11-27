@@ -16,6 +16,9 @@ def role_schema(role, data=None):
     if role=="composer" and isinstance(data,dict) and "typed_requirements" in data:
         from .composer_typed import SCHEMA
         return SCHEMA
+    if role=="composer" and isinstance(data,dict) and data.get("direction_guidance",{}).get("version")=="opening-vocal-structured-v1":
+        from .composer import Structured
+        return Structured.SCHEMA
     if role=="cover_art":
         from .cover_art import SCHEMA
         return SCHEMA

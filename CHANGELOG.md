@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — P0 structured Composer direction
+
+- New default autonomous policy requests distinct musical direction fields, canonicalizes valid responses, preserves legacy job identities and opening timing gates. Missing fields still stop. Synthetic Indonesian brief regression; hosted and live validation pending.
+
 ## Unreleased — native job recovery
 
 - Resume a native plan or song from its saved Studio acknowledgment after a local interruption before the journal update. A matching journal and an unambiguous saved job ID are required to continue.

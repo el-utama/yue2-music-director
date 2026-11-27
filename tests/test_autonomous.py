@@ -280,3 +280,68 @@ class CreativeSemanticRecoveryTests(unittest.TestCase):
                 native.assert_not_called()
             self.assertEqual(provider.calls,["composer","lyricist","reviewer"])
             self.assertEqual({p:p.read_bytes() for p in root.iterdir()},before)
+
+
+class StructuredComposerTests(unittest.TestCase):
+    def test_indonesian_brief_structured_response_and_resume(self):
+        from yue2_music_director.creative_provider import role_schema
+        from yue2_music_director import composer
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            f=Provider(stop=True)
+            original=f.complete
+            def complete(role,prompt,data):
+                value=original(role,prompt,data)
+                if role=="composer":
+                    self.assertEqual(prompt,composer.Structured.PROMPT)
+                    self.assertEqual(role_schema(role,data),composer.Structured.SCHEMA)
+                    value.update(performance="Close-mic baritone, sparse guitar, gentle swell.",
+                                 opening="direct_vocal", vocal="male", narrator="first person",
+                                 musical_rationale="Immediate entry emphasizes an intimate farewell.")
+                return value
+            f.complete=complete
+            args=(repo,"structured","Aku pergi agar dia bahagia","id",150,"http://127.0.0.1:8791/mcp")
+            # Editorial stop ensures no native calls; the receipt is validated on resume.
+            with patch.object(au.artist_run,"run") as native:
+                self.assertEqual(au.launch(*args,confirm=True,provider_factory=lambda:f),2)
+                self.assertEqual(au.launch(*args,confirm=True,provider_factory=lambda:f),2)
+                native.assert_not_called()
+            root=repo/"results/autonomous/structured"
+            saved=nd.read(root/"composer.json")["result"]
+            self.assertEqual(au.cd.parse_direction(saved),{"opening":"direct_vocal","vocal":"male","narrator":"first person"})
+            self.assertIn("Musical rationale:",saved["performance"])
+            self.assertEqual(f.calls,["composer","lyricist","reviewer"])
+
+    def test_missing_direction_is_not_fabricated(self):
+        from yue2_music_director import composer
+        value={"title":"Farewell","concept":"Parting","emotional_arc":"loss to resolve",
+               "performance":"Direct vocal, baritone, sparse guitar","style":"Indonesian, folk, male vocals"}
+        with self.assertRaises(ValueError):
+            composer.Structured.validate(value)
+        value.update(opening="direct_vocal",vocal="male",narrator="first person",
+                     musical_rationale=" ")
+        with self.assertRaises(ValueError):
+            composer.Structured.validate(value)
+
+    def test_v3_receipts_keep_old_prompt_and_timing(self):
+        from yue2_music_director import creative_core as cc, composer
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            root=repo/"results/autonomous/old"
+            root.mkdir(parents=True)
+            f=Provider(stop=True)
+            url="http://127.0.0.1:8791/mcp"
+            identity={"schema":"autonomous-job-v1","job":"old","request":"Farewell",
+                      "language":"en","duration_seconds":150,"provider":f.identity(),
+                      "studio_url":url,"production_policy":au.cd.POLICY}
+            nd.atomic_write(root/"job.json",identity)
+            result=cc.prepare(root,f,"Farewell","en",150,duration_guidance=True,
+                              direction_guidance=True,timing_guidance=True)
+            nd.atomic_write(root/"creative-result.json",result)
+            before={p:p.read_bytes() for p in root.iterdir()}
+            self.assertEqual(nd.read(root/"composer.attempt.json")["prompt"],composer.PROMPT)
+            self.assertEqual(au.launch(repo,"old","Farewell","en",150,url,
+                                       confirm=True,provider_factory=lambda:f),2)
+            self.assertEqual(before,{p:p.read_bytes() for p in root.iterdir()})
+            _,intent=au.make_inputs(result,identity)
+            self.assertIn("opening_timing",intent["constraints"])

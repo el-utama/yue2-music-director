@@ -8,7 +8,7 @@ from pathlib import Path
 
 from . import creative_core as cc, native_draft as nd, listening_director as ld
 
-POLICIES={"reviewed-score-v1","reviewed-score-v2","reviewed-score-v3","reviewed-score-v4-typed"}
+POLICIES={"reviewed-score-v1","reviewed-score-v2","reviewed-score-v3","reviewed-score-v4-typed","reviewed-score-v5-structured"}
 PLAN_FILES={"manifest.json","journal_plan.json","plan-result.json","plan-receipt.json","native-plan.abc"}
 
 

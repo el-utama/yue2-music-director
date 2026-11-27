@@ -93,3 +93,14 @@ Completed-source retrieval now has a shared historical verifier for Cover Art, E
 Human feedback is now a separate local, append-only exact-source ledger ([usage](HUMAN_FEEDBACK.md)). Explicit listening and release decisions remain distinct from technical or model judgments, and neither an altered take nor a finished candidate inherits original approval. Historical results remain untouched; recording a known listening verdict requires the actual local hash.
 
 The non-destructive finishing milestone is implemented as a separate plan/confirm command, with exact sample-count and fixed-gain PCM equality checks, finite acoustic limits, immutable source/candidate hashes, no automatic preference or release approval, and safe local interruption handling. See the dedicated finishing contract. CI and live validation are reported separately.
+
+
+### P0 personal production acceptance follow-up
+
+Operator-reported Composer format rejection on PR #133 main is a concrete
+P0 blocker, despite earlier successful reference production. A new
+versioned structured default Composer contract is proposed; preserve the
+old rejected job, its policy and all evidence. Require exact-head CI and
+fresh authorized end-to-end natural-language acceptance before declaring
+personal production ready. All corpus, artist memory, remote and album
+requirements remain open as recorded in project memory.
