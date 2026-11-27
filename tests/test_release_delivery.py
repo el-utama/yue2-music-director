@@ -117,3 +117,14 @@ class DeliveryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             rd.launch(self.repo,"release",confirm=True)
         self.assertFalse(self.ledger.exists())
+
+    def test_tampered_delivery_claim_cannot_be_verified(self):
+        self.assemble()
+        cover=self.image()
+        self.assertEqual(rd.launch(self.repo,"release",artwork=cover,confirm=True),0)
+        path=self.root/"delivery.json"
+        manifest=nd.read(path)
+        manifest["release_approved"]=True
+        nd.atomic_write(path,manifest)
+        with self.assertRaisesRegex(ValueError,"Delivery contract"):
+            rd.launch(self.repo,"release")
