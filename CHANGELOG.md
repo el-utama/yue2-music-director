@@ -1,5 +1,11 @@
 # Changelog and research milestones
 
+## Unreleased — brief-derived historical retrieval
+
+- Add explicit `--knowledge-auto` to derive bounded local lexical terms from the song brief, with frozen match/no-match/no-term evidence and no historical payload when abstaining. Manual query, legacy receipts and separate transfer consent preserved. No semantic or artistic claim, new corpus or inference.
+- Normalize Unicode in brief-derived queries and filter additional English and Indonesian function words to reduce incidental matches.
+
+
 ## Unreleased — descriptive historical craft metrics
 
 - Extend historical index v3 with lexical repetition, punctuation groups, melodic event fractions and conservative automatic harmony token summaries. New numeric creative context v2; exact v1 frozen receipt compatibility retained. No inferred rhyme, hook, emotion or verified harmony claim; no new source data or inference.

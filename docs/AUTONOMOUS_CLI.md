@@ -60,6 +60,33 @@ Observed references remain local-only candidates. Original style selection
 can coexist; explicit user constraints take precedence. The optional feature
 does not establish artistic quality or modern genre coverage.
 
+
+## Automatic lexical retrieval from the song brief
+
+Optional `--knowledge-auto` derives a short local lexical query from the
+brief after Unicode normalization (up to 12 distinct alphabetic terms, with
+common English and Indonesian function words such as `never` and `tanpa`
+removed from the query). The creative stages still receive the original brief.
+It uses the same historical role-specific FTS5 search and numeric-only payload.
+Matches reflect word overlap. Preview a brief with this command.
+
+```cmd
+music.cmd --job auto-song --request "A song about home" --knowledge-auto
+```
+
+Preview reports the exact derived query, matched local evidence or explicit
+abstention (`no_terms` or `no_matches`), with zero provider/Studio calls.
+Build the historical index first; a missing/corrupt index is an error if a
+query needs it, not a fabricated no-match. Confirmed production requires
+both `--confirm-run --confirm-knowledge-context` with the new-job arguments.
+If no matches, no historical payload is sent; ordinary creative stages may
+proceed within the existing budget. A matched lexical term is not proof that
+a historical work is stylistically relevant. Explicit manual `--knowledge-query`
+remains available; do not combine both modes. Resume with the job ID and both
+confirmation flags; the frozen match or abstention is reused without another
+database search. No extra provider calls or GPU work. Existing manual and
+legacy jobs retain their exact previous identity.
+
 ## Read-only readiness check
 
 Run `music.cmd --ready` on the Windows Studio host before starting a new

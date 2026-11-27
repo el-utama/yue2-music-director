@@ -53,7 +53,7 @@ def make_inputs(result, identity):
 
 def launch(repo, job, request, language, duration, url, *, confirm=False,
            provider_factory=None, retry_role=None, typed_spec=None, artist_profile=None, style_id=None,
-           knowledge_query=None, confirm_knowledge_context=False):
+           knowledge_query=None, confirm_knowledge_context=False, knowledge_auto=False):
     if typed_spec is not None:
         typed_spec=tc.validate_spec(typed_spec)
     if artist_profile is not None:
@@ -75,9 +75,9 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
     jobs=repo/"results/autonomous"
     root=jobs/job
     if not confirm:
-        knowledge=ak.resolve(repo,root,knowledge_query,confirmed=False,consent=False)
+        knowledge=ak.resolve(repo,root,knowledge_query,confirmed=False,consent=False,auto=knowledge_auto,request=request)
         if knowledge is not None:
-            print("Local knowledge preview:",json.dumps(knowledge["snapshot"],ensure_ascii=True,indent=2),flush=True)
+            print("Local knowledge preview:",json.dumps(knowledge,ensure_ascii=True,indent=2),flush=True)
         selected=ss.resolve(repo,root,style_id)
         if selected is not None:
             print("Selected style:",selected["id"],selected["style"],flush=True)
@@ -85,9 +85,9 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
         return 0
     with ld.lock(jobs/".active",context={"job":job,"root":root.relative_to(repo).as_posix(),"stage":"autonomous"}):
         selected=ss.resolve(repo,root,style_id)
-        knowledge=ak.resolve(repo,root,knowledge_query,confirmed=True,consent=confirm_knowledge_context)
+        knowledge=ak.resolve(repo,root,knowledge_query,confirmed=True,consent=confirm_knowledge_context,auto=knowledge_auto,request=request)
         if knowledge is not None:
-            print("Confirmed knowledge context: bounded numeric descriptors only.",flush=True)
+            print("Confirmed knowledge context:",knowledge.get("status","matched"),"; bounded numeric descriptors only if matched.",flush=True)
         provider=provider_factory() if provider_factory else TextProvider.for_repo(repo)
         if selected is not None:
             print("Selected style:",selected["id"],selected["style"],flush=True)
@@ -322,6 +322,7 @@ def main():
     p.add_argument("--request")
     p.add_argument("--style-id",help="Explicit original preset ID, e.g. trap-001; frozen for the job")
     p.add_argument("--knowledge-query",help="Local historical knowledge lexical preview; frozen for a confirmed job")
+    p.add_argument("--knowledge-auto",action="store_true",help="Derive a local historical lexical query from the song brief; abstain if no match")
     p.add_argument("--confirm-knowledge-context",action="store_true",help="Authorize only numeric historical descriptors to Composer and Lyricist with --confirm-run")
     p.add_argument("--creative-spec",type=Path,help="Optional explicit typed requirements and exact lyrics JSON")
     p.add_argument("--artist-profile",help="Explicit local artist display name or ID for a new typed job; --creative-spec supplies overrides")
@@ -335,7 +336,7 @@ def main():
     try:
         repo=a.repo.resolve()
         if a.continue_plan is not None:
-            if any(x is not None for x in (a.job,a.request,a.language,a.duration,a.creative_spec,a.artist_profile,a.profile_revision,a.style_id,a.knowledge_query)) or a.confirm_knowledge_context:
+            if any(x is not None for x in (a.job,a.request,a.language,a.duration,a.creative_spec,a.artist_profile,a.profile_revision,a.style_id,a.knowledge_query)) or a.confirm_knowledge_context or a.knowledge_auto:
                 raise ValueError("Continuation does not allow job or brief overrides")
             return continue_plan(repo,a.continue_plan,a.url,confirm=a.confirm_run,retry_role=a.retry_text)
         if a.retry_text and not a.job:
@@ -378,7 +379,7 @@ def main():
             language=a.language or "en"
             duration=a.duration if a.duration is not None else 195
         return launch(repo,job,request,language,duration,a.url,confirm=a.confirm_run,retry_role=a.retry_text,typed_spec=typed_spec,artist_profile=artist_profile,style_id=a.style_id,
-                      knowledge_query=a.knowledge_query,confirm_knowledge_context=a.confirm_knowledge_context)
+                      knowledge_query=a.knowledge_query,confirm_knowledge_context=a.confirm_knowledge_context,knowledge_auto=a.knowledge_auto)
     except (OSError,ValueError,KeyError,TypeError,MCPError,subprocess.SubprocessError,EOFError,sqlite3.Error) as e:
         print("ERROR:",e,file=sys.stderr,flush=True)
         print("Preserve job and receipts. Resume only the same job; no blind retry.",file=sys.stderr,flush=True)

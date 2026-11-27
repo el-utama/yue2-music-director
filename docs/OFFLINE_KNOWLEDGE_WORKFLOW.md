@@ -97,7 +97,8 @@ Resume a confirmed job using `music.cmd --job folk-song --confirm-run`
 only when needed. Existing job identity retains the exact selected style,
 even if the library changes. Changing the style or adding one to an existing
 job requires a new job. No extra inference is authorized by this guide.
-The main production CLI never automatically uses observed references or historical numeric context. Explicit historical context is available using `--knowledge-query` and separate confirmation; see [Autonomous CLI](AUTONOMOUS_CLI.md#historical-knowledge-in-autonomous-production-explicit-opt-in). The separate text-only path remains available in [Knowledge Bank](KNOWLEDGE_BANK.md#english-pilot-and-opt-in-text-only-creative-context).
+
+Observed references stay local. Historical context is opt-in. Use [`--knowledge-query`](AUTONOMOUS_CLI.md#historical-knowledge-in-autonomous-production-explicit-opt-in) for a manual search or [`--knowledge-auto`](AUTONOMOUS_CLI.md#automatic-lexical-retrieval-from-the-song-brief) to derive a local lexical query from the brief. Both modes require separate consent before transferring numeric descriptors. The text-only path remains available in [Knowledge Bank](KNOWLEDGE_BANK.md#english-pilot-and-opt-in-text-only-creative-context).
 
 ## 4. Recovery and common errors
 
