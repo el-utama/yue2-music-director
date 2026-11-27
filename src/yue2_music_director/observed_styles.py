@@ -9,13 +9,13 @@ import sqlite3
 import tempfile
 from .style_library import GENRES
 
-SCHEMA = "observed-style-metadata-v1"
+SCHEMA = "observed-style-metadata-v2"
 
 def load(root):
     root = Path(root)
     manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
     rows = [json.loads(line) for line in (root / "incompetech.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
-    if manifest["schema"] != SCHEMA:
+    if manifest["schema"] != "observed-style-metadata-v1":
         raise ValueError("Invalid reference schema")
     ids = set()
     for row in rows:
@@ -33,6 +33,32 @@ def load(root):
     counts = {g: sum(row["category"] == g for row in rows) for g in GENRES}
     if counts != manifest["counts"] or len(rows) != manifest["distinct_tracks"]:
         raise ValueError("Reference inventory mismatch")
+    clip_manifest = json.loads((root / "musiccaps-manifest.json").read_text(encoding="utf-8"))
+    clips = [json.loads(line) for line in (root / "musiccaps.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    if clip_manifest["schema"] != "musiccaps-style-annotations-v1" or clip_manifest["license"] != "CC-BY-SA-4.0":
+        raise ValueError("Invalid annotation manifest")
+    clip_counts = {g: 0 for g in GENRES}
+    for row in clips:
+        if (row["category"] not in GENRES or row["id"] in ids
+                or not re.fullmatch(r"[A-Za-z0-9_-]{11}", row["youtube_id"])
+                or row["id"] != "musiccaps-" + row["youtube_id"]
+                or row["source_url"] != "https://www.youtube.com/watch?v=" + row["youtube_id"]
+                or row["source_snapshot"] != clip_manifest["snapshot"]["revision"]
+                or row["metadata_license"] != "CC-BY-SA-4.0"
+                or row["rights_status"] != "annotation_licensed_recording_unreviewed"
+                or row["lyrics"] is not None or row["lyrics_status"] != "not_supplied"
+                or row["validation"] != "source_annotation_not_independently_listened"
+                or not 0 <= row["start_seconds"] < row["end_seconds"]
+                or not (row["genre_evidence"]["audioset_label"] or row["genre_evidence"]["annotation_keyword_match"])):
+            raise ValueError("Invalid or duplicate annotation reference")
+        ids.add(row["id"])
+        clip_counts[row["category"]] += 1
+    if clip_counts != clip_manifest["counts"] or len(clips) != clip_manifest["distinct_clips"]:
+        raise ValueError("Annotation inventory mismatch")
+    rows += clips
+    counts = {g: counts[g] + clip_counts[g] for g in GENRES}
+    if counts != clip_manifest["combined_candidates"] or any(n > 100 for n in counts.values()):
+        raise ValueError("Combined inventory mismatch")
     return rows, counts
 
 def build(root, database):
@@ -48,10 +74,12 @@ def build(root, database):
             db.execute("CREATE VIRTUAL TABLE search USING fts5(id UNINDEXED, metadata, tokenize='unicode61')")
             for row in rows:
                 db.execute("INSERT INTO refs VALUES (?, ?, ?)", (row["id"], row["category"], json.dumps(row, ensure_ascii=False)))
-                text = " ".join(str(row[key] or "") for key in ("title", "artist", "source_genre", "collection", "reported_bpm", "reported_instruments", "reported_moods"))
+                text = " ".join(str(row.get(key) or "") for key in ("title", "artist", "source_genre", "collection", "reported_bpm", "reported_instruments", "reported_moods", "annotation_tags"))
                 db.execute("INSERT INTO search VALUES (?, ?)", (row["id"], text))
         path.replace(database)
     return {"metadata_candidates": len(rows), "by_category": counts,
+            "track_metadata": sum("isrc" in row for row in rows),
+            "annotated_clips": sum("youtube_id" in row for row in rows),
             "rights_reviewed_tracks": 0, "lyrics": 0,
             "missing_metadata_to_100": {g: max(0, 100-n) for g,n in counts.items()}}
 

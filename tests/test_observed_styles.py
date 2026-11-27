@@ -8,15 +8,18 @@ ROOT = Path(__file__).resolve().parents[1] / "data/observed_styles"
 class ObservedStyleTests(unittest.TestCase):
     def test_actual_snapshot_metadata_and_gaps(self):
         rows, counts = os.load(ROOT)
-        self.assertEqual(counts, {"blues":11,"jazz":74,"lofi":0,"pop":18,"indie":0,"folk":0,"backsound":100,"hiphop":0,"lofihop":0,"trap":0})
-        self.assertEqual(len(rows), 203)
-        self.assertEqual(len({row["isrc"] for row in rows}), 203)
+        self.assertEqual(counts, {"blues":100,"jazz":100,"lofi":5,"pop":100,"indie":100,"folk":100,"backsound":100,"hiphop":100,"lofihop":0,"trap":15})
+        self.assertEqual(len(rows), 720)
+        self.assertEqual(len({row["id"] for row in rows}), len(rows))
         with tempfile.TemporaryDirectory() as temp:
             db = Path(temp) / "observed.sqlite"
             stats = os.build(ROOT, db)
-            self.assertEqual(stats["metadata_candidates"], 203)
+            self.assertEqual(stats["metadata_candidates"], 720)
             self.assertEqual(stats["rights_reviewed_tracks"], 0)
             self.assertEqual(stats["lyrics"], 0)
             self.assertEqual(len(os.search(db, "backsound", limit=100)), 100)
-            self.assertEqual(os.search(db, "trap"), [])
+            self.assertTrue(os.search(db, "trap"))
+            self.assertEqual(stats["annotated_clips"], 517)
+            self.assertEqual(stats["track_metadata"], 203)
+            self.assertTrue(all(r["metadata_license"] == "CC-BY-SA-4.0" for r in os.search(db, "trap")))
             self.assertTrue(os.search(db, "jazz", "jazz"))
