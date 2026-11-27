@@ -33,7 +33,8 @@ def journals(repo,owner):
     entries=[]
     for path in root.rglob("*.json"):
         if not (path.name.startswith("journal_") or path.name.endswith(".attempt.json")
-                or path.name in ("result.json","plan-stop.json","plan.json","report.json","receipt.json","submission.json")):
+                or path.name in ("result.json","plan-stop.json","plan.json","report.json","receipt.json","submission.json",
+                                 "release.json","assembly.json","delivery.json")):
             continue
         if len(entries)>=200 or path.is_symlink() or path.stat().st_size>2_000_000:
             return {"status":"unverified_journals","entries":entries}
