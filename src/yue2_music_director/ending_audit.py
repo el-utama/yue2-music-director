@@ -8,7 +8,7 @@ import sys
 from . import native_draft as nd, listening_director as ld
 from .creative_core import validate_job
 from .prosody import parse_lyrics
-from .musical_review import review_score
+from .retained_source import load
 from .native_completion import inspect_completion
 from .temporal_evidence import native_song_read
 from .mcp import MCPError
@@ -26,27 +26,10 @@ def cap_screen(cap, measured):
 
 
 def inspect(repo, job, url):
-    validate_job(job,"placeholder","en",195)
-    root=repo/"results/autonomous"/job
-    identity=nd.read(root/"job.json")
-    final=nd.read(root/"result.json")
-    brief=nd.load_brief(root/"brief.json")
-    intent=nd.read(root/"intent.json")
-    production=root/"production"
-    draft=production/"draft"
-    report=nd.read(draft/"report.json")
-    row=ld.verify_take(draft,brief,report)
-    if (identity.get("job")!=job or identity.get("duration_seconds")!=brief["duration_seconds"]
-            or identity.get("language")!=brief["language"] or report.get("artistic_intent")!=intent
-            or final.get("schema")!="autonomous-result-v1"
-            or final.get("audio")!=row["audio"] or final.get("audio_sha256")!=row["audio_sha256"]
-            or final.get("song_id")!=report["song_id"]
-            or final.get("brief_sha256")!=nd._sha(root/"brief.json")
-            or final.get("native_report_sha256")!=nd._sha(draft/"report.json")):
-        raise ValueError("Retained autonomous job identity differs")
-    packet=ld.retained_packet(production,brief,intent,row)
-    if final.get("listening_packet_sha256")!=nd._sha(production/"neutral-listening/review-packet.json"):
-        raise ValueError("Listening packet digest differs")
+    source=load(repo,job)
+    root=source["root"]
+    brief,report,packet=source["brief"],source["report"],source["packet"]
+    draft=root/"production/draft"
     native=inspect_completion(native_song_read(url,report["song_id"]),report["song_id"],report["job_id"])
     duration=cap_screen(brief["duration_seconds"],report["acoustic"]["duration_seconds"])
     groups=parse_lyrics(brief["lyrics"])
@@ -54,10 +37,9 @@ def inspect(repo, job, url):
     score_path=draft/"saved-score.abc"
     score_info={"status":"unavailable"}
     if score_path.exists():
-        saved=score_path.read_text(encoding="utf-8")
-        review=review_score(saved,brief["lyrics"],constraints=intent["constraints"],max_seconds=brief["duration_seconds"])
-        if review!=report.get("saved_score_review"):
-            raise ValueError("Saved score review differs from retained native report")
+        review=report.get("saved_score_review")
+        if (not isinstance(review,dict) or review.get("score_sha256")!=nd._sha(score_path)):
+            raise ValueError("Saved score bytes differ from retained native report")
         metrics=review.get("metrics")
         score_info={"status":review["status"],"hard_violations":review["hard_violations"],
                     "soft_flags":review["soft_flags"]}
