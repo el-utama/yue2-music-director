@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-from contextlib import contextmanager
 import math
 import os
 from pathlib import Path
@@ -12,6 +11,7 @@ import sys
 from . import artist_run, audio_critic as ac, native_draft as nd
 from .mcp import Client, MCPError, configured_endpoint
 from .studio_idle import assert_idle, wait_for_idle
+from .operation_lock import lock
 
 FIELDS = ("VOCAL", "INSTRUMENTS", "PHRASING", "DYNAMICS", "CHANGES", "TAIL", "LIMITS")
 PROMPT = (
@@ -187,17 +187,6 @@ def review_packet(brief, intent, row, contract, evidence):
                 "Propose a selective revision only with credible evidence and preserve lyrics and strengths; require separate approval.",
                 "Retain original recording; no automated quality score or repair."
             ]}
-
-
-@contextmanager
-def lock(path):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-    os.close(fd)
-    try:
-        yield
-    finally:
-        path.unlink()
 
 
 def retained_packet(root, brief, intent, row):
