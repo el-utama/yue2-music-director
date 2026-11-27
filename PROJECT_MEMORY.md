@@ -37,7 +37,8 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Main `1f910f84b3bfe59496e38ec80f2e93d5f78286d2` after PR #119; exact head `fab19e089a3a74198d6158d228a76c19126945bb` passed [all four CI jobs](https://github.com/el-utama/yue2-music-director/actions/runs/45956366618). Five bundled works indexed; 24-work full source not tested.\n- Follow-up: seven bundled works (5 de, 2 en), opt-in text-only role context; pending CI. R02/R03/R13 remain open.
+- Main `1f910f84b3bfe59496e38ec80f2e93d5f78286d2` after PR #119; exact head `fab19e089a3a74198d6158d228a76c19126945bb` passed [all four CI jobs](https://github.com/el-utama/yue2-music-director/actions/runs/45956366618). Five bundled works indexed; 24-work full source not tested.
+- Follow-up: seven bundled works (5 de, 2 en), opt-in text-only role context; pending CI. R02/R03/R13 remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
   See [local release checkpoint](docs/LOCAL_RELEASE_CHECKPOINT.md) and

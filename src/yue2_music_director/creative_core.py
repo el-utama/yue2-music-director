@@ -1,6 +1,7 @@
 """Durable text-only creative stages. No Studio mutation or generation."""
 from pathlib import Path
 import argparse
+import sqlite3
 import re
 import time
 import sys
@@ -197,7 +198,7 @@ def main():
     a=p.parse_args()
     try:
         return launch(a.repo.resolve(),a.job,a.request,a.language,a.duration,confirm_text=a.confirm_text,knowledge_query=a.knowledge_query,confirm_knowledge_context=a.confirm_knowledge_context)
-    except (OSError,ValueError,KeyError,TypeError,__import__("sqlite3").Error) as e:
+    except (OSError,ValueError,KeyError,TypeError,sqlite3.Error) as e:
         print("ERROR:",e,file=sys.stderr)
         return 2
 

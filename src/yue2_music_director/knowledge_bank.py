@@ -117,6 +117,10 @@ def records(root, *, external_root=None):
     work_rows = [(w, asset_root, external_root is not None) for w in manifest["works"]]
     if external_root:
         bundled = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+        if (bundled["schema"] != manifest["schema"]
+                or any(bundled["source"][key] != source[key]
+                       for key in ("revision", "repository", "license"))):
+            raise ValueError("Unreviewed bundled corpus source")
         work_rows += [(w, root, False) for w in bundled["works"] if not w["work_id"].startswith("schubert-d911-")]
     for work, row_root, external in work_rows:
         key = work["work_id"]

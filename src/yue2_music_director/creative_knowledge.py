@@ -20,6 +20,8 @@ def snapshot(database, query):
         hits = kb.retrieve(database, query, role, limit=3)
         roles[role] = [{"work_id": h["work"]["work_id"],
                         "source_revision": h["work"]["source_revision"],
+                        "source_asset_hashes": {kind: item["git_blob_sha"]
+                                                for kind, item in h["work"]["assets"].items()},
                         "features": {key: h["features"][key] for key in keys}} for h in hits]
     return {"schema": VERSION, "query": query, "roles": roles}
 
