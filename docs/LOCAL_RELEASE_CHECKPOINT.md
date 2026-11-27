@@ -47,15 +47,49 @@ not universal distributor/mastering requirements. Metadata remains a
 sidecar to preserve exact selected audio bytes. Partial timing is
 explicit and never fabricated.
 
+## Live finishing acceptance — 2026-11-27
+
+The operator ran the confirmed gain-only command on Windows at main
+`cef7858` against the already retained reference. The supplied console
+transcript reported exit 0 and `candidate_verified`; the supplied JSON
+report was reviewed separately. No repeat run is needed.
+
+| Measure | Original | Candidate |
+|---|---:|---:|
+| True peak (dBTP) | -0.19 | -1.05 |
+| Integrated loudness (LUFS) | -14.60 | -15.46 |
+| Loudness range (LU) | 9.2 | 9.3 |
+| Duration (s) | 184.358667 | 184.358667 |
+| Samples per channel | 8849216 | 8849216 |
+| Sample rate (Hz) | 48000 | 48000 |
+| Channels / bit depth | 2 / 24 | 2 / 24 |
+
+Applied gain -0.86 dB; actual loudness and peak deltas match the plan.
+LRA changed only 0.1 LU. The report records separate original/candidate
+SHA-256 values, a candidate PCM hash, timeline preserved, zero Studio jobs,
+recognition, MOSS, provider calls and library mutations. This satisfies the
+technical live finishing gate on this one reference. The audio and original
+report, full hashes and local paths remain private. The auditor reviewed
+operator-provided evidence, not the underlying local FLAC files independently.
+No candidate listening, clipping repair, artistic improvement, release
+approval or publishing is established. The preferred variant remains original.
+
+PR #102 additionally permits explicit completion of an omitted legacy
+artist credit during delivery without re-exporting or changing established
+credits. Exact-head CI run 45926576136 passed all four configurations:
+360 tests per configuration, with one expected Windows-only DPAPI skip
+on each Ubuntu job.
+
 ## Remaining verification boundary
 
 All executable changes require exact-head four-job Windows/Linux CI.
 Real local audio/artwork fixture tests are not access to the operator's
 files. The actual retained reference source and prior export remain on the
-Windows host. A single new, explicitly authorized local finishing check
-can validate the retained reference without re-running the earlier native
-song, ASR, MOSS, cover prompt or export. Existing human feedback can only
-be associated with the exact local original hash; the finished candidate
-needs its own assessment. No release package may be approved on behalf of
-the operator. Do not require that live check merely to validate historical
-known successes. No production-ready remote service claim.
+Windows host. The authorized local finishing check is complete; do not repeat it or the
+earlier native song, ASR, MOSS, cover prompt or export. Existing human
+feedback can be associated only with the exact local original hash; a private
+operator-confirmed ledger import is still separate from this technical result.
+The finished candidate needs its own listening assessment before selection.
+Actual cover art, artist credit and package approval are operator inputs for
+live release delivery; assembly/delivery integration has CI evidence only. No release package may be approved on behalf of
+the operator. Do not require another live check merely to validate historical known successes. No production-ready remote service claim.

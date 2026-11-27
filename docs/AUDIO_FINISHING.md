@@ -54,3 +54,15 @@ including gain and waveform checks, safe no-change, silence, interrupted
 output, input mutation, preserved receipts and no repeated rendering.
 Windows and Linux CI must have FFmpeg/ffprobe; synthetic test evidence is
 distinct from a new live check on an operator's retained recording.
+
+## Live acceptance
+
+On 2026-11-27 the operator completed one authorized retained-reference
+finishing run on Windows at main `cef7858`. Exit 0 and the supplied report
+confirm `candidate_verified`, -0.86 dB gain, TP -0.19 to -1.05 dBTP,
+LUFS -14.60 to -15.46, LRA 9.2 to 9.3 LU, unchanged 8849216 samples
+per channel at 48 kHz stereo 24-bit, and zero new external/native work.
+See [local release checkpoint](LOCAL_RELEASE_CHECKPOINT.md#live-finishing-acceptance--2026-11-27).
+No repeat of this successful test is required. The report is operator-provided
+evidence, not independent access to the original FLAC or human candidate
+listening. Original remains preferred; no artistic/release approval implied.
