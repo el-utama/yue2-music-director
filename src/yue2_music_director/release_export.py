@@ -9,7 +9,8 @@ from pathlib import Path
 
 from . import native_draft as nd, creative_core as cc, cover_art, listening_director as ld
 from .mcp import MCPError, configured_endpoint
-from .temporal_evidence import native_song_read, karaoke_metadata, parse_lrc, LINE
+from .temporal_evidence import parse_lrc, LINE
+from .export_timing import read_timing
 from .prosody import parse_lyrics
 
 
@@ -81,19 +82,6 @@ def timed_text(lrc,lyrics,duration):
     return lrc,"\n".join(cues)
 
 
-def read_timing(track,url):
-    report=track["report"]
-    song=native_song_read(url,report["song_id"])
-    if (not isinstance(song,dict) or song.get("id")!=report["song_id"]
-            or not isinstance(song.get("metadata"),dict)
-            or song["metadata"].get("job_id")!=report["job_id"]):
-        raise ValueError("Native timing song/job identity differs")
-    settings=song.get("generation_settings")
-    if not isinstance(settings,dict) or settings.get("lyrics")!=track["brief"]["lyrics"]:
-        raise ValueError("Native timing lyric identity differs")
-    return karaoke_metadata(song,report["song_id"],detailed=True)
-
-
 def verify_export(root,contract):
     manifest=nd.read(root/"release.json")
     if manifest.get("contract")!=contract:
@@ -154,14 +142,22 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",confirm=Fa
                     if not lrc:
                         raise ValueError("No retained native karaoke LRC")
                     lrc_out,srt_out=timed_text(lrc,lyrics,t["report"]["acoustic"]["duration_seconds"])
+                except (ValueError,MCPError,TypeError,KeyError,OSError) as exc:
+                    timing["reason"]=str(exc)
+                else:
+                    # Write failures are not timing unavailability. Abort the
+                    # staged export instead of publishing a partial timed pair.
                     (dest/(name+".lrc")).write_bytes(lrc_out.encode("utf-8"))
                     (dest/(name+".srt")).write_bytes(srt_out.encode("utf-8"))
                     timing={"status":"exported_unverified_display_anchors","acoustic_timing_verified":False,
                             "source_lrc_sha256":nd.digest(lrc.encode("utf-8")),
                             "srt_end_policy":"Studio UI word-tail/plain-line heuristic; capped at next onset, final 3 seconds and measured duration",
                             "lrc_preserved":True}
-                except (ValueError,MCPError) as exc:
-                    timing["reason"]=str(exc)
+                    if timing_reader is None:
+                        timing["source_identity_screen"]="matched_retained_audio_and_stable_library_snapshot_v1"
+                        timing["karaoke_provenance_verified"]=False
+                if nd._sha(t["audio"])!=t["result"]["audio_sha256"]:
+                    raise ValueError("Source audio changed during timing export")
                 details.append({"track":i,"job":t["job"],"title":t["brief"]["title"],"audio_sha256":t["result"]["audio_sha256"],
                                 "source_status":t["result"]["status"],"timing":timing})
                 print("Track",i,":",timing["status"],flush=True)
