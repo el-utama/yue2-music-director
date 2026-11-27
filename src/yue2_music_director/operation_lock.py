@@ -144,7 +144,7 @@ def _recovery_guard(path):
         os.close(fd)
 
 
-def recover(path,expected_sha,receipt_base,*,confirm=False):
+def recover(path,expected_sha,receipt_base,*,confirm=False,journal_summary=None):
     """Explicit recovery of an independently verified dead owner, never replay."""
     if not confirm:
         raise ValueError("Explicit lock recovery confirmation required")
@@ -161,7 +161,7 @@ def recover(path,expected_sha,receipt_base,*,confirm=False):
         _exclusive(receipt/"original-marker.json",raw)
         _exclusive(receipt/"attempt.json",_encode({"schema":"lock-recovery-v1","lock_name":path.name,
                    "marker_sha256":expected_sha,"owner":evidence["owner"],"attempted_utc":now(),
-                   "journal_replay_authorized":False}))
+                   "journal_summary":journal_summary,"journal_replay_authorized":False}))
         if inspect(path)!=evidence:
             raise ValueError("Marker changed or owner no longer verified; preserve evidence")
         path.unlink()
