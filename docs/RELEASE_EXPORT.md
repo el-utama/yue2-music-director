@@ -9,3 +9,29 @@ Official source audit (pinned v5-compatible source bfd35a0): [nativeLibrary.ts](
 ### Source identity hardening
 
 For new exports, the timing adapter checks the retained source SHA-256 and uses the existing read-only library_song_files identity check before and after two bounded native GET snapshots. Both snapshots must agree (including any supplied version and metadata fields), and song/job/lyrics must match the retained track. This is a conservative observed-stability screen, not an atomic Studio transaction or proof that imported/edited/interpolated karaoke was created against this recording. Preserve the original LRC UTF-8 bytes and hash. Missing, malformed, changed or unavailable timing yields a partial FLAC/TXT export without LRC/SRT; source audio mutation or output write failure aborts the staged package. Existing matching export snapshots are verified without any new native reads or schema migration. No new recognition or generation. Real operator audio has not been reprocessed for this change.
+
+### Stable release IDs and explicit snapshots
+
+A release ID now binds exact type, title, artist, ordered retained-source
+identities and original audio policy, including across songs/albums/eps.
+Case aliases cannot create a duplicate. New IDs reserve a private immutable
+identity under `results/exports/.release-index/` before writing the package.
+Existing pre-index packages are discovered and verified in their original
+folders without migration or repeated timing reads. Ambiguous IDs or changed
+metadata require a different release ID.
+
+The default v1 package remains immutable, including partial timing exports.
+When missing timing becomes available, explicitly request another snapshot:
+
+```powershell
+.\music.cmd --export RELEASE --snapshot v2 --confirm-run
+```
+
+Use the same ordered song IDs, type, title and artist options as v1. The
+revision lives under `results/exports/revisions/RELEASE/v2/`, links to the
+verified v1 manifest hash, and never overwrites the original package. A
+revision does not generate missing karaoke, approve a release or attach
+finished audio. Portable filenames avoid Windows device basenames, bound
+Unicode component length and reject unsafe Windows path lengths before
+writing. A failed package write leaves only its identity reservation (and
+the prior package, if any); retry the identical contract, not a changed ID.
