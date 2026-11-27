@@ -29,22 +29,27 @@ py -3 -u -m yue2_music_director.provider_setup --repo "%ROOT%." --check
 exit /b %ERRORLEVEL%
 
 :ending
+if /I "%~2"=="--help" goto endinghelp
 py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\ending-output.txt" -- py -3 -u -m yue2_music_director.ending_audit --repo "%ROOT%." --job "%~2" --url "%YUE2_MCP_URL%"
 exit /b %ERRORLEVEL%
 
 :reviewplan
+if /I "%~2"=="--help" goto reviewplanhelp
 py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\plan-review-output.txt" -- py -3 -u -m yue2_music_director.retained_plan_review --repo "%ROOT%." --job "%~2"
 exit /b %ERRORLEVEL%
 
 :cover
+if /I "%~2"=="--help" goto coverhelp
 py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\cover-output.txt" -- py -3 -u -m yue2_music_director.cover_art --repo "%ROOT%." %*
 exit /b %ERRORLEVEL%
 
 :exportrelease
+if /I "%~2"=="--help" goto exportreleasehelp
 py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\export-output.txt" -- py -3 -u -m yue2_music_director.release_export --repo "%ROOT%." --url "%YUE2_MCP_URL%" %*
 exit /b %ERRORLEVEL%
 
 :feedback
+if /I "%~2"=="--help" goto feedbackhelp
 py -3 -u -m yue2_music_director.human_feedback --repo "%ROOT%." %*
 exit /b %ERRORLEVEL%
 
@@ -58,17 +63,57 @@ py -3 -u -m yue2_music_director.audio_finishing --help
 exit /b %ERRORLEVEL%
 
 :lockstatus
+if /I "%~2"=="--help" goto lockstatushelp
 py -3 -u -m yue2_music_director.lock_status --repo "%ROOT%." %*
 exit /b %ERRORLEVEL%
 
 :assemble
+if /I "%~2"=="--help" goto assemblehelp
 py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\assembly-output.txt" -- py -3 -u -m yue2_music_director.release_assembly --repo "%ROOT%." %*
 exit /b %ERRORLEVEL%
 
 :delivery
+if /I "%~2"=="--help" goto deliveryhelp
 py -3 -u -m yue2_music_director.release_delivery --repo "%ROOT%." %*
 exit /b %ERRORLEVEL%
 
 :releaseworkflow
+if /I "%~2"=="--help" goto releaseworkflowhelp
 py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\release-output.txt" -- py -3 -u -m yue2_music_director.release_workflow --repo "%ROOT%." %*
+exit /b %ERRORLEVEL%
+
+:endinghelp
+py -3 -u -m yue2_music_director.ending_audit --help
+exit /b %ERRORLEVEL%
+
+:reviewplanhelp
+py -3 -u -m yue2_music_director.retained_plan_review --help
+exit /b %ERRORLEVEL%
+
+:coverhelp
+py -3 -u -m yue2_music_director.cover_art --help
+exit /b %ERRORLEVEL%
+
+:exportreleasehelp
+py -3 -u -m yue2_music_director.release_export --help
+exit /b %ERRORLEVEL%
+
+:feedbackhelp
+py -3 -u -m yue2_music_director.human_feedback --help
+exit /b %ERRORLEVEL%
+
+:lockstatushelp
+py -3 -u -m yue2_music_director.lock_status --help
+exit /b %ERRORLEVEL%
+
+:assemblehelp
+py -3 -u -m yue2_music_director.release_assembly --help
+exit /b %ERRORLEVEL%
+
+:deliveryhelp
+py -3 -u -m yue2_music_director.release_delivery --help
+exit /b %ERRORLEVEL%
+
+:releaseworkflowhelp
+py -3 -u -m yue2_music_director.release_workflow --help
 exit /b %ERRORLEVEL%
