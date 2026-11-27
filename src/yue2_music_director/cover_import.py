@@ -52,6 +52,8 @@ def inspect(path):
     if not 0<path.stat().st_size<=MAX_BYTES:
         raise ValueError("Cover exceeds local file-size profile")
     path=path.resolve(strict=True)
+    size=path.stat().st_size
+    sha=nd._sha(path)
     fmt,codec,ext=FORMATS[path.suffix.lower()]
     with path.open("rb") as stream:
         magic=stream.read(8)
@@ -63,7 +65,6 @@ def inspect(path):
     ffmpeg,ffprobe=shutil.which("ffmpeg"),shutil.which("ffprobe")
     if not ffmpeg or not ffprobe:
         raise ValueError("FFmpeg and ffprobe required for artwork validation")
-    sha=nd._sha(path)
     options=["-f",fmt,"-protocol_whitelist","file"]
     result=ac._run([ffprobe,"-v","error",*options,"-show_entries",
                     "stream=codec_name,codec_type,width,height,pix_fmt","-of","json",str(path)],30)
@@ -82,9 +83,9 @@ def inspect(path):
         raise ValueError("Cover decode failed or contains multiple frames")
     ac._run([ffmpeg,"-nostdin","-v","error","-xerror",*options,"-i",str(path),
              "-map","0:v:0","-f","null","-"],60)
-    if nd._sha(path)!=sha:
+    if nd._sha(path)!=sha or path.stat().st_size!=size:
         raise ValueError("Cover changed during validation")
     return {"schema":"cover-import-v1","file":"cover."+ext,"sha256":sha,
             "codec":codec,"width":PIXELS,"height":PIXELS,"pixel_format":s["pix_fmt"],
-            "size_bytes":path.stat().st_size,"profile":"local-3000-square-opaque-v1",
+            "size_bytes":size,"profile":"local-3000-square-opaque-v1",
             "rights_review":"operator_required","color_profile_verified":False}
