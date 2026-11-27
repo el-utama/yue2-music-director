@@ -100,7 +100,7 @@ def _verify(root,manifest,source,metadata):
 
 
 def launch(repo,release,*,assembly_id="package-v1",delivery_id="delivery-v1",artwork=None,
-           confirm=False,decision=None):
+           confirm=False,decision=None,expected_artwork_sha256=None,expected_assembly_sha256=None):
     ra._id(delivery_id)
     if decision not in (None,"approve","revoke") or decision and not confirm:
         raise ValueError("Explicit confirmation required for package review")
@@ -111,6 +111,8 @@ def launch(repo,release,*,assembly_id="package-v1",delivery_id="delivery-v1",art
         source,saved,files,metadata=assembly(repo,release,assembly_id)
         contract={"release":release,"assembly_id":assembly_id,"delivery_id":delivery_id,
                   "assembly_manifest_sha256":nd._sha(source/"assembly.json")}
+        if expected_assembly_sha256 is not None and contract["assembly_manifest_sha256"]!=expected_assembly_sha256:
+            raise ValueError("Frozen workflow assembly hash differs")
         return source,saved,files,metadata,contract
 
     def existing(data):
@@ -120,6 +122,8 @@ def launch(repo,release,*,assembly_id="package-v1",delivery_id="delivery-v1",art
         manifest=nd.read(root/"delivery.json")
         if manifest["contract"]!=contract:
             raise ValueError("Existing delivery differs; choose another delivery ID")
+        if expected_artwork_sha256 is not None and manifest["artwork"]["sha256"]!=expected_artwork_sha256:
+            raise ValueError("Frozen workflow cover hash differs")
         if artwork is not None and nd._sha(Path(artwork))!=manifest["artwork"]["sha256"]:
             raise ValueError("Existing delivery cover differs; choose another delivery ID")
         _verify(root,manifest,source,metadata)
@@ -185,6 +189,8 @@ def launch(repo,release,*,assembly_id="package-v1",delivery_id="delivery-v1",art
         if decision is not None or any(p.is_symlink() for p in (base,root.parent,root)) or ledger.exists():
             raise ValueError("Unexpected delivery destination or prior approval evidence")
         art=ci.inspect(artwork)
+        if expected_artwork_sha256 is not None and art["sha256"]!=expected_artwork_sha256:
+            raise ValueError("Frozen workflow cover changed")
         if art["file"] in files or "metadata.json" in files or "delivery.json" in files:
             raise ValueError("Reserved delivery filename collision")
         ri.ensure_paths([root/"delivery.json",root/"metadata.json",root/art["file"],*(root/n for n in files)])

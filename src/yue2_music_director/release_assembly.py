@@ -96,7 +96,15 @@ def prepare(repo,release,snapshot,variants):
     return root,manifest,files,selections
 
 
-def launch(repo,release,*,snapshot="v1",assembly_id="package-v1",variants=None,confirm=False):
+def assembly_contract(root,release,snapshot,assembly_id,selections):
+    return {"schema":"release-assembly-v1","release":release,"snapshot":snapshot,
+            "assembly_id":assembly_id,"base_manifest_sha256":nd._sha(root/"release.json"),
+            "tracks":[{k:v for k,v in s.items() if k!="audio"} for s in selections],
+            "artwork_attached":False}
+
+
+def launch(repo,release,*,snapshot="v1",assembly_id="package-v1",variants=None,confirm=False,
+           expected_contract=None):
     _id(assembly_id)
     variants=variants or {}
     for job,variant in variants.items():
@@ -104,10 +112,9 @@ def launch(repo,release,*,snapshot="v1",assembly_id="package-v1",variants=None,c
         _id(variant)
     def resolve():
         root,manifest,files,selections=prepare(repo,release,snapshot,variants)
-        contract={"schema":"release-assembly-v1","release":release,"snapshot":snapshot,
-                  "assembly_id":assembly_id,"base_manifest_sha256":nd._sha(root/"release.json"),
-                  "tracks":[{k:v for k,v in s.items() if k!="audio"} for s in selections],
-                  "artwork_attached":False}
+        contract=assembly_contract(root,release,snapshot,assembly_id,selections)
+        if expected_contract is not None and contract!=expected_contract:
+            raise ValueError("Frozen workflow assembly contract differs")
         return contract,manifest,files,selections
     contract,manifest,files,selections=resolve()
     base=repo/"results/release-assembly"
