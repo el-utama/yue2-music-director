@@ -4,7 +4,7 @@ set "ROOT=%~dp0"
 if not exist "%ROOT%results" mkdir "%ROOT%results"
 if not defined YUE2_MCP_URL set "YUE2_MCP_URL=http://127.0.0.1:8791/mcp"
 set "PYTHONPATH=%ROOT%src"
-if /I "%~1"=="--artist-memory" goto artistmemory
+if /I "%~1"=="--knowledge" goto knowledge\r\nif /I "%~1"=="--artist-memory" goto artistmemory
 if /I "%~1"=="--ready" goto ready
 if /I "%~1"=="--setup" goto setup
 if /I "%~1"=="--check-provider" goto check

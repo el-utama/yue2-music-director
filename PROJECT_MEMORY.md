@@ -57,10 +57,10 @@ unpublished lyrics, audio, private paths or personal preferences here.
 | ID | Requirement / deliverable | Current verified state | Remaining acceptance work |
 |---|---|---|---|
 | R01 | Original song from natural-language brief; distinct Composer, Lyricist, reviewer, Director; native YuE2 first | Local alpha implemented, prior live workflow and retained reference succeeded; latest CI green | Independent generalization, artistic quality and usability; do not repeat successful reference |
-| R02 | Deep Lyricist knowledge base: many songs, multilingual structure, prosody, rhyme, narrative, imagery, genre and emotional arc | **OPEN; 0 corpus entries verified in repository; no corpus database, importer or retrieval.** Lyricist uses prompt and model knowledge, local validation only | Rights/source audit, actual ingestion, deduplication, searchable structured analysis, counts by language/genre and rights, integration with versioned creative policy, held-out editorial evaluation |
-| R03 | Composer knowledge: melody, harmony, arrangement, instruments, vocal phrasing, music theory and production | Native contracts/research docs and symbolic score review available; no structured searchable Composer catalog verified | Source-backed knowledge entries and retrieval, versioned policy integration and meaningful artistic evaluation |
+| R02 | Deep Lyricist knowledge base: many songs, multilingual structure, prosody, rhyme, narrative, imagery, genre and emotional arc | **OPEN; pilot PR bundles 3 German art songs and offline SQLite/FTS5 importer/retrieval; CI pending.** No creative integration yet | Rights/source audit, actual ingestion, deduplication, searchable structured analysis, counts by language/genre and rights, integration with versioned creative policy, held-out editorial evaluation |
+| R03 | Composer knowledge: melody, harmony, arrangement, instruments, vocal phrasing, music theory and production | Native contracts/research docs and symbolic score review available; pilot MusicXML descriptors and automatic harmony search; CI pending, no creative integration | Source-backed knowledge entries and retrieval, versioned policy integration and meaningful artistic evaluation |
 | R04 | Native controls, actual installed capability and limitations | Source-pinned audit and live velocity fixture; velocity not retained in ABC, schedule coverage advisory only | Complete remaining melody/harmony/arrangement/replay/cover/adapter audit; installed binary identity not verified; no fake controls |
-| R05 | Human feedback, persistent artist profiles, confirmed vs inferred preference | Local immutable feedback and opt-in Artist Memory implemented/CI; explicit typed job selection | Live hosted typed-schema validation; usable profile management, no inferred preferences silently applied; artist naming PR115 pending |
+| R05 | Human feedback, persistent artist profiles, confirmed vs inferred preference | Local immutable feedback and opt-in Artist Memory implemented/CI; explicit typed job selection | Live hosted typed-schema validation; usable profile management, no inferred preferences silently applied; artist naming PR115 merged; live usage pending |
 | R06 | Audio finishing, original preserved, separate variant | Gain-only finishing passed live technical check on retained reference | General mastering, repair and artistic comparison are not established; no automatic acceptance |
 | R07 | Cover art direction, release export and complete release package | Cover prompt/original single-song export live; approved variant assembly/delivery CI only | Actual authorized cover and metadata, human review, multi-track release verification; no publishing without approval |
 | R08 | One short launcher, intuitive human-readable names and safe recovery | Readiness and multiple specialist launchers CI; previous launcher help failure fixed | Usability audit with real multiword/Unicode names, quoted paths, realistic input and minimal commands; actual Windows readiness not live checked |
@@ -103,7 +103,7 @@ data, source versions and checksums. A schema or empty SQLite is not a bank.
 
 ## Prioritization after current pending PR
 
-Resolve and verify the named-artist PR. Then prioritize R02 and R03
+Named-artist PR #115 merged after exact-head green CI. Prioritize R02 and R03
 (artistic knowledge, actual corpus evidence), before further convenience
 CLI expansion or remote service architecture. Audit source/license
 candidates and report concrete usable data volumes, not speculative
@@ -125,3 +125,4 @@ artist names and the missing lyric knowledge bank. User explicitly requested
 persistent, read/write project memory to avoid omissions in later sessions.
 The memory requirement is implemented in main via PR #116; the naming change needs integrated CI; the lyric bank remains open. Do not require user to
 repeat prior requirements.
+\n\n2026-11-27: Operator agreed SQLite + FTS5/BM25 offline-first, with optional CPU semantic retrieval only if needed; no GPU burden or hosted embedding dependency. See [offline knowledge bank](docs/KNOWLEDGE_BANK.md). Three unique historical works bundled in pilot branch; import tests pending. The zero-entry inventory above describes the previous main, not the pilot. Expand rights-reviewed multilingual coverage, support local import, freeze role-specific retrieval in a new creative policy and evaluate before full acceptance. No new generation or provider calls.\n
