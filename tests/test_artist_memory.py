@@ -67,3 +67,36 @@ class ArtistMemoryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             am.compile_spec(self.repo,"artist",overrides={"schema":"creative-spec-v1",
                             "lyrics":"[Intro]\n\n[Verse]\nA line"})
+
+
+    def test_named_artist_preserves_unicode_and_internal_identity(self):
+        name="Écho du Matin 星"
+        first=am.save_named(self.repo,name,self.profile,0,confirm=True)
+        aid=first["record"]["artist"]
+        self.assertTrue(aid.startswith("artist-"))
+        self.assertEqual(first["record"]["profile"]["display_name"],name)
+        compiled=am.compile_spec(self.repo,"E\u0301cho du Matin 星")
+        self.assertEqual(compiled["artist"],aid)
+        self.assertEqual(compiled["display_name"],name)
+        self.assertNotIn("display_name",compiled["spec"])
+        renamed={**first["record"]["profile"],"display_name":"Écho Nouveau"}
+        am.save_named(self.repo,aid,renamed,1,confirm=True)
+        self.assertEqual(am.compile_spec(self.repo,"Écho Nouveau",revision=1)["display_name"],name)
+        self.assertEqual(am.compile_spec(self.repo,aid)["display_name"],"Écho Nouveau")
+
+    def test_ambiguous_name_never_selects_arbitrary_profile(self):
+        named={**self.profile,"schema":am.NAMED_PROFILE,"display_name":"Same Name"}
+        am.save(self.repo,"one",named,0,confirm=True)
+        am.save(self.repo,"two",named,0,confirm=True)
+        with self.assertRaisesRegex(ValueError,"Ambiguous"):
+            am.compile_spec(self.repo,"same name")
+        self.assertEqual(am.compile_spec(self.repo,"one")["artist"],"one")
+
+    def test_save_by_name_does_not_use_display_name_as_path(self):
+        name="A / B: 星"
+        row=am.save_named(self.repo,name,self.profile,0,confirm=True)
+        self.assertEqual(am.compile_spec(self.repo,name)["display_name"],name)
+        self.assertEqual(len(list((self.repo/"local/artist-memory").iterdir())),1)
+        with self.assertRaises(ValueError):
+            am.save_named(self.repo,name,self.profile,0,confirm=True)
+        self.assertEqual(len(am.history(self.repo,row["record"]["artist"])),1)

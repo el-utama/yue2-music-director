@@ -37,14 +37,14 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Main `51fac872976e708bddfb0bfc4167c9e410bf24e2` after PR #114.
+- Main before this integration: `31818aac2d5930ae56a582aeb1030a934872f0d3` after PR #116 (mandatory project memory). Last executable baseline: `51fac872976e708bddfb0bfc4167c9e410bf24e2` after PR #114.
   Exact-head CI [45950591295](https://github.com/el-utama/yue2-music-director/actions/runs/45950591295)
   passed four jobs; 377 Windows tests. PR #113 Artist Memory passed 376
   Windows tests after fixing launcher help. PR #112 readiness passed 372.
 - PR [115](https://github.com/el-utama/yue2-music-director/pull/115) at
   `9cf87578bd23317309d72d3952033114b039c6ea` is open for display names;
   CI [45951344742](https://github.com/el-utama/yue2-music-director/actions/runs/45951344742)
-  was in progress at this check. Recheck actual head/status before merging.
+  passed all four jobs (380 Windows tests) on the original PR head. PR #116 subsequently merged, so integrate the latest main and require fresh exact-head CI before merge. Recheck PR #115 actual head and status; original CI is historical, not approval for the integration commit.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
   See [local release checkpoint](docs/LOCAL_RELEASE_CHECKPOINT.md) and
@@ -123,5 +123,5 @@ can remain usable while the full product requirements are open.
 2026-11-27: operator identified two missed requirements: natural multiword
 artist names and the missing lyric knowledge bank. User explicitly requested
 persistent, read/write project memory to avoid omissions in later sessions.
-Record both as open until supported by evidence. Do not require user to
+The memory requirement is implemented in main via PR #116; the naming change needs integrated CI; the lyric bank remains open. Do not require user to
 repeat prior requirements.

@@ -152,13 +152,14 @@ class ArtistProfileProductionTests(unittest.TestCase):
             profile={"schema":am.PROFILE,"defaults":{"vocal":"female","opening":"direct_vocal"},
                      "confirmed_preferences":["private confirmed note"],
                      "inferred_observations":["private inference"],"provenance":"operator"}
-            first=am.save(repo,"fixture",profile,0,confirm=True)
+            first=am.save_named(repo,"The Midnight Écho",profile,0,confirm=True)
+            aid=first["record"]["artist"]
             override=repo/"override.json"
             nd.atomic_write(override,{"schema":tc.SPEC_SCHEMA,"lyrics":WORDS,"narrator":"first person",
                                       "section_purposes":SPEC["section_purposes"]})
             p=Provider("one")
             common=["music","--repo",str(repo),"--url",URL,"--job","one"]
-            args=common+["--request","A departure","--duration","90","--artist-profile","fixture",
+            args=common+["--request","A departure","--duration","90","--artist-profile","The Midnight Écho",
                          "--creative-spec",str(override)]
             with patch.object(au.TextProvider,"for_repo",return_value=p),patch.object(au,"produce",return_value=0):
                 with patch.object(sys,"argv",args):
@@ -170,12 +171,12 @@ class ArtistProfileProductionTests(unittest.TestCase):
                 self.assertEqual(p.calls,["composer","reviewer"])
                 root=repo/"results/autonomous/one"
                 saved=nd.read(root/"job.json")
-                self.assertEqual(saved["artist_profile"],{"artist":"fixture","revision":1,"profile_sha256":first["sha256"]})
+                self.assertEqual(saved["artist_profile"],{"artist":aid,"revision":1,"profile_sha256":first["sha256"],"display_name":"The Midnight Écho"})
                 self.assertEqual(saved["creative_spec"]["lyrics"],WORDS)
                 self.assertEqual(saved["creative_spec"]["vocal"],"female")
                 self.assertNotIn("private confirmed note",str(saved))
                 self.assertNotIn("private inference",str(saved))
-                am.save(repo,"fixture",{**profile,"defaults":{"vocal":"male"}},1,confirm=True)
+                am.save_named(repo,"The Midnight Écho",{**profile,"defaults":{"vocal":"male"}},1,confirm=True)
                 with patch.object(sys,"argv",common+["--confirm-run"]),patch.object(am,"compile_spec",side_effect=AssertionError("profile reread")):
                     self.assertEqual(au.main(),0)
                 self.assertEqual(nd.read(root/"job.json"),saved)

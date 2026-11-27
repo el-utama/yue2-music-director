@@ -11,7 +11,8 @@ Create a private JSON file (for example `local/artist-profile.json`):
 
 ```json
 {
-  "schema": "artist-profile-v1",
+  "schema": "artist-profile-v2",
+  "display_name": "The Midnight Echo",
   "defaults": {
     "vocal": "female",
     "opening": "direct_vocal",
@@ -32,9 +33,21 @@ Confirmed preference notes and inferred observations remain separate,
 local, and **neither is automatically applied**. The operator may choose
 to translate a confirmed preference into a supported typed default.
 
+## Artist names and identity
+
+Use the actual display name in quotes, for example `"The Midnight Echo"`.
+Names retain capitalization, spaces, accents and Unicode; a separate portable
+internal ID is generated on first named save. Name lookup is NFC/casefold
+normalized; ambiguous names stop rather than silently picking a profile.
+Existing v1 profiles remain readable by their original ID; saving by that ID
+can add a display name without rewriting history. A rename is an explicit
+new profile revision selected by internal ID; prior jobs keep their frozen
+name and revision. Profile names do not automatically change release credits;
+those remain separate explicit metadata.
+
 ## Use a profile directly in a new song
 
-Run `music.cmd --artist-profile ARTIST` to preview a new job, or add
+Run `music.cmd --artist-profile "The Midnight Echo"` to preview a new job, or add
 `--confirm-run` to authorize the existing bounded production flow. Optional
 `--profile-revision N` pins a revision; `--creative-spec PATH` supplies partial
 song overrides. The job freezes the compiled spec and artist ID, revision
@@ -46,11 +59,11 @@ has not been live validated.
 
 ## Commands (Windows repository)
 
-- Inspect: `music.cmd --artist-memory ARTIST`
-- Save first revision: `music.cmd --artist-memory ARTIST --save local/artist-profile.json --expected-revision 0 --confirm-run`
+- Inspect: `music.cmd --artist-memory "The Midnight Echo"`
+- Save first revision: `music.cmd --artist-memory "The Midnight Echo" --save local/artist-profile.json --expected-revision 0 --confirm-run`
 - Update by supplying a full replacement profile and the current expected revision.
-- Preview a compiled spec: `music.cmd --artist-memory ARTIST --compile`
-- Export locally: `music.cmd --artist-memory ARTIST --compile --confirm-run`
+- Preview a compiled spec: `music.cmd --artist-memory "The Midnight Echo" --compile`
+- Export locally: `music.cmd --artist-memory "The Midnight Echo" --compile --confirm-run`
 - Optional: `--revision N` pins an earlier revision; `--overrides PATH`
   supplies a partial creative-spec-v1 JSON for the new song. Missing fields
   inherit; explicit null clears scalar fields. A supplied score_constraints

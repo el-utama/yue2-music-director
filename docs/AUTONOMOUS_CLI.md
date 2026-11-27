@@ -16,7 +16,7 @@ Provider endpoint/model references: [NVIDIA NIM LLM API](https://docs.api.nvidia
 
 ## Use an explicitly selected artist profile
 
-For a new song, `music.cmd --artist-profile ARTIST` previews a compiled typed
+For a new song, `music.cmd --artist-profile "The Midnight Echo"` previews a compiled typed
 spec (with optional `--profile-revision N` and `--creative-spec PATH` overrides).
 Add `--confirm-run` for the existing production budget. Existing jobs resume
 from their frozen spec and profile provenance without looking up the current
