@@ -64,13 +64,17 @@ def stage(root, role, module, provider, data, *, retry=False, semantic_check=Non
     return result
 
 
-def prepare(root, provider, request, language, duration, *, retry_role=None, duration_guidance=False, direction_guidance=False, timing_guidance=False, typed_spec=None, knowledge=None):
+def prepare(root, provider, request, language, duration, *, retry_role=None, duration_guidance=False, direction_guidance=False, timing_guidance=False, typed_spec=None, knowledge=None, style_recipe=None):
     data={"request":request,"language":language,"duration_seconds":duration}
     def role_data(role, data):
-        if knowledge is None:
-            return data
-        from .creative_knowledge import payload
-        return {**data, "knowledge_context": payload(knowledge, role)}
+        result=data
+        if knowledge is not None:
+            from .creative_knowledge import payload
+            result={**result, "knowledge_context": payload(knowledge, role)}
+        if style_recipe is not None and role=="composer":
+            from .style_selection import payload as style_payload
+            result={**result, "style_recipe": style_payload(style_recipe)}
+        return result
     if duration_guidance:
         # Advisory target only; the actual native score clock is screened before rendering.
         reserve=min(15,max(3,round(duration*0.08)))

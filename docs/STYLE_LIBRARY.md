@@ -56,3 +56,12 @@ material were made. Do not count any source-reported totals as imported rows.
 `music.cmd --styles --genre backsound --limit 100`
 
 Build creates local/style-library.sqlite; existing knowledge-bank.sqlite remains separate.
+
+## Use a selected style in autonomous production
+
+`music.cmd --styles --build` indexes the original recipes for local browsing.
+`music.cmd --styles --genre folk --limit 10` lists IDs and style descriptions.
+
+`music.cmd --job new-folk --request "A quiet goodbye" --style-id folk-001`
+
+This previews the exact original recipe with zero provider or Studio calls; no database build is required for selection itself. Only an explicit `--confirm-run` authorizes the usual production budget and sends the selected authored style (not unreviewed observed track metadata) as optional Composer guidance. The operator's request and typed requirements take precedence. Resume with the existing job ID and confirmation; the saved style remains frozen even if the library changes. Changing the recipe requires a new job. This is advisory text, not a verified native tempo or arrangement control. No live generation has been run for this feature.

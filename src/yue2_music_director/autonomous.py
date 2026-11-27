@@ -11,6 +11,7 @@ from .creative_provider import TextProvider, ROLES
 from .mcp import MCPError, configured_endpoint
 from .prosody import parse_lyrics
 from . import creative_direction as cd, typed_creative as tc
+from . import style_selection as ss
 
 LEGACY_POLICY="reviewed-score-v1"
 POLICY=cd.POLICY
@@ -49,7 +50,7 @@ def make_inputs(result, identity):
 
 
 def launch(repo, job, request, language, duration, url, *, confirm=False,
-           provider_factory=None, retry_role=None, typed_spec=None, artist_profile=None):
+           provider_factory=None, retry_role=None, typed_spec=None, artist_profile=None, style_id=None):
     if typed_spec is not None:
         typed_spec=tc.validate_spec(typed_spec)
     if artist_profile is not None:
@@ -66,19 +67,27 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
     print("Budget: up to four text stages, one native composition plan, one native song, one explicit ASR, two CPU excerpts.",flush=True)
     if retry_role is not None and (retry_role not in ROLES or not confirm):
         raise ValueError("Retry requires a valid text role and explicit confirmation")
+    jobs=repo/"results/autonomous"
+    root=jobs/job
     if not confirm:
+        selected=ss.resolve(repo,root,style_id)
+        if selected is not None:
+            print("Selected style:",selected["id"],selected["style"],flush=True)
         print("Plan only; zero provider or Studio calls.",flush=True)
         return 0
     provider=provider_factory() if provider_factory else TextProvider.for_repo(repo)
-    jobs=repo/"results/autonomous"
-    root=jobs/job
     with ld.lock(jobs/".active",context={"job":job,"root":root.relative_to(repo).as_posix(),"stage":"autonomous"}):
+        selected=ss.resolve(repo,root,style_id)
+        if selected is not None:
+            print("Selected style:",selected["id"],selected["style"],flush=True)
         identity={"schema":"autonomous-job-v1","job":job,"request":request,"language":language,
                   "duration_seconds":duration,"provider":provider.identity(),"studio_url":url,"production_policy":tc.POLICY if typed_spec is not None else POLICY}
         if typed_spec is not None:
             identity["creative_spec"]=typed_spec
         if artist_profile is not None:
             identity["artist_profile"]=artist_profile
+        if selected is not None:
+            identity["style_recipe"]=selected
         if retry_role is not None:
             if (not (root/(retry_role+".attempt.json")).is_file()
                     or (root/(retry_role+".json")).exists()
@@ -102,7 +111,7 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
         result=cc.prepare(root,provider,request,language,duration,retry_role=retry_role,duration_guidance=True,
                           direction_guidance=identity["production_policy"] in DIRECTION_POLICIES,
                           timing_guidance=identity["production_policy"]==POLICY,
-                          typed_spec=identity.get("creative_spec"))
+                          typed_spec=identity.get("creative_spec"),style_recipe=identity.get("style_recipe"))
         freeze(root/"creative-result.json",result)
         if result["review"]["decision"]!="retain":
             print("Editorial stop. No native generation:",root/"creative-result.json",flush=True)
@@ -241,7 +250,7 @@ def continue_plan(repo,job,url,*,confirm=False,provider_factory=None,retry_role=
                           identity["duration_seconds"],duration_guidance=True,
                           direction_guidance=identity["production_policy"] in DIRECTION_POLICIES,
                           timing_guidance=identity["production_policy"]==POLICY,
-                          typed_spec=identity.get("creative_spec"))
+                          typed_spec=identity.get("creative_spec"),style_recipe=identity.get("style_recipe"))
         if nd.read(parent/"creative-result.json")!=result or result["review"]["decision"]!="retain":
             raise ValueError("Retained creative result differs")
         brief,intent=make_inputs(result,identity)
@@ -296,6 +305,7 @@ def main():
     p.add_argument("--job")
     p.add_argument("--continue-plan",metavar="JOB",help="Explicit continuation of a rechecked parser-blocked plan")
     p.add_argument("--request")
+    p.add_argument("--style-id",help="Explicit original preset ID, e.g. trap-001; frozen for the job")
     p.add_argument("--creative-spec",type=Path,help="Optional explicit typed requirements and exact lyrics JSON")
     p.add_argument("--artist-profile",help="Explicit local artist display name or ID for a new typed job; --creative-spec supplies overrides")
     p.add_argument("--profile-revision",type=int,help="Pin an artist profile revision (default: latest)")
@@ -308,7 +318,7 @@ def main():
     try:
         repo=a.repo.resolve()
         if a.continue_plan is not None:
-            if any(x is not None for x in (a.job,a.request,a.language,a.duration,a.creative_spec,a.artist_profile,a.profile_revision)):
+            if any(x is not None for x in (a.job,a.request,a.language,a.duration,a.creative_spec,a.artist_profile,a.profile_revision,a.style_id)):
                 raise ValueError("Continuation does not allow job or brief overrides")
             return continue_plan(repo,a.continue_plan,a.url,confirm=a.confirm_run,retry_role=a.retry_text)
         if a.retry_text and not a.job:
@@ -350,7 +360,7 @@ def main():
                 request=a.request
             language=a.language or "en"
             duration=a.duration if a.duration is not None else 195
-        return launch(repo,job,request,language,duration,a.url,confirm=a.confirm_run,retry_role=a.retry_text,typed_spec=typed_spec,artist_profile=artist_profile)
+        return launch(repo,job,request,language,duration,a.url,confirm=a.confirm_run,retry_role=a.retry_text,typed_spec=typed_spec,artist_profile=artist_profile,style_id=a.style_id)
     except (OSError,ValueError,KeyError,TypeError,MCPError,subprocess.SubprocessError,EOFError) as e:
         print("ERROR:",e,file=sys.stderr,flush=True)
         print("Preserve job and receipts. Resume only the same job; no blind retry.",file=sys.stderr,flush=True)
