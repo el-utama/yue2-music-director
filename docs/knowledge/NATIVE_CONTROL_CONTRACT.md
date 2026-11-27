@@ -213,6 +213,35 @@ sampling, pipeline and server track output, not compiled engine tests,
 full BPE vocabulary audit, or installed inference observation. No
 reference generation, replay, GPU call or settings change was made.
 
+## Installed artistic guides and lyric schedule evidence
+
+Live writing_guide(lyrics/style/sections) was read from the installed Studio.
+Its new-song advice uses standalone English tags, ordinary spelling,
+nearby lines of similar syllable count, roughly 2–3 sung words per second
+as a planning heuristic (not a universal acceptance limit), and no singer
+cues in lyrics. Duet voices are style descriptors, not dedicated singer
+routing. Style places vocal language first, concrete genre/vocal/instruments,
+mood and BPM last. Dataset-caption advice is a separate route with different
+length requirements. Do not silently change historical creative prompts,
+operator-authored lyrics or receipt identities.
+
+[Studio schedule](https://github.com/timoncool/YuE2-Studio/blob/40a4631dcb5203625551b0be37d097c2afb194d1/crates/music-server/src/score/schedule.rs)
+matches sung tags to score sections in order and schedules their first
+Vocal note. It skips instrumental blocks and can omit unmatched sections.
+Its spans index Unicode codepoints in the actual engine lyrics, not UTF-8
+bytes. Studio uses bias -4, a soft constraint; the engine maps those spans
+to BPE prompt rows. Neither the request flag nor schedule coverage proves
+actual timing, diction, stress or singer identity.
+
+New artist draft reports include optional native_lyric_schedule evidence
+from saved generation_settings and pass it to Director only when present.
+The report distinguishes absent metadata, partial/full recognized sung
+block coverage and invalid/unrecognized shapes. This is an advisory
+coverage check against saved text, not a recreation of native score
+matching or verification of the engine mask. No new acceptance gate,
+automatic repair, extra inference, or historical report migration is
+introduced. Actual acoustic section timing remains unverified.
+
 ## Production route and control matrix
 
 [Native MCP schemas](https://github.com/timoncool/YuE2-Studio/blob/40a4631dcb5203625551b0be37d097c2afb194d1/crates/music-server/src/mcp.rs),
