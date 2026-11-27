@@ -47,3 +47,21 @@ coordinated local tampering. No source audio or artwork is sent externally.
 Existing deliveries verify without re-decoding artwork or rendering audio.
 Regression uses real synthetic JPEG/PNG and exact audio-approval fixtures;
 operator artwork and music are not reprocessed in CI.
+
+## One-command local preparation
+
+If the original export and separate human audio approvals already exist, use
+`music.cmd --release RELEASE --artwork "C:\path\cover.jpg" --confirm-run`.
+Repeat explicit --variant JOB=VARIANT if needed, select --snapshot for an
+existing export revision and --workflow-id for an independent immutable plan
+(default release-v1). The coordinator freezes all ordered audio identities,
+approvals, release metadata, source manifest and exact cover hash with zero
+external stage budgets. It invokes assembly and delivery only, retaining both
+stage manifests and recording the completed/partial result. It does not
+invoke finishing or another export. On interruption, retry with the same
+cover bytes and workflow ID; completed stage outputs are verified, not
+copied again. A completed workflow is verified with `music.cmd --release RELEASE`.
+Review the resulting package using `music.cmd --release-delivery RELEASE --assembly-id release-v1 --delivery-id release-v1 --approve --confirm-run`
+(or the selected workflow ID in both positions). This remains a separate human
+rights/credits/typography and package decision, not publishing. Multi-track
+creative scheduling and automatic external stage execution remain future work.
