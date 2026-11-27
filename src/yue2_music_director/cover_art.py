@@ -61,7 +61,7 @@ def launch(repo,release,jobs,*,title=None,artist="",direction="",confirm=False,p
     provider=provider_factory() if provider_factory else TextProvider.for_repo(repo)
     base=repo/"results/artwork"
     root=base/release
-    with lock(base/".active"):
+    with lock(base/".active",context={"release":release,"root":root.relative_to(repo).as_posix(),"stage":"cover_art"}):
         contract={"schema":"cover-art-job-v1","release":release,"sources":list(evidence),
                   "input":data,"provider":provider.identity(),"budget":{"text_calls":1,"image_calls":0}}
         if root.exists():
