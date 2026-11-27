@@ -85,3 +85,20 @@ class OpeningTimingTests(unittest.TestCase):
         self.assertFalse(report["hard_violations"])
         self.assertEqual(report["metrics"]["opening_evidence"]["classification"],"direct_vocal")
 
+    def test_director_context_version_and_lra(self):
+        from yue2_music_director import director_decision as dd
+        report={"acoustic":{"duration_seconds":3,"integrated_lufs":-17,
+                            "true_peak_dbtp":-1.2,"loudness_range_lu":5.7},
+                "lyric_screen":{},"headroom_pass":True,"duration_cap_screen_pass":True,
+                "saved_score_review":self.review(HEADER+VERSE,WORDS,"direct_vocal")}
+        old={"constraints":{"opening":{"mode":"must","value":"direct_vocal"}}}
+        new={"constraints":{**old["constraints"],"opening_timing":{"mode":"must","value":"direct_vocal"}}}
+        previous=dd.context("fixture",{},old,report,{"observations":[]})
+        self.assertIsNone(previous["technical"]["lra_lu"])
+        self.assertNotIn("context_schema",previous)
+        self.assertNotIn("opening_evidence",previous["score_evidence"])
+        current=dd.context("fixture",{},new,report,{"observations":[]})
+        self.assertEqual(current["context_schema"],"director-context-v3")
+        self.assertEqual(current["technical"]["loudness_range_lu"],5.7)
+        self.assertNotIn("lra_lu",current["technical"])
+        self.assertEqual(current["score_evidence"]["opening_evidence"]["first_vocal_onset_seconds"],0)
