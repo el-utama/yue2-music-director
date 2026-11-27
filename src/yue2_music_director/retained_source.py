@@ -151,7 +151,9 @@ def continuation_before_director(repo,job):
     report,row,packet=_native(root,brief,intent)
     return {"job":job,"parent":parent,"root":root,"identity":identity,"brief":brief,
             "intent":intent,"creative":creative,"report":report,"row":row,"packet":packet,
-            "audio":Path(row["audio"])}
+            "audio":Path(row["audio"]),"frozen_hashes":{
+                name:nd._sha(root/name) for name in ("continuation.json","brief.json","intent.json",
+                "production/draft/report.json","production/neutral-listening/review-packet.json")}}
 
 
 def load(repo,job):
