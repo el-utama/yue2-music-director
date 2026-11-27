@@ -9,7 +9,7 @@ import sqlite3
 import tempfile
 from .style_library import GENRES
 
-SCHEMA = "observed-style-metadata-v3"
+SCHEMA = "observed-style-metadata-v4"
 
 def load(root):
     root = Path(root)
@@ -84,6 +84,37 @@ def load(root):
     rows += curated
     if counts != curated_manifest["counts"] or len(rows) != curated_manifest["distinct_candidate_ids"] or any(n > 100 for n in counts.values()):
         raise ValueError("Curated combined count mismatch")
+    album_manifest = json.loads((root / "fma-albums-manifest.json").read_text(encoding="utf-8"))
+    album_rows = [json.loads(line) for line in (root / "fma-albums.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    if album_manifest["schema"] != "fma-album-candidates-v1":
+        raise ValueError("Invalid FMA album manifest")
+    album_counts = Counter()
+    # Compare known artist/title pairs in addition to source-specific identifiers.
+    def identity(row):
+        return re.sub(r"[^a-z0-9]", "", (row.get("artist", "") + " " + row.get("title", "")).lower())
+    known = {identity(row) for row in rows if row.get("artist") and row.get("title")}
+    for row in album_rows:
+        source = next((s for s in album_manifest["sources"] if s["id"] == row["source_id"]), None)
+        if (source is None or row["category"] != source["category"] or row["id"] in ids
+                or row["source_url"] != source["url"]
+                or row["artist"] != source["artist"]
+                or row["source_snapshot"] != album_manifest["snapshot"]
+                or row["metadata_origin"] != "fma_album_catalog"
+                or row["reported_license"] != "CC0-1.0"
+                or row["rights_status"] != "album_reports_cc0_track_review_pending"
+                or row["validation"] != "metadata_only_not_listened"
+                or row["lyrics"] is not None or row["lyrics_status"] != "not_supplied"
+                or not row["title"] or identity(row) in known):
+            raise ValueError("Invalid or duplicate FMA album candidate")
+        known.add(identity(row))
+        ids.add(row["id"])
+        album_counts[row["source_id"]] += 1
+        counts[row["category"]] += 1
+    if any(album_counts[s["id"]] != s["count"] for s in album_manifest["sources"]):
+        raise ValueError("FMA album count mismatch")
+    rows += album_rows
+    if counts != album_manifest["counts"] or len(rows) != album_manifest["distinct_candidate_ids"] or any(n > 100 for n in counts.values()):
+        raise ValueError("FMA combined count mismatch")
     return rows, counts
 
 def build(root, database):
@@ -107,6 +138,7 @@ def build(root, database):
             "annotated_clips": sum("youtube_id" in row for row in rows),
             "curated_track_candidates": sum(row.get("metadata_origin") == "third_party_playlist_manifest" for row in rows),
             "disclosed_ai_track_candidates": sum(row.get("metadata_origin") == "creator_catalog_disclosed_suno_v5" for row in rows),
+            "fma_album_candidates": sum(row.get("metadata_origin") == "fma_album_catalog" for row in rows),
             "rights_reviewed_tracks": 0, "lyrics": 0,
             "missing_metadata_to_100": {g: max(0, 100-n) for g,n in counts.items()}}
 

@@ -37,8 +37,8 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Main `54d56b360886f1b76b91a112eff04daab77d4d93` after PR #123; exact head `202063f5d1690ae65dbd6cd2509f72e3b2dc2834` passed [four CI jobs](https://github.com/el-utama/yue2-music-director/actions/runs/45960070717). 720 candidate identifiers indexed, no recording rights acceptance.
-- Follow-up: 95 third-party Lo-fi playlist candidates and eight disclosed AI-generated Chillhop tracks; combined 823 candidates, CI pending. Rights and cross-source identity review open.
+- Main `25021426a12e16422b5eb16df6292b23ac250cab` after PR #124; exact head `f67ed0904829a4f92c5e1f06fb134c8a124e0932` passed [four CI jobs](https://github.com/el-utama/yue2-music-director/actions/runs/45961931649). 823 candidate IDs including eight disclosed AI tracks.
+- Follow-up: 30 album catalog candidates; combined 853 IDs, CI pending. Album licensing and recording-level genre/rights review open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
   See [local release checkpoint](docs/LOCAL_RELEASE_CHECKPOINT.md) and
@@ -63,7 +63,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 | R11 | Multi-track/album creative scheduling and consistent artist direction | Release snapshots/assembly; no creative scheduling | Explicit track-level plans/budgets, deterministic resume, independent evidence and approval |
 | R12 | Project documentation, continuity and complete requirement coverage | This register plus native/release docs | Maintain on every substantive change, verify all outstanding rows before readiness |
 | R13 | Privacy, licensing, safe external use | Local private storage and explicit provider boundary | Validate every reference corpus source/rights, permitted use and hosted transfer; preserve originals and no unsupported claims |
-| R14 | 100 music styles per specified category, lyrics if available | 1,000 authored presets merged/CI; 720 observed candidates merged/CI; 103 further candidates (8 explicitly AI-origin), CI pending. Quotas not accepted. | Rights-reviewed 100 observed records per category; source and lyric availability, deduplication, creative evaluation |
+| R14 | 100 music styles per specified category, lyrics if available | 1,000 authored presets merged/CI; 823 candidate IDs merged/CI; 30 more album candidates pending CI. No approved quota. | Rights-reviewed 100 observed records per category; source and lyric availability, deduplication, creative evaluation |
 
 ## Corpus and knowledge inventory — explicit gap, not optional to full product
 
@@ -135,3 +135,5 @@ repeat prior requirements.
 2026-11-27: MusicCaps annotation dataset CC BY-SA 4.0, source snapshot ecbb5a1f52e52cf09a38dd7698578ccca7cef353. Added 517 unique clip IDs with normalized musical descriptors and category evidence; combined inventory {"blues":100,"jazz":100,"lofi":5,"pop":100,"indie":100,"folk":100,"backsound":100,"hiphop":100,"lofihop":0,"trap":15}. Distinct IDs within each source; cross-source recording overlap unknown. No audio, source captions or lyrics copied; no provider/GPU. Full song identity and recording rights not established. R14 remains open. See data/observed_styles/musiccaps-manifest.json.
 
 2026-11-27: PR #123 merged after CI. Follow-up adds 95 curated Lo-fi track candidates from pinned AgentBBS factual playlist metadata and 8 creator-disclosed Suno v5 Chillhop entries from Open Lo-Fi. Source licensing is reported, not independently verified per track. Combined 823 identifiers (815 excluding AI-disclosed eight), missing 177 category slots including 92 lofihop and 85 trap; no new lyrics. WaivOps CC BY 4.0 drum-loop/chord datasets are useful for technical technique references, not full-track quotas; do not pad with loops. FMA official pages 403 here. R14 remains open.
+
+2026-11-27: PR #124 merged. Direct FMA album catalog metadata: 30 candidates; totals {"blues":100,"jazz":100,"lofi":100,"pop":100,"indie":100,"folk":100,"backsound":100,"hiphop":100,"lofihop":27,"trap":26}. Album-level rights reported, individual tracks not reviewed; duplicate known artist/title pairs excluded, clip-level identity overlap unknown. Direct FMA and Hugging Face bulk API access blocked; dataset cards inspected, annotation/lyric rights not assumed. No new lyrics or audio. Remaining slots 147. No provider calls. R14 open.
