@@ -113,6 +113,17 @@ def save(repo,artist,value,expected_revision,*,confirm=False):
     return saved[expected_revision]
 
 
+def validate_selection(value):
+    """Frozen profile provenance; no private notes or live profile lookup."""
+    if (not isinstance(value,dict) or set(value)!={"artist","revision","profile_sha256"}
+            or type(value["revision"]) is not int or value["revision"]<1
+            or not isinstance(value["profile_sha256"],str)
+            or not re.fullmatch(r"[0-9a-f]{64}",value["profile_sha256"])):
+        raise ValueError("Invalid frozen artist profile selection")
+    artist_id(value["artist"])
+    return dict(value)
+
+
 def compile_spec(repo,artist,*,revision=None,overrides=None):
     records=history(repo,artist)
     if not records:
