@@ -92,6 +92,9 @@ def launch(repo,release,*,workflow_id="release-v1",snapshot=None,variants=None,
         code=rd.launch(repo,release,assembly_id=stage_id,delivery_id=stage_id,
                        artist=artist,expected_artwork_sha256=sha,expected_assembly_sha256=nd._sha(assembly_path/"assembly.json"))
         saved_delivery=nd.read(delivery/"delivery.json")
+        if (saved_delivery["metadata"]["artist"]!=credit
+                or saved_delivery["contract"].get("artist_completion")!=completion):
+            raise ValueError("Frozen workflow delivery credit differs")
         result={"schema":"release-workflow-result-v1","plan_sha256":nd._sha(plan_path),
                 "stages":{"audio_assembly":{"status":saved["status"],"manifest_sha256":nd._sha(assembly_path/"assembly.json")},
                           "delivery":{"status":saved_delivery["status"],"manifest_sha256":nd._sha(delivery/"delivery.json")}},
