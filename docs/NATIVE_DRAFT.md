@@ -14,6 +14,10 @@ The launcher uses base Python and existing FFmpeg/ffprobe, not the optional eval
 
 The runner verifies the completed job identity, seed and adapter fields, finds its one local FLAC, measures audio, and captures at most one native Whisper recognition. It scores lyric disagreement with the configured language metric. Technical review is required when measured peak exceeds -1 dBTP, loudness is unusable, or duration exceeds the requested cap by more than 2 s. A provisional draft is not a release-ready or musically accepted song. No automatic repair, regeneration, export, model training or final acceptance. The language metric is not proof of recognizer accuracy. No audio leaves the PC through this runner. A successfully cached result is reused without new Studio calls; private reports and audio paths stay local. 
 
+## Saved native lyric schedule evidence (new artist drafts)
+
+PR #109 adds advisory `native_lyric_schedule` evidence to new artist draft reports from saved generation settings. It distinguishes all/partial sung blocks recorded, absent metadata, invalid/unrecognized shape and unknown evidence. Spans use codepoints in saved lyrics, not byte offsets. A requested lyric timing flag does not guarantee coverage; recorded coverage does not verify actual vocal onset, diction or syllable alignment. Director receives this field only if present. Retained reports are not migrated; no new call or automatic rejection is introduced. See [native control contract](knowledge/NATIVE_CONTROL_CONTRACT.md).
+
 ## Acceptance status
 
 This is the first single-brief integration, with mocked end-to-end and interrupted-transaction tests. Live stock generation and recognition in this combined path are not yet verified. Earlier real-song evaluation and timing are already complete; do not repeat them. The next genuine validation is one new user-intended song after CI passes and its actual brief is provided. A prior successful component test is not proof of combined production readiness.

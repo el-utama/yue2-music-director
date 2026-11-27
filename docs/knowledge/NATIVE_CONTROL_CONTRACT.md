@@ -275,10 +275,10 @@ The table distinguishes supported input contract from acoustic fidelity.
 ## Native-first review backlog (not finished)
 
 1. Pinned engine-side prompt, sampling, pipeline and track truncation source
-   reviewed above. Trace truncation through Studio storage to Director
-   acceptance, review remaining notation/BPE vocabulary and lyric mask
-   semantics, and compare installed runtime identity/settings to pinned
-   sources before changing defaults.
+   reviewed above, including truncation through Studio storage to Director
+   acceptance and section schedule evidence. Review remaining notation/BPE
+   vocabulary and lyric mask semantics, and compare installed runtime
+   identity/settings to pinned sources before changing defaults.
 2. Audit composer/lyricist against writing_guide topics and actual ABC
    parser/token vocabulary; inspect permitted score edits and evidence
    gates. Distinguish hard syntax/score constraints from stylistic intent.

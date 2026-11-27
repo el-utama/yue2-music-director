@@ -1,5 +1,13 @@
 # Changelog and research milestones
 
+## Unreleased — native control and lyric evidence (PRs 104–109)
+
+- Live installed velocity conversion confirms loss across score-mode MIDI/ABC/MIDI; operator confirms UI edits are not retained. Separate MIDI production from native audio conditioning.
+- Trace pinned engine request, AR semantic sampling, NAR rendering, replay, duration and truncation; no live synthesis or parameter tuning claimed.
+- Reject malformed completion flags/codec streams; accept only exact or Studio-normalized CRLF-to-LF saved lyrics; preserve original creative artifacts.
+- Record optional advisory lyric schedule coverage in new artist draft reports and Director context. No acoustic alignment or automatic acceptance claim; historical receipts remain untouched.
+- Exact-head PR #109 CI: four green jobs, 368 Windows tests. See [native audit checkpoint](docs/NATIVE_AUDIT_CHECKPOINT.md) and [native control contract](docs/knowledge/NATIVE_CONTROL_CONTRACT.md).
+
 ## Unreleased — autonomous audit hardening and mix-only finishing
 
 - Preserve original/reference audio and historic receipts; validate role semantics before acceptance, version opening score evidence and correct Director LRA context.
