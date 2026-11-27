@@ -4,6 +4,10 @@ Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, developing a ge
 
 > The repository is public. Never commit private audio, unpublished lyrics, local job journals, model weights or credentials.
 
+## Project memory and acceptance register
+
+Read [PROJECT_MEMORY.md](PROJECT_MEMORY.md) before resuming development. It tracks outstanding user requirements, verified implementation and actual data counts, live evidence and limitations. Update it alongside substantive changes; P0 alpha is not full product readiness.
+
 ## Active product roadmap
 
 **Current milestone: autonomous score-first Windows CLI and independent release specialists.** The hosted Composer/Lyricist/reviewer, native plan and synthesis, ASR, neutral MOSS and advisory Director pipeline has completed live; a recovered score-first take received favorable human feedback. Cover prompt and original single-song export also completed live. Historical-source hardening, [human feedback](docs/HUMAN_FEEDBACK.md), and [non-destructive audio finishing](docs/AUDIO_FINISHING.md) extend the retained workflow. Gain-only finishing passed the authorized retained-reference Windows technical check; this is not a mastering or release-quality claim. See the [active roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md), [autonomous CLI](docs/AUTONOMOUS_CLI.md) and [repository agent instructions](AGENTS.md).
