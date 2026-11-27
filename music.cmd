@@ -23,7 +23,12 @@ py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\music-output
 exit /b %ERRORLEVEL%
 
 :artistmemory
+if /I "%~2"=="--help" goto artistmemoryhelp
 py -3 -u -m yue2_music_director.artist_memory --repo "%ROOT%." %*
+exit /b %ERRORLEVEL%
+
+:artistmemoryhelp
+py -3 -u -m yue2_music_director.artist_memory --help
 exit /b %ERRORLEVEL%
 
 :ready
