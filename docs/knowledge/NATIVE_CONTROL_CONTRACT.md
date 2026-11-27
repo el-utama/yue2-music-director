@@ -112,10 +112,96 @@ tuplets, stacked notes or lyric w: lines. This is an installed guide
 contract, not exhaustive parser/tokenizer proof. Preserve unrelated bars
 when editing. Match Q tempo to style BPM.
 
-This increment reaches Studio's engine submission boundary, not actual
-engine internals or live engine payload capture. Inspect the engine-side
-parser, tokenizer, sampling and completion handling before modifying
-production defaults. Do not invoke a generation just to test a schema.
+This increment reaches Studio's engine submission boundary. The following
+section extends source review into the pinned engine; neither is live engine
+payload capture. Do not invoke a generation just to test a schema.
+
+## Pinned native engine conditioning audit — 2026-11-27
+
+The reviewed Studio revision pins [yue2.cpp 892b9b0311512a1c45e42d6403881d17a991b87c](https://github.com/timoncool/yue2.cpp/tree/892b9b0311512a1c45e42d6403881d17a991b87c)
+in [engines/yue2-cpp-source.json](https://github.com/timoncool/YuE2-Studio/blob/40a4631dcb5203625551b0be37d097c2afb194d1/engines/yue2-cpp-source.json).
+This establishes the reviewed source relationship, not the installed
+engine executable hash, backend, weights, or effective runtime settings.
+
+### Composition, semantic stream and acoustic rendering
+
+- [prompt.h](https://github.com/timoncool/yue2.cpp/blob/892b9b0311512a1c45e42d6403881d17a991b87c/src/prompt.h):
+  BPE-encoded instruction, Tags/style and Lyrics text, followed by special
+  ABC and music delimiters. Full mode requests chord-annotated ABC,
+  melody mode requests no chord symbols, off skips score planning.
+  Provided ABC is encoded as text, not MIDI bytes or CC/velocity events.
+  The checkpoint context constant is 24576; the actual runtime capacity
+  is configurable. The engine does not itself normalize lyrics in prompt
+  assembly; Studio's earlier CRLF normalization still applies.
+- [pipeline.h](https://github.com/timoncool/yue2.cpp/blob/892b9b0311512a1c45e42d6403881d17a991b87c/src/pipeline.h):
+  complete supplied ABC is encoded and copied into each plan slot;
+  missing ABC or abc_continue enters planning (opening prefix without
+  its closing token). With supplied ABC, sampling another semantic stream
+  still changes interpretation. The engine score checker for model-made
+  plans is a basic structural screen, not a complete native notation or
+  musical-quality validator; missing headers can be filled and bad plans
+  can be retried. Keep the Director's stricter preflight and evidence gates.
+- [sampling.h](https://github.com/timoncool/yue2.cpp/blob/892b9b0311512a1c45e42d6403881d17a991b87c/src/sampling.h):
+  separate sampling presets, with source defaults below. These are not
+  recommended tuning values or confirmed installed effective defaults.
+
+| Source default | ABC planning | Semantic generation |
+|---|---:|---:|
+| Temperature | 0.7 | 1.0 |
+| Top-p | 0.9 | 0.95 |
+| Top-k | 30 | 100 |
+| Repetition penalty | 1.005 | 1.2 |
+| Penalty window | 100 | 50 |
+| Minimum tokens | 32 | 200 |
+| Maximum tokens | 4096 | 9000 |
+
+- [generate.h](https://github.com/timoncool/yue2.cpp/blob/892b9b0311512a1c45e42d6403881d17a991b87c/src/generate.h):
+  CFG combines conditional and unconditional logits in AR generation;
+  the negative prompt removes style/lyrics but retains the score for
+  score modes. Source default guidance is 1.0 in full/melody and 1.01
+  off. This is **not** a NAR loudness, expression or effects control.
+  The actual lyric_schedule path requires guidance 1 and a supplied
+  score. Do not tune CFG independently of lyric timing compatibility.
+- Semantic replay supplies code IDs directly rather than drawing a new
+  semantic stream; continuation carries the previous codes as prefix
+  and draws additional codes. Replay still needs acoustic conditioning
+  prefill and flow matching. Changing the score/style/lyrics or adapters
+  is not a certified transparent replay. Do not equate same codes to
+  identical waveform or artistic quality.
+- Noise is drawn per acoustic variation using seed+j; the AR draw uses
+  lm_seed+i per song; model-made plan retries use separate seed offsets.
+  For a fixed semantic stream, acoustic variants share the stream but
+  use different noise. The pipeline solves latent chunks with steps and
+  solver, overlapping/crossfading latent frames for long songs, then VAE
+  decodes. AR and NAR adapter slots are distinct. No proof of arbitrary
+  note dynamics or exact timbre control arises from any of these knobs.
+- [request.cpp](https://github.com/timoncool/yue2.cpp/blob/892b9b0311512a1c45e42d6403881d17a991b87c/src/request.cpp)
+  builds a per-track replay request with ABC, codes, resolved song/variation
+  seeds, batch sizes reset to one. This is evidence of intended replay
+  provenance, not a guarantee of bitwise equality across environments.
+
+### Completion evidence and safeguards
+
+Semantic generation caps its token budget by requested duration and
+remaining context after prompt/score; min_tokens can be clamped to the
+duration cap, and insufficient room for the minimum can fail. Acoustic
+context includes the prompt and two frame-related blocks, so it can
+require chunks even if AR generation fits. No automatic increase of
+duration, context, GPU settings or sampling budget is justified by this
+audit. End token versus token cap is a distinct completion condition;
+the pipeline records truncation if the planned score or semantic
+generation truncated. [tools/yue-server.cpp](https://github.com/timoncool/yue2.cpp/blob/892b9b0311512a1c45e42d6403881d17a991b87c/tools/yue-server.cpp)
+serializes that flag in track JSON. Absence of truncation is not proof
+of lyrical/section completeness or musical ending quality. Preserve
+engine provenance, separate observed truncation from human ending
+judgment, and do not invent missing signals when historical records
+lack them. Further audit must trace Studio propagation and Director
+consumption of the actual track flag before changing acceptance logic.
+
+Scope: source review of pinned prompt assembly, request parsing,
+sampling, pipeline and server track output, not compiled engine tests,
+full BPE vocabulary audit, or installed inference observation. No
+reference generation, replay, GPU call or settings change was made.
 
 ## Production route and control matrix
 
@@ -142,17 +228,18 @@ The table distinguishes supported input contract from acoustic fidelity.
 | Cover | score_transcribe SheetSage2 and score_match_sections, then new style/lyrics/ABC | Melody/chord estimates and uncertain sections; not exact identity or velocity extraction |
 | Semantic tokens | explicit engine-specific conditioning/replay | Not raw MIDI controls, no assumption of editable note mapping; no mixing with unsupported transpose |
 | Seeds and batches | lm_seed and seed; planning and performance batches separate | New performance can vary; cap duration is a ceiling, not guaranteed completion |
-| Acoustic solver / steps / CFG / companion | explicit synthesis controls in native schema | Not musical velocity or validated artistic tuning; retain current approved configuration |
+| AR CFG / NAR solver, steps, companion | CFG changes semantic AR logits; steps/solver and companion affect acoustic path | Not musical velocity or validated artistic tuning; retain current approved configuration |
 | LoRA | installed adapters and per-slot strength | Role/model-dependent; no automatic download/training or voice identity guarantee |
 | MIDI editor new/track mode | native MIDI/audio rendering or MIDI storage | SoundFont preview/render is not YuE2 native synthesis |
 | Native song_export | new WAV/FLAC/MP3, rate/depth, loudness target + true peak ceiling, one gain | No limiter; native route is separate from our verified offline gain-only candidate; don't re-export historical success |
 
 ## Native-first review backlog (not finished)
 
-1. Trace actual engine-side score/semantic/acoustic request handling for
-   the installed native YuE2 engine, including sampling, lyric timing,
-   continuation, model context/length and completion signals; compare
-   exact installed schema to pinned sources before changing defaults.
+1. Pinned engine-side prompt, sampling, pipeline and track truncation source
+   reviewed above. Trace truncation through Studio storage to Director
+   acceptance, review remaining notation/BPE vocabulary and lyric mask
+   semantics, and compare installed runtime identity/settings to pinned
+   sources before changing defaults.
 2. Audit composer/lyricist against writing_guide topics and actual ABC
    parser/token vocabulary; inspect permitted score edits and evidence
    gates. Distinguish hard syntax/score constraints from stylistic intent.
