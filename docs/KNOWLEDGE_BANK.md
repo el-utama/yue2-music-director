@@ -35,7 +35,7 @@ seven lyric files and seven automatic harmony files. The counts are bundled
 inventory; PR #119 verified five in CI; PR #120 verified seven in Windows/Linux CI. German art song is not a
 representative sample of modern multilingual songwriting. This is lexical
 retrieval, not semantic RAG. The text-only creative CLI now offers an opt-in versioned numeric context;
-historical numeric context is not integrated into the default autonomous production path. PR #126 adds a separate explicit authored-style option; see [offline workflow](OFFLINE_KNOWLEDGE_WORKFLOW.md).
+historical numeric context remains opt-in in autonomous production; see [Autonomous CLI](AUTONOMOUS_CLI.md#historical-knowledge-in-autonomous-production-explicit-opt-in). PR #126 adds a separate explicit authored-style option.
 Raw text must remain local by default. No open-ended corpus importer or
 editorial quality claim. R02/R03/R13 remain open (issue #117).
 
@@ -72,6 +72,6 @@ only to Composer and Lyricist; no reference titles, query, raw text, melody,
 source paths or IDs in the added provider context. Query and provenance remain
 in local job identity, and resume uses frozen evidence even if the index changes.
 The opt-in must be repeated on resume. No actual provider or Studio calls were
-made by this PR; mock tests only. The production launcher has a separate authored style selection; it does not automatically retrieve historical numerical context.
+made by this PR; mock tests only. The production launcher now supports explicit historical numeric selection with separate confirmation; it does not retrieve historical knowledge automatically. The separate text-only path above retains its own confirmation flags.
 Numerical descriptors are not proof of artistic usefulness; no semantic or
 multilingual query translation is implemented.

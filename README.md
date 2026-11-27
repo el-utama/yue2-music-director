@@ -66,7 +66,9 @@ music.cmd --knowledge --build
 The optional `--style-id folk-001` on a new autonomous job selects an
 original recipe for Composer; it is preview-only unless confirmed.
 Observed references remain local candidate metadata, and historical numeric
-knowledge is opt-in through the separate text-only workflow.
+knowledge is opt-in through the autonomous or separate text-only workflow.
+Use `--knowledge-query home` for local preview and add both `--confirm-run`
+and `--confirm-knowledge-context` only for authorized production.
 See [current requirements](PROJECT_MEMORY.md) for incomplete corpus,
 rights and live validation.
 

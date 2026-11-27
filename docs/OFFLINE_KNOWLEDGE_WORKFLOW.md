@@ -11,7 +11,7 @@ Use [PROJECT_MEMORY.md](../PROJECT_MEMORY.md) for the live acceptance register.
 |---|---|---|---|
 | Original style recipes | 1,000 unrendered recipes, 100 per category | `local/style-library.sqlite` | Selected recipe only, Composer, explicitly confirmed autonomous job |
 | Observed references | 853 candidate IDs across four source batches | `local/observed-style.sqlite` | Local browsing only; not approved for creative provider transfer |
-| Historical knowledge | 7 works (5 German, 2 English), 21 assets: lyrics, scores, automatic harmony | `local/knowledge-bank.sqlite` | Optional bounded numeric descriptors via separate text-only CLI with explicit confirmation |
+| Historical knowledge | 7 works (5 German, 2 English), 21 assets: lyrics, scores, automatic harmony | `local/knowledge-bank.sqlite` | Optional bounded numeric descriptors via autonomous or separate text-only CLI with explicit confirmation |
 
 These numbers are different units and must not be summed as songs.
 The 853 candidates include 203 Incompetech track metadata records, 517
@@ -97,9 +97,7 @@ Resume a confirmed job using `music.cmd --job folk-song --confirm-run`
 only when needed. Existing job identity retains the exact selected style,
 even if the library changes. Changing the style or adding one to an existing
 job requires a new job. No extra inference is authorized by this guide.
-The main production CLI does not automatically use observed references or
-the historical numeric knowledge context. For that separate text-only
-experiment see [Knowledge Bank](KNOWLEDGE_BANK.md#english-pilot-and-opt-in-text-only-creative-context).
+The main production CLI never automatically uses observed references or historical numeric context. Explicit historical context is available using `--knowledge-query` and separate confirmation; see [Autonomous CLI](AUTONOMOUS_CLI.md#historical-knowledge-in-autonomous-production-explicit-opt-in). The separate text-only path remains available in [Knowledge Bank](KNOWLEDGE_BANK.md#english-pilot-and-opt-in-text-only-creative-context).
 
 ## 4. Recovery and common errors
 
@@ -122,4 +120,4 @@ experiment see [Knowledge Bank](KNOWLEDGE_BANK.md#english-pilot-and-opt-in-text-
 - For a new corpus source, document scope, source version and stable IDs, license evidence and permitted use, selection rules, overlap, missing lyrics, provenance, review status and exact-head CI. No scraping copyrighted lyrics, no inferred rights approval.
 - For a change to a launcher, test the documented flags, quoted paths, empty inputs and retained-job behavior; include no-call and no-duplicate checks.
 - Update README and relevant user/technical docs, changelog and PROJECT_MEMORY.md in the same PR. Historical checkpoints must be labeled as historical.
-- Remaining: 147 metadata slots; individual rights/genre/identity review; broader legitimate lyrics and deeper linguistic/musical features; production integration of historical knowledge and approved observed data; independent artistic evaluation; live validation of the new preset option. No repeat of retained Unreachable, ASR, MOSS, cover or export.
+- Remaining: 147 metadata slots; individual rights/genre/identity review; broader legitimate lyrics and deeper linguistic/musical features; live and artistic evaluation of explicit historical context, integration of approved observed data; independent artistic evaluation; live validation of the new preset option. No repeat of retained Unreachable, ASR, MOSS, cover or export.
