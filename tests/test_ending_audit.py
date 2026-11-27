@@ -52,3 +52,32 @@ class NativeCompletionTests(unittest.TestCase):
         self.assertEqual(replay_cut_reason({"truncated":True,"duration":195,"semantic_tokens":",".join(["1"]*4875)}),"length")
         self.assertEqual(replay_cut_reason({"truncated":True,"duration":240,"semantic_tokens":",".join(["1"]*3537)}),"memory")
         self.assertIsNone(replay_cut_reason({"truncated":True}))
+
+    def test_malformed_completion_evidence_blocks_provisional(self):
+        from yue2_music_director.native_completion import inspect_completion, blocks_provisional
+        song={"id":"s","metadata":{"job_id":"j"}}
+        for replay in ({"truncated":"true","semantic_tokens":"1,2"},
+                       {"truncated":None,"semantic_tokens":"1,2"},
+                       {"truncated":0,"semantic_tokens":"1,2"},
+                       {"semantic_tokens":True},{"semantic_tokens":"bad"},
+                       {"semantic_tokens":"1,,2"},{"semantic_tokens":"32768"},
+                       {"truncated":False,"semantic_tokens":"-1"}):
+            with self.subTest(replay=replay):
+                result=inspect_completion({**song,"replay_request":replay},"s","j")
+                self.assertEqual(result["status"],"unknown")
+                self.assertTrue(blocks_provisional(result))
+        # Sparse replay without a marker remains compatible with the pinned engine.
+        result=inspect_completion({**song,"replay_request":{"semantic_tokens":"0, 32767,12"}},"s","j")
+        self.assertEqual(result["status"],"not_flagged")
+        self.assertFalse(result["musical_completion_verified"])
+        self.assertFalse(blocks_provisional(result))
+
+    def test_invalid_stream_does_not_invent_cut_reason(self):
+        from yue2_music_director.native_completion import replay_cut_reason, inspect_completion, blocks_provisional
+        for tokens in ("not-a-code","1,,2","32768","9"*5000):
+            replay={"truncated":True,"semantic_tokens":tokens}
+            self.assertIsNone(replay_cut_reason(replay))
+            result=inspect_completion({"id":"s","metadata":{"job_id":"j"},"replay_request":replay},"s","j")
+            self.assertEqual(result["status"],"truncated_reason_unknown")
+            self.assertTrue(blocks_provisional(result))
+        self.assertEqual(replay_cut_reason({"truncated":True,"duration":1e308,"semantic_tokens":"1"}),"memory")
