@@ -72,7 +72,7 @@ def prepare(repo,release,snapshot,variants):
         stem=name[:-5]
         if manifest["files"][name]!=t["audio_sha256"]:
             raise ValueError("Export audio hash differs from retained original")
-        expected=(source["brief"]["lyrics"].rstrip()+"\n").encode("utf-8")
+        expected=ex.lyric_bytes(source)
         if (stem+".txt" not in files or files[stem+".txt"].read_bytes()!=expected):
             raise ValueError("Export lyric text differs")
         if t["timing"]["status"] not in ("exported_unverified_display_anchors","unavailable"):
