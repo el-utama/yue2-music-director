@@ -64,7 +64,7 @@ def stage(root, role, module, provider, data, *, retry=False, semantic_check=Non
     return result
 
 
-def prepare(root, provider, request, language, duration, *, retry_role=None, duration_guidance=False, direction_guidance=False, timing_guidance=False, typed_spec=None, knowledge=None, style_recipe=None):
+def prepare(root, provider, request, language, duration, *, retry_role=None, duration_guidance=False, direction_guidance=False, timing_guidance=False, structured_direction=False, typed_spec=None, knowledge=None, style_recipe=None):
     data={"request":request,"language":language,"duration_seconds":duration}
     def role_data(role, data):
         result=data
@@ -83,7 +83,7 @@ def prepare(root, provider, request, language, duration, *, retry_role=None, dur
               "guidance":"Plan a compact complete song, with a resolved final sung phrase and short instrumental tail inside the target. Allow room for introductions, instrumental breaks, breathing and sustained notes. Avoid redundant verses, long repeated choruses or extended outros. Lyricist should adapt line and section count to pacing; reviewer should stop implausibly long plans. Do not treat duration as an exact target or omit necessary closure."}
     if typed_spec is not None:
         from . import typed_creative as tc, composer_typed
-        if direction_guidance or timing_guidance:
+        if direction_guidance or timing_guidance or structured_direction:
             raise ValueError("Typed direction uses a separate contract")
         spec=tc.validate_spec(typed_spec)
         data["typed_requirements"]=spec
@@ -116,12 +116,12 @@ def prepare(root, provider, request, language, duration, *, retry_role=None, dur
         return {"composition":music,"lyrics":words["lyrics"],"review":review}
     if direction_guidance:
         from . import creative_direction as cd
-        data["direction_guidance"]=cd.GUIDANCE
+        data["direction_guidance"]=cd.STRUCTURED_GUIDANCE if structured_direction else cd.GUIDANCE
         if timing_guidance:
             data["opening_timing_guidance"]=cd.TIMING_GUIDANCE
-    elif timing_guidance:
-        raise ValueError("Timing guidance requires direction guidance")
-    music=stage(root,"composer",composer,provider,role_data("composer",data),retry=retry_role=="composer",
+    elif timing_guidance or structured_direction:
+        raise ValueError("Timing/structured guidance requires direction guidance")
+    music=stage(root,"composer",composer.Structured if structured_direction else composer,provider,role_data("composer",data),retry=retry_role=="composer",
                 semantic_check=cd.parse_direction if direction_guidance else None)
     words=stage(root,"lyricist",lyricist,provider,role_data("lyricist",{**data,"composition":music}),retry=retry_role=="lyricist",
                 semantic_check=(lambda value: cd.validate_opening(music,value["lyrics"])) if direction_guidance else None)

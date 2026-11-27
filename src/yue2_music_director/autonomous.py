@@ -16,8 +16,9 @@ from . import creative_direction as cd, typed_creative as tc
 from . import style_selection as ss, autonomous_knowledge as ak
 
 LEGACY_POLICY="reviewed-score-v1"
-POLICY=cd.POLICY
-DIRECTION_POLICIES=(cd.PREVIOUS_POLICY,POLICY)
+POLICY=cd.STRUCTURED_POLICY
+DIRECTION_POLICIES=(cd.PREVIOUS_POLICY,cd.POLICY,POLICY)
+TIMING_POLICIES=(cd.POLICY,POLICY)
 POLICIES=(LEGACY_POLICY,*DIRECTION_POLICIES,tc.POLICY)
 
 
@@ -40,7 +41,7 @@ def make_inputs(result, identity):
     if identity.get("production_policy") in DIRECTION_POLICIES:
         opening=cd.validate_opening(music,brief["lyrics"])["opening"]
         constraints["opening"]={"mode":"must","value":opening}
-        if identity["production_policy"]==POLICY:
+        if identity["production_policy"] in TIMING_POLICIES:
             constraints["opening_timing"]={"mode":"must","value":opening}
     intent={"schema":"artist-intent-v1","route":"reviewed_native",
           "concept":music["concept"],"emotional_arc":music["emotional_arc"],"performance":music["performance"],
@@ -123,7 +124,8 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
         print("Creative stages",flush=True)
         result=cc.prepare(root,provider,request,language,duration,retry_role=retry_role,duration_guidance=True,
                           direction_guidance=identity["production_policy"] in DIRECTION_POLICIES,
-                          timing_guidance=identity["production_policy"]==POLICY,
+                          timing_guidance=identity["production_policy"] in TIMING_POLICIES,
+                          structured_direction=identity["production_policy"]==POLICY,
                           typed_spec=identity.get("creative_spec"),style_recipe=identity.get("style_recipe"),
                           knowledge=ak.retained_snapshot(identity))
         freeze(root/"creative-result.json",result)
@@ -263,7 +265,8 @@ def continue_plan(repo,job,url,*,confirm=False,provider_factory=None,retry_role=
         result=cc.prepare(parent,provider,identity["request"],identity["language"],
                           identity["duration_seconds"],duration_guidance=True,
                           direction_guidance=identity["production_policy"] in DIRECTION_POLICIES,
-                          timing_guidance=identity["production_policy"]==POLICY,
+                          timing_guidance=identity["production_policy"] in TIMING_POLICIES,
+                          structured_direction=identity["production_policy"]==POLICY,
                           typed_spec=identity.get("creative_spec"),style_recipe=identity.get("style_recipe"),
                           knowledge=ak.retained_snapshot(identity))
         if nd.read(parent/"creative-result.json")!=result or result["review"]["decision"]!="retain":

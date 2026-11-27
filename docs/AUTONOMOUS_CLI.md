@@ -139,3 +139,22 @@ Live continuation on 780d670: retained creative stages, native MIDI gate, one so
 Operator rated the second live take good in all five musical categories; reported no intro and female vocalist. The latter is not a fault by itself. New jobs use a versioned direction guide: explicit instrumental_intro or direct_vocal, vocalist identity, narrator perspective and musical rationale within the existing Composer performance string. Lyricist must include a wordless [Intro] when planned, or begin with a sung section for direct_vocal. Local score gate checks actual first notated section and vocal activity; this does not guarantee acoustic onset or voice identity. Editorial reviewer checks story, style and explicit user requirements. Director receives advisory-evidence limits and opening score metrics only for the new policy. Old reviewed-score-v1 jobs retain exactly their original guidance and constraints; no migration or automatic generation. No new provider schema or call budget. No forced intro on every song, no fixed artist voice, no live validation yet. Finishing and Artist Memory are separate work.
  
 New opted-in historical contexts include descriptive lexical repetition, melodic event ratios and automatic harmony token statistics; see [Knowledge Bank](KNOWLEDGE_BANK.md#descriptive-craft-analysis-v3). Saved v1 contexts preserve the exact earlier payload. Rebuild the derived index for new retrieval; no raw reference transfer.
+
+
+## Structured default Composer direction
+
+A reported Indonesian natural-language job reached the Composer provider but
+returned ordinary performance prose instead of the old required headers.
+No downstream stages ran. New autonomous jobs use
+`reviewed-score-v5-structured`, with separate required opening, vocal,
+narrator and musical_rationale fields in the Composer JSON contract.
+The local validator converts a valid response into the established canonical
+performance format; a complete and valid legacy-format response remains
+acceptable for providers without schema enforcement. Missing decisions are
+not invented. The existing score timing gate remains mandatory.
+Old v1/v2/v3 and explicit v4 typed jobs preserve their original contract,
+prompt and receipt identity. An old rejected v3 job may use its existing
+explicit one-time retry, but is not silently migrated or repaired; this may
+still fail. Do not overwrite a rejected receipt or retry blindly.
+Offline tests cover structured responses and legacy preservation. Hosted
+schema compatibility and live acceptance remain unverified.

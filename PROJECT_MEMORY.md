@@ -159,3 +159,18 @@ repeat prior requirements.
 2026-11-27: New craft analysis derives punctuation group and repeated token-sequence statistics from actual extracted text, melodic event ratios from notation and conservative automatic RomanText token statistics. No stanza/rhyme/hook/narrative/emotion or verified harmonic-function claim. Index v3 requires rebuild; creative payload v2 extends bounded numeric fields while v1 frozen snapshots retain exact previous payload and consent. No data added or provider/Studio inference. Tests use hand-calculated fixtures and actual bundled corpus; exact-head CI pending. R02/R03/R13/R14 open, 147 candidate slots unchanged. Next substantive work: source expansion and held-out artistic evaluation.
 
 2026-11-27: PR #131 merged after exact-head green CI. Added opt-in --knowledge-auto brief-derived local lexical query (bounded unique terms, common English/Indonesian request words filtered). Separate transfer consent; frozen matched selection or explicit no-term/no-match abstention, no provider payload on abstention. Manual query unchanged. No automatic genre inference, translation, semantic retrieval, new sources or inference. Mock CI pending; corpus and artistic validation remain open. Next: actual data expansion, held-out creative evaluation.
+
+
+2026-11-27: P0 live operator report on main 7d7a81c (PR #133 merged,
+workflow 45977889206 successful): an Indonesian natural-language request
+failed at Composer semantic validation. Retained rejection contains coherent
+ordinary performance prose with opening and vocal descriptors, but no
+explicit narrator or rationale. No downstream stages; preserve private
+receipt and job unchanged. R01/R08/R09 remain open. New default
+reviewed-score-v5-structured separates musical direction fields in the wire
+contract and canonicalizes validated responses; v3 and older jobs retain
+their existing policy. Synthetic Indonesian regression and old receipt
+compatibility tests added; exact-head CI and independent hosted/live
+acceptance pending. No new provider or Studio call. Do not count this as
+repair of the existing rejected job. Prioritize personal production
+readiness over convenience expansion, preserving every R02–R14 requirement.

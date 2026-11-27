@@ -39,3 +39,9 @@ def validate_opening(composition,lyrics):
     elif first["name"] in ("intro","interlude") or not first["lines"]:
         raise ValueError("Planned direct vocal requires an opening sung section")
     return direction
+
+
+# Versioned separately from reviewed-score-v3 and explicit v4 typed jobs.
+STRUCTURED_POLICY="reviewed-score-v5-structured"
+STRUCTURED_GUIDANCE={**GUIDANCE, "version":"opening-vocal-structured-v1",
+    "composer":"Return opening, vocal, narrator and musical_rationale as separate required JSON fields. Write performance as musical prose. Select a purposeful opening, vocal character and arrangement progression based on the story. Explicit user requirements take priority; vocalist and narrator are separate. Include vocal identity and timbre in the positive English style. Budget opening, transitions and closure within the target score duration."}
