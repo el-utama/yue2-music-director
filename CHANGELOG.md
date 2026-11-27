@@ -1,5 +1,10 @@
 # Changelog and research milestones
 
+## Unreleased — descriptive historical craft metrics
+
+- Extend historical index v3 with lexical repetition, punctuation groups, melodic event fractions and conservative automatic harmony token summaries. New numeric creative context v2; exact v1 frozen receipt compatibility retained. No inferred rhyme, hook, emotion or verified harmony claim; no new source data or inference.
+
+
 ## Unreleased — opt-in autonomous historical knowledge
 
 - Reuse bounded numerical historical descriptors in Composer/Lyricist for explicitly selected autonomous jobs; local preview, separate transfer consent, frozen checksummed job context, resume without index reread. No new provider stages or inference; observed-reference data remains local. Corpus and artistic acceptance remain open.

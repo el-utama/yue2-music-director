@@ -40,7 +40,7 @@ Preview prints local source provenance and selected numeric descriptors (up to
 three works per role); it is not a job receipt. A query with no matches in
 either role stops. To authorize a new production job with this context, repeat
 the preview command with both `--confirm-run --confirm-knowledge-context`.
-Only the existing bounded numerical fields and advisory guidance enter
+Only versioned bounded numerical fields and advisory guidance enter
 Composer and Lyricist requests; no source title, query, work ID, hashes,
 raw lyric, melody, recording, or database is sent as the knowledge payload.
 The normal authorized song brief and generated lyrics still enter the existing
@@ -110,3 +110,5 @@ Live continuation on 780d670: retained creative stages, native MIDI gate, one so
 ## Intentional opening and vocalist direction (reviewed-score-v2)
 
 Operator rated the second live take good in all five musical categories; reported no intro and female vocalist. The latter is not a fault by itself. New jobs use a versioned direction guide: explicit instrumental_intro or direct_vocal, vocalist identity, narrator perspective and musical rationale within the existing Composer performance string. Lyricist must include a wordless [Intro] when planned, or begin with a sung section for direct_vocal. Local score gate checks actual first notated section and vocal activity; this does not guarantee acoustic onset or voice identity. Editorial reviewer checks story, style and explicit user requirements. Director receives advisory-evidence limits and opening score metrics only for the new policy. Old reviewed-score-v1 jobs retain exactly their original guidance and constraints; no migration or automatic generation. No new provider schema or call budget. No forced intro on every song, no fixed artist voice, no live validation yet. Finishing and Artist Memory are separate work.
+ 
+New opted-in historical contexts include descriptive lexical repetition, melodic event ratios and automatic harmony token statistics; see [Knowledge Bank](KNOWLEDGE_BANK.md#descriptive-craft-analysis-v3). Saved v1 contexts preserve the exact earlier payload. Rebuild the derived index for new retrieval; no raw reference transfer.

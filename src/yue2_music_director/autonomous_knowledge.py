@@ -9,13 +9,13 @@ def validate(value):
     if not isinstance(value, dict) or set(value) != {"schema", "snapshot", "sha256"} or value["schema"] != SCHEMA:
         raise ValueError("Invalid retained knowledge selection")
     saved = value["snapshot"]
-    if not isinstance(saved, dict) or set(saved) != {"schema", "query", "roles"} or saved["schema"] != ck.VERSION:
+    if not isinstance(saved, dict) or set(saved) != {"schema", "query", "roles"} or saved["schema"] not in (ck.LEGACY_VERSION, ck.VERSION):
         raise ValueError("Invalid knowledge snapshot")
     query = saved["query"]
     if not isinstance(query, str) or len(query) > 500 or not 1 <= len(re.findall(r"[^\W_]+", query)) <= 30:
         raise ValueError("Invalid knowledge query")
     roles = saved["roles"]
-    if not isinstance(roles, dict) or set(roles) != set(ck.FIELDS):
+    if not isinstance(roles, dict) or set(roles) != set(ck.fields_for(saved["schema"])):
         raise ValueError("Invalid knowledge roles")
     if not any(roles.values()):
         raise ValueError("No historical knowledge matches; choose a different query")
