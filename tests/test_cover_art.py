@@ -23,15 +23,20 @@ class MusicProvider:
     def identity(self):
         return {"model":"fixture"}
     def complete(self,role,prompt,data):
-        return {"composer":{"title":self.job,"style":"English folk","concept":"Leaving home",
+        result={"composer":{"title":self.job,"style":"English folk","concept":"Leaving home",
                             "emotional_arc":"Loss to hope","performance":"Soft acoustic voice"},
                 "lyricist":{"lyrics":"[Verse]\nPrivate words"},
                 "reviewer":{"decision":"retain","rationale":"Fixture"},
                 "director":{"decision":"retain_provisional","rationale":"Fixture",
                             "suggested_next_step":"Listen"}}[role]
+        if role=="composer" and "typed_requirements" in data:
+            result["style"]="English folk, female vocals"
+            result["direction"]={"opening":"direct_vocal","vocal":"female","narrator":"first person",
+                                 "section_plan":[{"section":"verse#1","purpose":"Introduce the departure"}]}
+        return result
 
 
-def make_song(repo,job,continuation=False):
+def make_song(repo,job,continuation=False,typed_spec=None):
     from yue2_music_director import autonomous as au, creative_core as cc, listening_director as ld
     from yue2_music_director import artist_run as ar, director_decision as dd
     from test_creative_direction import HEADER, VERSE
@@ -41,8 +46,12 @@ def make_song(repo,job,continuation=False):
     identity={"schema":"autonomous-job-v1","job":job,"request":"Original synthetic fixture",
               "language":"en","duration_seconds":90,"provider":provider.identity(),
               "studio_url":"http://127.0.0.1:8791/mcp","production_policy":au.LEGACY_POLICY}
+    if typed_spec is not None:
+        identity["creative_spec"]=au.tc.validate_spec(typed_spec)
+        identity["production_policy"]=au.tc.POLICY
     nd.atomic_write(parent/"job.json",identity)
-    creative=cc.prepare(parent,provider,identity["request"],"en",90,duration_guidance=True)
+    creative=cc.prepare(parent,provider,identity["request"],"en",90,duration_guidance=True,
+                        typed_spec=identity.get("creative_spec"))
     nd.atomic_write(parent/"creative-result.json",creative)
     brief,intent=au.make_inputs(creative,identity)
     nd.atomic_write(parent/"brief.json",brief)
