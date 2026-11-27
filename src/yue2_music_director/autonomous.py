@@ -10,12 +10,12 @@ from . import native_draft as nd, artist_run
 from .creative_provider import TextProvider, ROLES
 from .mcp import MCPError, configured_endpoint
 from .prosody import parse_lyrics
-from . import creative_direction as cd
+from . import creative_direction as cd, typed_creative as tc
 
 LEGACY_POLICY="reviewed-score-v1"
 POLICY=cd.POLICY
 DIRECTION_POLICIES=(cd.PREVIOUS_POLICY,POLICY)
-POLICIES=(LEGACY_POLICY,*DIRECTION_POLICIES)
+POLICIES=(LEGACY_POLICY,*DIRECTION_POLICIES,tc.POLICY)
 
 
 def freeze(path, value):
@@ -39,15 +39,19 @@ def make_inputs(result, identity):
         constraints["opening"]={"mode":"must","value":opening}
         if identity["production_policy"]==POLICY:
             constraints["opening_timing"]={"mode":"must","value":opening}
-    intent=artist_run.validate_intent({"schema":"artist-intent-v1","route":"reviewed_native",
+    intent={"schema":"artist-intent-v1","route":"reviewed_native",
           "concept":music["concept"],"emotional_arc":music["emotional_arc"],"performance":music["performance"],
           "section_purposes":purposes,"constraints":constraints,"retain_soft_flags":{},"follow_lyrics":True,
-          "budget":{"score_jobs":1,"song_jobs":1,"recognition_calls":1}})
-    return brief,intent
+          "budget":{"score_jobs":1,"song_jobs":1,"recognition_calls":1}}
+    if identity.get("production_policy")==tc.POLICY:
+        intent.update(tc.intent_fields(music,identity["creative_spec"],brief["lyrics"]))
+    return brief,artist_run.validate_intent(intent)
 
 
 def launch(repo, job, request, language, duration, url, *, confirm=False,
-           provider_factory=None, retry_role=None):
+           provider_factory=None, retry_role=None, typed_spec=None):
+    if typed_spec is not None:
+        typed_spec=tc.validate_spec(typed_spec)
     cc.validate_job(job,request,language,duration)
     url=configured_endpoint(url)
     print("Job:",job,flush=True)
@@ -62,7 +66,9 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
     root=jobs/job
     with ld.lock(jobs/".active",context={"job":job,"root":root.relative_to(repo).as_posix(),"stage":"autonomous"}):
         identity={"schema":"autonomous-job-v1","job":job,"request":request,"language":language,
-                  "duration_seconds":duration,"provider":provider.identity(),"studio_url":url,"production_policy":POLICY}
+                  "duration_seconds":duration,"provider":provider.identity(),"studio_url":url,"production_policy":tc.POLICY if typed_spec is not None else POLICY}
+        if typed_spec is not None:
+            identity["creative_spec"]=typed_spec
         if retry_role is not None:
             if (not (root/(retry_role+".attempt.json")).is_file()
                     or (root/(retry_role+".json")).exists()
@@ -72,6 +78,8 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
             previous=nd.read(root/"job.json")
             if previous.get("production_policy") not in POLICIES:
                 raise ValueError("Legacy job retained unchanged; use --inspect-ending, not a new production route on this job")
+            if (previous["production_policy"]==tc.POLICY)!=(typed_spec is not None):
+                raise ValueError("Retained typed job must use its exact specification")
             identity["production_policy"]=previous["production_policy"]
             if previous!=identity:
                 raise ValueError("Retained job identity differs")
@@ -83,7 +91,8 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
         print("Creative stages",flush=True)
         result=cc.prepare(root,provider,request,language,duration,retry_role=retry_role,duration_guidance=True,
                           direction_guidance=identity["production_policy"] in DIRECTION_POLICIES,
-                          timing_guidance=identity["production_policy"]==POLICY)
+                          timing_guidance=identity["production_policy"]==POLICY,
+                          typed_spec=identity.get("creative_spec"))
         freeze(root/"creative-result.json",result)
         if result["review"]["decision"]!="retain":
             print("Editorial stop. No native generation:",root/"creative-result.json",flush=True)
@@ -212,12 +221,17 @@ def continue_plan(repo,job,url,*,confirm=False,provider_factory=None,retry_role=
         if provider.identity()!=identity["provider"]:
             raise ValueError("Retained provider identity differs")
         for role in ("composer","lyricist","reviewer"):
+            if role=="lyricist" and identity.get("creative_spec",{}).get("lyrics") is not None:
+                if not (parent/"operator-lyrics.json").is_file():
+                    raise ValueError("Retained operator lyrics missing")
+                continue
             if not (parent/(role+".json")).is_file() or not (parent/(role+".attempt.json")).is_file():
                 raise ValueError("Retained creative receipt missing")
         result=cc.prepare(parent,provider,identity["request"],identity["language"],
                           identity["duration_seconds"],duration_guidance=True,
                           direction_guidance=identity["production_policy"] in DIRECTION_POLICIES,
-                          timing_guidance=identity["production_policy"]==POLICY)
+                          timing_guidance=identity["production_policy"]==POLICY,
+                          typed_spec=identity.get("creative_spec"))
         if nd.read(parent/"creative-result.json")!=result or result["review"]["decision"]!="retain":
             raise ValueError("Retained creative result differs")
         brief,intent=make_inputs(result,identity)
@@ -272,6 +286,7 @@ def main():
     p.add_argument("--job")
     p.add_argument("--continue-plan",metavar="JOB",help="Explicit continuation of a rechecked parser-blocked plan")
     p.add_argument("--request")
+    p.add_argument("--creative-spec",type=Path,help="Optional explicit typed requirements and exact lyrics JSON")
     p.add_argument("--language",choices=sorted(cc.SUPPORTED))
     p.add_argument("--duration",type=int)
     p.add_argument("--confirm-run",action="store_true",
@@ -281,7 +296,7 @@ def main():
     try:
         repo=a.repo.resolve()
         if a.continue_plan is not None:
-            if any(x is not None for x in (a.job,a.request,a.language,a.duration)):
+            if any(x is not None for x in (a.job,a.request,a.language,a.duration,a.creative_spec)):
                 raise ValueError("Continuation does not allow job or brief overrides")
             return continue_plan(repo,a.continue_plan,a.url,confirm=a.confirm_run,retry_role=a.retry_text)
         if a.retry_text and not a.job:
@@ -290,8 +305,16 @@ def main():
         # Validate path component before reading an existing job.
         cc.validate_job(job,"placeholder","en",195)
         saved=repo/"results/autonomous"/job/"job.json"
+        typed_spec=None
+        if a.creative_spec is not None:
+            from .creative_provider import strict_json
+            if a.creative_spec.stat().st_size>100000:
+                raise ValueError("Creative specification exceeds size limit")
+            typed_spec=tc.validate_spec(strict_json(a.creative_spec.read_bytes().decode("utf-8-sig")))
         if saved.is_file():
             previous=nd.read(saved)
+            if typed_spec is None:
+                typed_spec=previous.get("creative_spec")
             request=a.request if a.request is not None else previous["request"]
             language=a.language if a.language is not None else previous["language"]
             duration=a.duration if a.duration is not None else previous["duration_seconds"]
@@ -303,7 +326,7 @@ def main():
                 request=a.request
             language=a.language or "en"
             duration=a.duration if a.duration is not None else 195
-        return launch(repo,job,request,language,duration,a.url,confirm=a.confirm_run,retry_role=a.retry_text)
+        return launch(repo,job,request,language,duration,a.url,confirm=a.confirm_run,retry_role=a.retry_text,typed_spec=typed_spec)
     except (OSError,ValueError,KeyError,TypeError,MCPError,subprocess.SubprocessError,EOFError) as e:
         print("ERROR:",e,file=sys.stderr,flush=True)
         print("Preserve job and receipts. Resume only the same job; no blind retry.",file=sys.stderr,flush=True)
