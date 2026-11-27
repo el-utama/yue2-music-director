@@ -36,11 +36,33 @@ YuE2 Music Director adalah agent pendamping YuE2 Studio yang bertugas memahami t
 
 **Penggunaan dasar:** Python 3.10+ dan Git diperlukan. Untuk instalasi editable dan tes offline, ikuti bagian Setup. Jalankan `py -3 -m yue2_music_director.cli --help` untuk melihat perintah aktual. FFmpeg dan Studio lokal diperlukan hanya untuk operasi terkait. Jangan mengulang eksperimen yang sudah selesai; periksa laporan dan jurnal lokal terlebih dahulu. Jangan unggah audio, lirik, dataset atau konfigurasi pribadi ke repository publik.
 
-**Rencana terkini:** baca [roadmap agent otonom](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md). Pertahankan hasil musik lama, verifikasi spesialis downstream tanpa regenerasi, dan integrasikan release manifest secara terpisah. Web app, katalog ribuan lagu dan Artist Memory menyusul; tidak perlu mengulang demo lama.
+**Rencana terkini:** baca [roadmap agent otonom](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md). Pertahankan hasil musik lama, verifikasi spesialis downstream tanpa regenerasi, dan integrasikan release manifest secara terpisah. Artist Memory lokal dan tiga indeks pengetahuan offline telah tersedia pada tahap alpha; korpus lengkap, evaluasi artistik, serta layanan/web app privat masih belum selesai. Tidak perlu mengulang demo lama.
 
 ## Artist Memory (local, opt-in)
 
 Use `music.cmd --artist-memory ARTIST` to inspect private versioned artist preferences. An explicitly saved profile can be compiled into an existing typed creative specification without provider or Studio calls. See [Artist Memory](docs/ARTIST_MEMORY.md). Inferred observations are never automatically applied.
+
+## Offline knowledge and style libraries
+
+Start with the [offline knowledge workflow](docs/OFFLINE_KNOWLEDGE_WORKFLOW.md)
+for setup, browsing, selected-style production, recovery and current counts.
+The repository contains 1,000 original recipes, 853 candidate reference IDs
+and seven historical lyric/score works, not 1,860 unique songs.
+All three indexes use local SQLite/FTS5, without GPU or network.
+Build only the indexes you need:
+
+```cmd
+music.cmd --styles --build
+music.cmd --references --build
+music.cmd --knowledge --build
+```
+
+The optional `--style-id folk-001` on a new autonomous job selects an
+original recipe for Composer; it is preview-only unless confirmed.
+Observed references remain local candidate metadata, and historical numeric
+knowledge is opt-in through the separate text-only workflow.
+See [current requirements](PROJECT_MEMORY.md) for incomplete corpus,
+rights and live validation.
 
 ## Readiness check (Windows)
 

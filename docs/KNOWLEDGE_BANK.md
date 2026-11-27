@@ -32,10 +32,10 @@ No contemporary lyrics or private operator data are included.
 
 This is a limited source-specific pilot: seven unique works (five German, two English), seven score files,
 seven lyric files and seven automatic harmony files. The counts are bundled
-inventory; PR #119 verified five in CI; the seven-work follow-up requires fresh CI. German art song is not a
+inventory; PR #119 verified five in CI; PR #120 verified seven in Windows/Linux CI. German art song is not a
 representative sample of modern multilingual songwriting. This is lexical
 retrieval, not semantic RAG. The text-only creative CLI now offers an opt-in versioned numeric context;
-the default autonomous production path is unchanged.
+historical numeric context is not integrated into the default autonomous production path. PR #126 adds a separate explicit authored-style option; see [offline workflow](OFFLINE_KNOWLEDGE_WORKFLOW.md).
 Raw text must remain local by default. No open-ended corpus importer or
 editorial quality claim. R02/R03/R13 remain open (issue #117).
 
@@ -50,8 +50,7 @@ music.cmd --knowledge --build --source-dir "D:\\OpenScore Lieder"
 ```
 
 All required files must match the manifest; partial or changed inputs fail
-without replacing the existing index. The full 24-work index is not yet
-verified; only the bundled subset is tested. This does not import arbitrary
+without replacing the existing index. The full external import (24 German plus two bundled English works = 26 expected) is not yet verified; only the bundled subset and failure paths are tested. This does not import arbitrary
 new corpus sources. V2 adds lexical type/token ratio (not rhyme or semantic
 quality), notated vocal rests, key signatures and consecutive pitch interval
 counts (not acoustic phrasing or a verified voice-separated polyphonic analysis).
@@ -73,6 +72,6 @@ only to Composer and Lyricist; no reference titles, query, raw text, melody,
 source paths or IDs in the added provider context. Query and provenance remain
 in local job identity, and resume uses frozen evidence even if the index changes.
 The opt-in must be repeated on resume. No actual provider or Studio calls were
-made by this PR; mock tests only. The default production launcher is unchanged.
+made by this PR; mock tests only. The production launcher has a separate authored style selection; it does not automatically retrieve historical numerical context.
 Numerical descriptors are not proof of artistic usefulness; no semantic or
 multilingual query translation is implemented.

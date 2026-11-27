@@ -1,4 +1,10 @@
-# Observed style metadata pilot
+# Observed style metadata — source batches and current inventory
+
+Current index v4, PR #125 merged and CI-tested: 853 candidate IDs (203 track metadata, 517 annotated clips, 95 curated Lo-fi, eight disclosed AI Chillhop tracks, 30 FMA album candidates). See [offline workflow](OFFLINE_KNOWLEDGE_WORKFLOW.md) for exact genre counts and recovery. No source-wide recording rights or artistically assessed acceptance. 147 candidate slots remain. No lyrics in observed index.
+
+Additional source batches: [MusicCaps adaptation and license](../data/observed_styles/MUSICCAPS_LICENSE.md), [curated Lo-fi](CURATED_LOFI.md), [FMA album candidates](FMA_ALBUM_CANDIDATES.md). The following section describes the original Incompetech batch only.
+
+## Historical first batch (203 candidates)
 
 R14: 100 actual references in each requested category, lyrics if available.
 This batch is separate from the 1,000 original presets. It contains 203
@@ -22,7 +28,7 @@ the dataset to noncommercial research/academic use and requires prior written
 authorization for other uses. Do not import into production.
 FMA metadata CC BY 4.0 remains a candidate; original archive not accessible
 in this environment. MusicCaps metadata CC BY-SA 4.0; audio rights separate.
-Neither was imported here. Do not infer actual references from aggregate
+The bulk FMA archive remains inaccessible; later PRs imported factual playlist and FMA album metadata. MusicCaps annotation subset imported in PR #123. Do not infer actual references from aggregate
 counts, or assign lo-fi, trap, folk, or hip-hop labels without source evidence.
 All real-reference acceptance quotas remain open until individual rights and
 style evidence are reviewed; no lyrics supplied in this batch.
@@ -33,4 +39,4 @@ Offline Windows usage:
 `music.cmd --references --genre backsound --search piano`
 
 Creates local/observed-style.sqlite. No network calls, GPU, inference, or
-provider transmission. Autonomous integration remains open.
+provider transmission. Autonomous integration of observed references remains open. Rebuild v4 from bundled sources after upgrading; this does not trigger provider or Studio calls.

@@ -28,21 +28,22 @@ and whether lyrics exist/are eligible. No claim about exact tempo, instruments
 or mood unless present in source/analysis. Do not substitute synthetic recipes
 for this acceptance count.
 
-## Candidate sources (not imported)
+## Source acquisition status
+
+Current observed index contains 853 candidate IDs; 147 metadata slots remain. See [observed references](OBSERVED_STYLES.md) and [offline workflow](OFFLINE_KNOWLEDGE_WORKFLOW.md) for current counts. No observed-source lyrics or individual recording rights approval.
 
 - MTG-Jamendo, pinned revision cafd8e20c265ed84f1e61f1c875327971f43a62f:
   https://github.com/MTG/mtg-jamendo-dataset — genre, mood/theme and instrument
-  tags. Raw file 8.56 MB not retrievable through current connector. Source
+  tags. Raw file 8.56 MB was successfully retrieved via the Git blob API in PR #122; the source explicitly restricts use to noncommercial research/academic purposes without written authorization. Excluded from production corpus. Source
   genre stats: blues 1,092, hiphop 2,670, lofi 246, trap only 64. No lyrics
   supplied; track audio licenses separate. Verify metadata license and
   per-track eligibility before copying any assets.
 - FMA: https://github.com/mdeff/fma — metadata CC BY 4.0; recording licenses
-  vary. Candidate supplemental source, especially legacy blues/jazz/pop/folk.
+  vary. Bulk archive access blocked; selected factual playlist and FMA album metadata separately imported, individual rights review pending.
 - Free Music Archive search: https://freemusicarchive.org/search — candidate
   for modern lo-fi, lo-fi hip-hop and trap; check per-track license.
 - MusicCaps: https://huggingface.co/datasets/google/MusicCaps — 5,521
-  audio descriptions, not necessarily a balanced genre dataset; verify
-  annotation terms separately from audio rights.
+  audio descriptions; 517 adapted annotation candidates imported under CC BY-SA 4.0 in PR #123, audio rights separate.
 
 No provider calls, model downloads, synthesis, or external transfer of private
 material were made. Do not count any source-reported totals as imported rows.

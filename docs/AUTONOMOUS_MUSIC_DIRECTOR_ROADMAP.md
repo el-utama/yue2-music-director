@@ -10,6 +10,10 @@ The live reference take and original release assets remain immutable. PRs #88–
 
 The later [native audit checkpoint](NATIVE_AUDIT_CHECKPOINT.md) records PRs #104–109, completed live conversion and guide reads, current CI evidence, and ordered artistic work. Remote audit access is documented separately; it does not complete the private production service milestone.
 
+## Offline knowledge checkpoint (PRs 118–126)
+
+The [offline knowledge workflow](OFFLINE_KNOWLEDGE_WORKFLOW.md) records current data and exact commands. Seven historical lyric/score works, 1,000 original style recipes and 853 observed-reference candidate IDs are bundled and CI-tested. Explicit selected-style context reaches the autonomous Composer only on confirmed runs; historical numerical context is opt-in in the separate text-only CLI. No observed-corpus transfer. Local artist profiles are implemented and CI-tested, not live validated with hosted typed-schema production. R02/R03/R13/R14 remain open: 147 candidate slots, recording identity/rights/genre verification, broader legal lyrics, deeper technique analysis, versioned creative retrieval and independent artistic evaluation. P0 alpha is not full acceptance. No new live work authorized. Use [PROJECT_MEMORY.md](../PROJECT_MEMORY.md) for current state; earlier snapshots below are historical.
+
 ## Native control audit gate
 
 The operator identified the score editor's Velocity/CC controls. Source tracing and live synthetic conversion confirm that Apply's MIDI-to-ABC route discards velocity; the operator reports the corresponding UI edits are not retained. Fixed exported MIDI velocities are not acoustic conditioning. See [native control contract](knowledge/NATIVE_CONTROL_CONTRACT.md). Before adding performance/humanization or changing generation policies, complete relevant UI/schema/handler/engine data-flow audits. The prior feature inventory is not an exhaustive engine audit. Keep the successful reference and its gain-only candidate unchanged; no repeat synthesis or mandatory release experiment.

@@ -1,5 +1,14 @@
 # Changelog and research milestones
 
+## Unreleased — offline knowledge and original style selection (PRs 118–126)
+
+- Bundle seven historical OpenScore works (21 source assets); build a local role-specific FTS5 index with opt-in numerical text-only creative context. Full 26-work external import remains unverified.
+- Bundle 1,000 original unrendered style recipes, 100 per category; index offline. Do not count these as observed songs.
+- Index 853 reference candidate IDs from Incompetech, MusicCaps, curated playlists and FMA album metadata, including eight disclosed AI tracks. Individual rights, genre and recording identity review remain open; 147 candidate slots missing and no observed-source lyrics collected.
+- Add explicit `--style-id` to autonomous Composer with frozen job identity and preview; exact-head PR #126 CI passed on Windows and Linux. No live production validation of this option.
+- Consolidate [offline knowledge workflow](docs/OFFLINE_KNOWLEDGE_WORKFLOW.md), update source and status documentation; no new generation or external provider calls.
+
+
 ## Unreleased — local readiness and Artist Memory
 
 - Add read-only `music.cmd --ready` using existing native preflight, without provider or generation calls; PR #112 CI passed 372 Windows tests.
