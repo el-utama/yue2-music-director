@@ -82,6 +82,10 @@ class DeliveryTests(unittest.TestCase):
     def test_real_jpeg_dimensions_and_invalid_images(self):
         good=self.image("cover.jpg")
         self.assertEqual(ci.inspect(good)["codec"],"mjpeg")
+        truncated=self.repo/"truncated.jpg"
+        truncated.write_bytes(good.read_bytes()[:-2])
+        with self.assertRaisesRegex(ValueError,"Incomplete"):
+            ci.inspect(truncated)
         small=self.image("small.png",64)
         with self.assertRaisesRegex(ValueError,"3000"):
             ci.inspect(small)
