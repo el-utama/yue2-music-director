@@ -37,14 +37,8 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Main before this integration: `31818aac2d5930ae56a582aeb1030a934872f0d3` after PR #116 (mandatory project memory). Last executable baseline: `51fac872976e708bddfb0bfc4167c9e410bf24e2` after PR #114.
-  Exact-head CI [45950591295](https://github.com/el-utama/yue2-music-director/actions/runs/45950591295)
-  passed four jobs; 377 Windows tests. PR #113 Artist Memory passed 376
-  Windows tests after fixing launcher help. PR #112 readiness passed 372.
-- PR [115](https://github.com/el-utama/yue2-music-director/pull/115) at
-  `9cf87578bd23317309d72d3952033114b039c6ea` is open for display names;
-  CI [45951344742](https://github.com/el-utama/yue2-music-director/actions/runs/45951344742)
-  passed all four jobs (380 Windows tests) on the original PR head. PR #116 subsequently merged, so integrate the latest main and require fresh exact-head CI before merge. Recheck PR #115 actual head and status; original CI is historical, not approval for the integration commit.
+- Main `046e2b8d482c506f1f17f17096be1c0a84a05459` after PR #115; exact integrated head `03055a324bd4f15fb0c42294253a0380d5e24d8f` passed [four CI jobs](https://github.com/el-utama/yue2-music-director/actions/runs/45953514891). Windows live usage remains unverified.
+- PR #118: offline knowledge pilot; CI pending. R02/R03/R13 remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
   See [local release checkpoint](docs/LOCAL_RELEASE_CHECKPOINT.md) and
@@ -57,7 +51,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 | ID | Requirement / deliverable | Current verified state | Remaining acceptance work |
 |---|---|---|---|
 | R01 | Original song from natural-language brief; distinct Composer, Lyricist, reviewer, Director; native YuE2 first | Local alpha implemented, prior live workflow and retained reference succeeded; latest CI green | Independent generalization, artistic quality and usability; do not repeat successful reference |
-| R02 | Deep Lyricist knowledge base: many songs, multilingual structure, prosody, rhyme, narrative, imagery, genre and emotional arc | **OPEN; pilot PR bundles 3 German art songs and offline SQLite/FTS5 importer/retrieval; CI pending.** No creative integration yet | Rights/source audit, actual ingestion, deduplication, searchable structured analysis, counts by language/genre and rights, integration with versioned creative policy, held-out editorial evaluation |
+| R02 | Deep Lyricist knowledge base: many songs, multilingual structure, prosody, rhyme, narrative, imagery, genre and emotional arc | **OPEN; pilot PR bundles 3 German art songs and offline SQLite/FTS5 index and retrieval; CI pending.** No creative integration yet | Rights/source audit, actual ingestion, deduplication, searchable structured analysis, counts by language/genre and rights, integration with versioned creative policy, held-out editorial evaluation |
 | R03 | Composer knowledge: melody, harmony, arrangement, instruments, vocal phrasing, music theory and production | Native contracts/research docs and symbolic score review available; pilot MusicXML descriptors and automatic harmony search; CI pending, no creative integration | Source-backed knowledge entries and retrieval, versioned policy integration and meaningful artistic evaluation |
 | R04 | Native controls, actual installed capability and limitations | Source-pinned audit and live velocity fixture; velocity not retained in ABC, schedule coverage advisory only | Complete remaining melody/harmony/arrangement/replay/cover/adapter audit; installed binary identity not verified; no fake controls |
 | R05 | Human feedback, persistent artist profiles, confirmed vs inferred preference | Local immutable feedback and opt-in Artist Memory implemented/CI; explicit typed job selection | Live hosted typed-schema validation; usable profile management, no inferred preferences silently applied; artist naming PR115 merged; live usage pending |
@@ -72,7 +66,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Corpus and knowledge inventory — explicit gap, not optional to full product
 
-Verified from main tree and Lyricist source: no committed .db/.sqlite/.csv/
+Historical pre-pilot inventory from main tree and Lyricist source: no committed .db/.sqlite/.csv/
 .jsonl/.parquet/.tsv corpus, no corpus importer/retrieval module. Private
 Windows corpus contents are unknown; zero independently verified entries.
 No claim of thousands of lyrics based on model training or documentation.
@@ -123,6 +117,8 @@ can remain usable while the full product requirements are open.
 2026-11-27: operator identified two missed requirements: natural multiword
 artist names and the missing lyric knowledge bank. User explicitly requested
 persistent, read/write project memory to avoid omissions in later sessions.
-The memory requirement is implemented in main via PR #116; the naming change needs integrated CI; the lyric bank remains open. Do not require user to
+The memory requirement is implemented via PR #116; PR #115 merged after integrated CI; the lyric bank remains open. Do not require user to
 repeat prior requirements.
-\n\n2026-11-27: Operator agreed SQLite + FTS5/BM25 offline-first, with optional CPU semantic retrieval only if needed; no GPU burden or hosted embedding dependency. See [offline knowledge bank](docs/KNOWLEDGE_BANK.md). Three unique historical works bundled in pilot branch; import tests pending. The zero-entry inventory above describes the previous main, not the pilot. Expand rights-reviewed multilingual coverage, support local import, freeze role-specific retrieval in a new creative policy and evaluate before full acceptance. No new generation or provider calls.\n
+
+
+2026-11-27: Operator agreed offline-first SQLite + FTS5/BM25; optional CPU semantic retrieval only if needed. No GPU or hosted embedding dependency. See [offline knowledge bank](docs/KNOWLEDGE_BANK.md). PR #118 bundles three unique historical works with nine pinned assets; runtime tests pending. Expand rights-reviewed multilingual coverage, support local import, freeze retrieval in a versioned creative policy and evaluate before acceptance. No new synthesis or provider calls.
