@@ -111,8 +111,7 @@ def _packet(production,brief,intent,row):
     return packet
 
 
-def load(repo,job):
-    parent,root=resolve(repo,job)
+def _inputs(parent,root,job):
     identity=nd.read(parent/"job.json")
     if (identity.get("schema")!="autonomous-job-v1" or identity.get("job")!=job
             or identity.get("production_policy") not in POLICIES):
@@ -127,22 +126,51 @@ def load(repo,job):
     creative=_creative(parent,identity,brief)
     if any(intent.get(k)!=creative["composition"][k] for k in ("concept","emotional_arc","performance")):
         raise ValueError("Retained creative intent differs")
+    return identity,brief,intent,creative
+
+
+def _native(root,brief,intent):
+    production=root/"production"
+    draft=production/"draft"
+    report=nd.read(draft/"report.json")
+    if report.get("artistic_intent")!=intent:
+        raise ValueError("Retained native artistic intent differs")
+    row=ld.verify_take(draft,brief,report,historical=True)
+    packet=_packet(production,brief,intent,row)
+    return report,row,packet
+
+
+def continuation_before_director(repo,job):
+    """Only a fully retained continuation with no final result, no new work."""
+    cc.validate_job(job,"placeholder","en",195)
+    parent=Path(repo)/"results/autonomous"/job
+    root=parent/"continuation-1"
+    if not root.is_dir() or any((p/"result.json").exists() for p in (parent,root)):
+        raise ValueError("Director recovery requires an incomplete retained continuation")
+    identity,brief,intent,creative=_inputs(parent,root,job)
+    report,row,packet=_native(root,brief,intent)
+    return {"job":job,"parent":parent,"root":root,"identity":identity,"brief":brief,
+            "intent":intent,"creative":creative,"report":report,"row":row,"packet":packet,
+            "audio":Path(row["audio"])}
+
+
+def load(repo,job):
+    parent,root=resolve(repo,job)
+    identity,brief,intent,creative=_inputs(parent,root,job)
     production=root/"production"
     draft=production/"draft"
     final=nd.read(root/"result.json")
-    report=nd.read(draft/"report.json")
+    report,row,packet=_native(root,brief,intent)
     packet_path=production/"neutral-listening/review-packet.json"
     if (final.get("schema")!="autonomous-result-v1" or final.get("status") not in ("provisional","review_required")
             or final.get("automatic_acceptance") is not False or final.get("revision_authorized") is not False
             or final.get("brief_sha256")!=nd._sha(root/"brief.json")
             or final.get("native_report_sha256")!=nd._sha(draft/"report.json")
             or final.get("listening_packet_sha256")!=nd._sha(packet_path)
-            or report.get("artistic_intent")!=intent or final.get("song_id")!=report.get("song_id")):
+            or final.get("song_id")!=report.get("song_id")):
         raise ValueError("Retained autonomous result differs")
-    row=ld.verify_take(draft,brief,report,historical=True)
     if any(final.get(k)!=row[k] for k in ("audio","audio_sha256")):
         raise ValueError("Retained audio identity differs")
-    packet=_packet(production,brief,intent,row)
     director_input,director=_receipt(root,"director",identity["provider"])
     if (director!=final.get("director") or director_input.get("request")!=identity["request"]
             or director_input.get("brief")!=brief or director_input.get("intent")!=intent):
