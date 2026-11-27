@@ -63,7 +63,7 @@ def stage(root, role, module, provider, data, *, retry=False, semantic_check=Non
     return result
 
 
-def prepare(root, provider, request, language, duration, *, retry_role=None, duration_guidance=False, direction_guidance=False):
+def prepare(root, provider, request, language, duration, *, retry_role=None, duration_guidance=False, direction_guidance=False, timing_guidance=False):
     data={"request":request,"language":language,"duration_seconds":duration}
     if duration_guidance:
         # Advisory target only; the actual native score clock is screened before rendering.
@@ -74,6 +74,10 @@ def prepare(root, provider, request, language, duration, *, retry_role=None, dur
     if direction_guidance:
         from . import creative_direction as cd
         data["direction_guidance"]=cd.GUIDANCE
+        if timing_guidance:
+            data["opening_timing_guidance"]=cd.TIMING_GUIDANCE
+    elif timing_guidance:
+        raise ValueError("Timing guidance requires direction guidance")
     music=stage(root,"composer",composer,provider,data,retry=retry_role=="composer",
                 semantic_check=cd.parse_direction if direction_guidance else None)
     words=stage(root,"lyricist",lyricist,provider,{**data,"composition":music},retry=retry_role=="lyricist",

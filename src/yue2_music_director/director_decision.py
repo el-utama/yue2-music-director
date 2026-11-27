@@ -33,10 +33,16 @@ def context(request, brief, intent, report, packet):
                                                   "format_status","checks")} for item in packet["observations"]]}
     if "native_completion" in report:
         result["technical"]["native_completion"]=report["native_completion"]
-    if "opening" in intent.get("constraints",{}):
+    if any(key in intent.get("constraints",{}) for key in ("opening","opening_timing")):
         saved=report.get("saved_score_review",{})
         metrics=saved.get("metrics") or {}
         result["score_evidence"]={"opening":metrics.get("opening"),"score_seconds":metrics.get("score_seconds"),
             "section_order":metrics.get("section_order"),"limits":"Notated opening is not acoustic vocal onset."}
         result["observation_policy"]="MOSS descriptions are advisory, not independent proof of bad arrangement or unfinished ending. Native truncation evidence and human listening have distinct roles. Never equate no fade with an incomplete song. Report disagreement as uncertainty; headroom failure is not proven clipping."
+    if "opening_timing" in intent.get("constraints",{}):
+        # v3 only: do not change the identity of earlier Director receipts.
+        result["context_schema"]="director-context-v3"
+        result["technical"].pop("lra_lu",None)
+        result["technical"]["loudness_range_lu"]=acoustic.get("loudness_range_lu")
+        result["score_evidence"]["opening_evidence"]=metrics.get("opening_evidence")
     return result
