@@ -26,5 +26,13 @@ class ObservedStyleTests(unittest.TestCase):
             self.assertEqual(len(os.search(db, "lofi", limit=100)), 100)
             self.assertEqual(sum(r["metadata_origin"] == "creator_catalog_disclosed_suno_v5" for r in os.search(db, "lofihop", limit=100)), 8)
             self.assertEqual(stats["fma_album_candidates"], 30)
-            self.assertTrue(all(r["metadata_license"] == "CC-BY-SA-4.0" for r in os.search(db, "trap")))
+            trap = os.search(db, "trap", limit=100)
+            clips = [r for r in trap if "youtube_id" in r]
+            albums = [r for r in trap if r.get("metadata_origin") == "fma_album_catalog"]
+            self.assertEqual(len(clips), 15)
+            self.assertEqual(len(albums), 11)
+            self.assertTrue(all(r["metadata_license"] == "CC-BY-SA-4.0" for r in clips))
+            self.assertTrue(all(r["reported_license"] == "CC0-1.0" and
+                                r["rights_status"] == "album_reports_cc0_track_review_pending"
+                                for r in albums))
             self.assertTrue(os.search(db, "jazz", "jazz"))
