@@ -114,7 +114,11 @@ def records(root, *, external_root=None):
             or source["license"] != "CC0-1.0"):
         raise ValueError("Unreviewed corpus source")
     seen, scores = set(), set()
-    for work in manifest["works"]:
+    work_rows = [(w, asset_root, external_root is not None) for w in manifest["works"]]
+    if external_root:
+        bundled = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+        work_rows += [(w, root, False) for w in bundled["works"] if not w["work_id"].startswith("schubert-d911-")]
+    for work, row_root, external in work_rows:
         key = work["work_id"]
         if work["rights"] != "approved_public_domain_cc0":
             raise ValueError("Unapproved work: " + key)
@@ -122,9 +126,9 @@ def records(root, *, external_root=None):
             raise ValueError("Duplicate work or score")
         seen.add(key)
         scores.add(work["assets"]["score"]["git_blob_sha"])
-        lyrics = asset(asset_root, work["assets"]["lyrics"], external=external_root is not None).decode("utf-8")
-        harmony = asset(asset_root, work["assets"]["harmony"], external=external_root is not None).decode("utf-8")
-        features = score_features(asset(asset_root, work["assets"]["score"], external=external_root is not None))
+        lyrics = asset(row_root, work["assets"]["lyrics"], external=external).decode("utf-8")
+        harmony = asset(row_root, work["assets"]["harmony"], external=external).decode("utf-8")
+        features = score_features(asset(row_root, work["assets"]["score"], external=external))
         if not lyrics.strip() or not harmony.strip() or not features["lyric_bearing_notes"]:
             raise ValueError("Missing expected lyric or harmony evidence: " + key)
         words = re.findall(r"[^\W_]+", lyrics.casefold(), re.UNICODE)

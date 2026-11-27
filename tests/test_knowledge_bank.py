@@ -13,14 +13,15 @@ class KnowledgeBankTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             db = Path(temp) / "bank.sqlite"
             stats = kb.build(ROOT, db)
-            self.assertEqual(stats["unique_works"], 5)
-            self.assertEqual(stats["languages"], {"de": 5})
+            self.assertEqual(stats["unique_works"], 7)
+            self.assertEqual(stats["languages"], {"de": 5, "en": 2})
             hits = kb.retrieve(db, "Schubert", "composer")
             self.assertEqual(len(hits), 5)
             self.assertTrue(all(h["features"]["lyric_bearing_notes"] > 0 for h in hits))
             self.assertTrue(all(h["features"]["notated_melodic_intervals"] for h in hits))
             self.assertTrue(all(0 < h["features"]["lexical_type_token_ratio"] <= 1 for h in hits))
             self.assertTrue(kb.retrieve(db, "Schnee", "lyricist"))
+            self.assertTrue(any(h["work"]["language"] == "en" for h in kb.retrieve(db, "home", "lyricist")))
             self.assertEqual(kb.retrieve(db, "zzzznonexistent", "lyricist"), [])
             self.assertNotIn("lyrics", hits[0])
             self.assertEqual(kb.build(ROOT, db), stats)
@@ -71,4 +72,4 @@ class KnowledgeBankTest(unittest.TestCase):
             ids = {w["work_id"] for w in manifest["works"]}
             full["works"] = [w for w in full["works"] if w["work_id"] in ids]
             (root / "winterreise-full.json").write_text(json.dumps(full), encoding="utf-8")
-            self.assertEqual(kb.build(root, db, external_root=source)["unique_works"], 5)
+            self.assertEqual(kb.build(root, db, external_root=source)["unique_works"], 7)

@@ -30,13 +30,12 @@ The lyric files are automatically extracted score text, not guaranteed original
 poem order or stanza boundaries. MusicXML descriptors are not acoustic evidence.
 No contemporary lyrics or private operator data are included.
 
-This is a limited source-specific pilot: five unique works, five score files,
-five lyric files and five automatic harmony files. The counts are bundled
-inventory; PR #118 verified three in CI; the five-work follow-up requires fresh CI. German art song is not a
+This is a limited source-specific pilot: seven unique works (five German, two English), seven score files,
+seven lyric files and seven automatic harmony files. The counts are bundled
+inventory; PR #119 verified five in CI; the seven-work follow-up requires fresh CI. German art song is not a
 representative sample of modern multilingual songwriting. This is lexical
-retrieval, not semantic RAG. The creative role integration is intentionally
-not enabled yet: it needs explicit versioned policy, frozen evidence and
-authorization before any derived context is sent to a hosted provider.
+retrieval, not semantic RAG. The text-only creative CLI now offers an opt-in versioned numeric context;
+the default autonomous production path is unchanged.
 Raw text must remain local by default. No open-ended corpus importer or
 editorial quality claim. R02/R03/R13 remain open (issue #117).
 
@@ -56,4 +55,24 @@ verified; only the bundled subset is tested. This does not import arbitrary
 new corpus sources. V2 adds lexical type/token ratio (not rhyme or semantic
 quality), notated vocal rests, key signatures and consecutive pitch interval
 counts (not acoustic phrasing or a verified voice-separated polyphonic analysis).
-Rebuild the disposable v1 index to use v2. No hosted transfer or creative calls.
+Rebuild the disposable v1 index to use v2. No hosted transfer or creative calls during import.
+
+## English pilot and opt-in text-only creative context
+
+Haydn/Shakespeare's She never told her love (1795) and Bishop/Payne's
+Home, Sweet Home (1823) add historical English song. The underlying authors
+died more than 170 years ago; the pinned OpenScore transcriptions are CC0.
+The full external Winterreise import retains these two bundled English works
+(26 total expected if the full source is present). No modern genre coverage.
+
+From a checkout with an editable install, run the text-only CLI with
+`python -m yue2_music_director.creative_core --repo . --job sample --request "A quiet goodbye" --knowledge-query home`.
+This previews local evidence, no provider calls. Adding both `--confirm-text`
+and `--confirm-knowledge-context` permits sending bounded numerical observations
+only to Composer and Lyricist; no reference titles, query, raw text, melody,
+source paths or IDs in the added provider context. Query and provenance remain
+in local job identity, and resume uses frozen evidence even if the index changes.
+The opt-in must be repeated on resume. No actual provider or Studio calls were
+made by this PR; mock tests only. The default production launcher is unchanged.
+Numerical descriptors are not proof of artistic usefulness; no semantic or
+multilingual query translation is implemented.
