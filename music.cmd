@@ -44,5 +44,10 @@ py -3 -u -m yue2_music_director.human_feedback --repo "%ROOT%." %*
 exit /b %ERRORLEVEL%
 
 :finishaudio
+if /I "%~2"=="--help" goto finishhelp
 py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\finishing-output.txt" -- py -3 -u -m yue2_music_director.audio_finishing --repo "%ROOT%." %*
+exit /b %ERRORLEVEL%
+
+:finishhelp
+py -3 -u -m yue2_music_director.audio_finishing --help
 exit /b %ERRORLEVEL%
