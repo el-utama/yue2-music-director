@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — native job recovery
+
+- Resume a native plan or song from its saved Studio acknowledgment after a local interruption before the journal update. A matching journal and an unambiguous saved job ID are required to continue.
+
 ## Unreleased — brief-derived historical retrieval
 
 - Add explicit `--knowledge-auto` to derive bounded local lexical terms from the song brief, with frozen match/no-match/no-term evidence and no historical payload when abstaining. Manual query, legacy receipts and separate transfer consent preserved. No semantic or artistic claim, new corpus or inference.

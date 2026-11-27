@@ -132,14 +132,16 @@ def native_plan(brief,intent,root,url,*,max_polls=120,sleep=time.sleep):
     sha=digest(_canonical(request))
     path=root/"journal_plan.json"
     raw_path=root/"plan-result.json"
+    receipt_path=root/"plan-receipt.json"
+    score_path=root/"native-plan.abc"
     if path.exists():
         journal=nd.read(path)
-        if (journal.get("request_sha256")!=sha or journal.get("state") not in ("SUBMITTED","COMPLETED")
-                or not isinstance(journal.get("id"),str) or not journal["id"]
+        if (not isinstance(journal,dict) or journal.get("request_sha256")!=sha
+                or journal.get("state") not in ("SUBMISSION_ATTEMPTED","SUBMITTED","COMPLETED")
                 or not isinstance(journal.get("configuration"),dict)):
             raise ValueError("Uncertain or mismatched native planning job; never resubmit")
     else:
-        if raw_path.exists() or (root/"native-plan.abc").exists() or (root/"plan-receipt.json").exists():
+        if raw_path.exists() or score_path.exists() or receipt_path.exists():
             raise ValueError("Retained plan artifacts lack a journal")
         client=Client(configured_endpoint(url),timeout=90).connect()
         config=_preflight(client,brief,request)
@@ -148,12 +150,20 @@ def native_plan(brief,intent,root,url,*,max_polls=120,sleep=time.sleep):
         nd.create_journal(path,journal)
         print("Submitting one native composition plan...",flush=True)
         response=unpack(client.call("score_compose",request))
-        nd.atomic_write(root/"plan-receipt.json",response)
+        nd.atomic_write(receipt_path,response)
+    if journal["state"]=="SUBMISSION_ATTEMPTED":
+        # The Studio receipt can survive an interruption before the journal update.
+        if (set(journal)!={"state","request_sha256","configuration"} or not receipt_path.is_file()
+                or raw_path.exists() or score_path.exists()):
+            raise ValueError("Uncertain or mismatched native planning job; never resubmit")
+        response=nd.read(receipt_path)
         if (not isinstance(response,dict) or not isinstance(response.get("id"),str)
-                or not response["id"] or response.get("status") not in ("running","done")):
+                or not response["id"].strip() or response.get("status") not in ("running","done")):
             raise ValueError("Ambiguous planning receipt; never resubmit")
         journal.update(state="SUBMITTED",id=response["id"])
         nd.atomic_write(path,journal)
+    elif not isinstance(journal.get("id"),str) or not journal["id"].strip():
+        raise ValueError("Uncertain or mismatched native planning job; never resubmit")
     if raw_path.exists():
         result=nd.read(raw_path)
     else:
@@ -177,7 +187,6 @@ def native_plan(brief,intent,root,url,*,max_polls=120,sleep=time.sleep):
     score_sha=digest(abc.encode("utf-8"))
     if journal["state"]=="COMPLETED" and journal.get("score_sha256")!=score_sha:
         raise ValueError("Retained plan hash differs")
-    score_path=root/"native-plan.abc"
     if score_path.exists():
         if score_path.read_bytes()!=abc.encode("utf-8"):
             raise ValueError("Retained native plan file differs")
