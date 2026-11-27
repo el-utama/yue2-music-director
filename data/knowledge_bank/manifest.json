@@ -1,0 +1,94 @@
+{
+  "schema": "knowledge-bank-v1",
+  "source": {
+    "repository": "https://github.com/OpenScore/Lieder",
+    "revision": "38c5db510224d9facdc4b08d741fc788cfb58ea8",
+    "license": "CC0-1.0",
+    "rights_evidence": "https://www.themorgan.org/music-manuscripts-and-printed-music/115668",
+    "license_url": "https://github.com/OpenScore/Lieder/blob/38c5db510224d9facdc4b08d741fc788cfb58ea8/LICENSE.txt",
+    "scope": "1827 Winterreise works by Franz Schubert (d. 1828) and Wilhelm Müller (d. 1827); original German text only; OpenScore CC0 transcriptions and automatic harmonic annotations; no recording rights claimed"
+  },
+  "works": [
+    {
+      "work_id": "schubert-d911-01",
+      "title": "Gute Nacht",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "lyrics": {
+          "file": "5015378-lc5015378.txt",
+          "git_blob_sha": "e7fbe410e2fa1a0180aa9c999728b526d85b6de9",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/01_Gute_Nacht/lc5015378.txt"
+        },
+        "harmony": {
+          "file": "5015378-analysis_automatic.rntxt",
+          "git_blob_sha": "57b3358494ebf9aef3263f276d0d55c77c60fffa",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/01_Gute_Nacht/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "5015378-lc5015378.mxl",
+          "git_blob_sha": "2368e4c4ef0b1a67d9317ae05c20c22752a8fc45",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/01_Gute_Nacht/lc5015378.mxl"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-02",
+      "title": "Die Wetterfahne",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "lyrics": {
+          "file": "5015435-lc5015435.txt",
+          "git_blob_sha": "03849e3f3cdd4152fadca63d473d53b0ca1a6a0e",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/02_Die_Wetterfahne/lc5015435.txt"
+        },
+        "harmony": {
+          "file": "5015435-analysis_automatic.rntxt",
+          "git_blob_sha": "05337000d5bd1107e91d2c9f90b3546688b1df9b",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/02_Die_Wetterfahne/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "5015435-lc5015435.mxl",
+          "git_blob_sha": "92673071856460d4f1b00a4d78069f2c0ec9a950",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/02_Die_Wetterfahne/lc5015435.mxl"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-05",
+      "title": "Der Lindenbaum",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "lyrics": {
+          "file": "5016466-lc5016466.txt",
+          "git_blob_sha": "625bbb5717393b27191e402fd73dc38f66e85f4a",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/05_Der_Lindenbaum/lc5016466.txt"
+        },
+        "harmony": {
+          "file": "5016466-analysis_automatic.rntxt",
+          "git_blob_sha": "55ee5933cc01419b81b38fb430492e13ba44fdf3",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/05_Der_Lindenbaum/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "5016466-lc5016466.mxl",
+          "git_blob_sha": "703316810bcd5924fef30e78346c22e1c14110db",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/05_Der_Lindenbaum/lc5016466.mxl"
+        }
+      }
+    }
+  ]
+}
