@@ -110,3 +110,20 @@ class ReleaseIdentityTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     ex.launch(repo,"release",["one"],URL,title="Different",confirm=True,timing_reader=lambda *a:self.fail("read"))
                 self.assertEqual(ex.launch(repo,"release",["one"],URL,confirm=True,timing_reader=lambda *a:LRC),0)
+
+    def test_ambiguous_legacy_package_paths_refused(self):
+        import shutil
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            track=fixture(repo,"one")
+            with patch.object(ex,"retained",return_value=track):
+                ex.launch(repo,"release",["one"],URL,confirm=True,timing_reader=lambda *a:LRC)
+                exports=repo/"results/exports"
+                (exports/".release-index/release/identity.json").unlink()
+                root=exports/"songs/one--release"
+                duplicate=exports/"songs/duplicate--release"
+                shutil.copytree(root,duplicate)
+                with self.assertRaisesRegex(ValueError,"Multiple packages"):
+                    ex.launch(repo,"release",["one"],URL,confirm=True,timing_reader=lambda *a:self.fail("read"))
+                self.assertTrue((root/"release.json").exists())
+                self.assertTrue((duplicate/"release.json").exists())
