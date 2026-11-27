@@ -120,7 +120,7 @@ def launch(repo,job,*,variant=DEFAULT_VARIANT,confirm=False):
             print("Estimated fixed gain from retained metrics:",estimate,"dB",flush=True)
         print("Plan only. No output written or new inference. Confirm to measure and finish.",flush=True)
         return 0
-    with ld.lock(base/".active"):
+    with ld.lock(base/".active",context={"job":job,"root":root.relative_to(repo).as_posix(),"stage":"audio_finishing"}):
         source=load(repo,job)
         if contract_for(source,variant)!=contract:
             raise ValueError("Original retained source changed")
