@@ -38,7 +38,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 ## Current baseline and work in progress
 
 - Main `dfc7c37091e58976455188f9171f69279439b295` after PR #131; exact head `79ecaabf66866bbe65bfd4ab97497fd6163e9557` passed [four CI jobs](https://github.com/el-utama/yue2-music-director/actions/runs/45968585367). Historical descriptive craft context v2 merged; v1 compatible. Seven historical works, 853 candidate IDs, 147 slots open.
-- Follow-up: explicit brief-derived local lexical retrieval with frozen match or abstention, pending CI; no semantic or artistic quality claim.
+- [PR #132](https://github.com/el-utama/yue2-music-director/pull/132) adds opt-in brief-derived local lexical retrieval with frozen match or abstention (R02/R03/R08/R13). [CI for the original head](https://github.com/el-utama/yue2-music-director/actions/runs/45969157859) passed. The review follow-up adds Unicode normalization and filters common words such as `never`; see [current PR checks](https://github.com/el-utama/yue2-music-director/pull/132/checks) for the latest head. Retrieval relevance and artistic quality remain unverified.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
   See [local release checkpoint](docs/LOCAL_RELEASE_CHECKPOINT.md) and

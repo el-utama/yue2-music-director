@@ -1,5 +1,6 @@
 """Explicit, versioned historical knowledge selection for autonomous jobs."""
 import re
+import unicodedata
 from . import creative_knowledge as ck, knowledge_bank as kb, native_draft as nd
 
 SCHEMA = "autonomous-knowledge-selection-v1"
@@ -9,14 +10,20 @@ AUTO_SCHEMA = "autonomous-knowledge-auto-v1"
 STOP = frozenset(("a an the and or of to in for with on by at from as is be are it its "
                   "this that about into song music write create make original lyrics lyric "
                   "style genre please i me my you your we our he she they his her their "
+                  "was were been has have had does did can could will would should "
+                  "when where which who what how there than no not never without "
                   "yang dan atau di ke dari untuk dengan tentang buat buatkan lagu musik "
-                  "lirik saya aku kamu ini itu sebuah dalam agar ingin bisa").split())
+                  "lirik saya aku kamu ini itu sebuah dalam agar ingin bisa "
+                  "tidak tak bukan jangan tanpa belum").split())
 
 
 def brief_query(request):
-    terms = list(dict.fromkeys(t for t in re.findall(r"[^\W_]+", request.casefold())
-                              if 3 <= len(t) <= 40 and t.isalpha() and t not in STOP))
-    return " ".join(terms[:12])[:500].rsplit(" ", 1)[0] if len(" ".join(terms[:12])) > 500 else " ".join(terms[:12])
+    normalized = unicodedata.normalize("NFC", request).casefold()
+    terms = dict.fromkeys(
+        term for term in re.findall(r"[^\W_]+", normalized)
+        if 3 <= len(term) <= 40 and term.isalpha() and term not in STOP
+    )
+    return " ".join(list(terms)[:12])
 
 
 def validate(value):

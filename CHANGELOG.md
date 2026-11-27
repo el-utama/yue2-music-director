@@ -3,6 +3,7 @@
 ## Unreleased — brief-derived historical retrieval
 
 - Add explicit `--knowledge-auto` to derive bounded local lexical terms from the song brief, with frozen match/no-match/no-term evidence and no historical payload when abstaining. Manual query, legacy receipts and separate transfer consent preserved. No semantic or artistic claim, new corpus or inference.
+- Normalize Unicode in brief-derived queries and filter additional English and Indonesian function words to reduce incidental matches.
 
 
 ## Unreleased — descriptive historical craft metrics

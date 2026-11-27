@@ -64,10 +64,11 @@ does not establish artistic quality or modern genre coverage.
 ## Automatic lexical retrieval from the song brief
 
 Optional `--knowledge-auto` derives a short local lexical query from the
-brief (up to 12 distinct alphabetic terms, with common English and Indonesian
-function/request words removed). It is not semantic retrieval, translation,
-genre classification or a guarantee of relevance. It uses the same
-historical role-specific FTS5 search and numeric-only payload. For example:
+brief after Unicode normalization (up to 12 distinct alphabetic terms, with
+common English and Indonesian function words such as `never` and `tanpa`
+removed from the query). The creative stages still receive the original brief.
+It uses the same historical role-specific FTS5 search and numeric-only payload.
+Matches reflect word overlap. Preview a brief with this command.
 
 ```cmd
 music.cmd --job auto-song --request "A song about home" --knowledge-auto
