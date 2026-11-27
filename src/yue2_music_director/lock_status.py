@@ -10,7 +10,8 @@ LOCKS={"autonomous":"results/autonomous/.active","drafts":"results/drafts/.activ
        "critic":"results/.critic-active","creative":"results/creative/.active",
        "artwork":"results/artwork/.active","exports":"results/exports/.active",
        "feedback":"results/feedback/.active","finishing":"results/audio-finishing/.active",
-       "release-assembly":"results/release-assembly/.active"}
+       "release-assembly":"results/release-assembly/.active",
+       "release-delivery":"results/release-delivery/.active"}
 
 
 def journals(repo,owner):
