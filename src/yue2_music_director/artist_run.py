@@ -104,7 +104,7 @@ def plan_request(brief,intent):
     return request
 
 
-def _preflight(client,brief,request):
+def _preflight(client,brief,request,*,wait=True):
     if not shutil.which("ffmpeg") or not shutil.which("ffprobe"):
         raise ValueError("FFmpeg and ffprobe required before planning")
     tools={t["name"]:t.get("inputSchema",{}) for t in client.tools()}
@@ -121,7 +121,8 @@ def _preflight(client,brief,request):
     if "harmony" in request and "follow_lyrics" not in tools["score_compose"]["properties"]["harmony"].get("properties",{}):
         raise ValueError("Native section steering unavailable")
     nd.recognition_preflight(client)
-    return nd.reference_configuration(client,wait_for_idle(client,"native composition planning"),
+    status=wait_for_idle(client,"native composition planning") if wait else assert_idle(client)
+    return nd.reference_configuration(client,status,
         nd.request_for(brief),unpack(client.call("song_defaults",{})),
         unpack(client.call("studio_capabilities",{})))
 
