@@ -132,3 +132,31 @@ class DeliveryTests(unittest.TestCase):
         nd.atomic_write(path,manifest)
         with self.assertRaisesRegex(ValueError,"Delivery contract"):
             rd.launch(self.repo,"release")
+
+    def test_fill_omitted_credit_without_reexport_or_inherited_approval(self):
+        self.assemble(artist="")
+        cover=self.image()
+        original=self.repo/"results/exports/songs/one--release"
+        before={p:nd._sha(p) for p in original.rglob("*") if p.is_file()}
+        with patch.object(ex,"read_timing",side_effect=AssertionError("no timing read")), \
+             patch.object(ex,"launch",side_effect=AssertionError("no export replay")):
+            self.assertEqual(rd.launch(self.repo,"release",artwork=cover,artist="Explicit Artist",confirm=True),0)
+            self.assertEqual(rd.launch(self.repo,"release"),0)
+            manifest=nd.read(self.root/"delivery.json")
+            self.assertEqual(manifest["metadata"]["artist"],"Explicit Artist")
+            self.assertEqual(manifest["metadata"]["tracks"][0]["artist"],"Explicit Artist")
+            self.assertEqual(manifest["contract"]["artist_completion"]["original"],"")
+            self.assertFalse(manifest["release_approved"])
+            self.assertFalse(self.ledger.exists())
+            with self.assertRaisesRegex(ValueError,"Existing delivery differs"):
+                rd.launch(self.repo,"release",artist="Changed Artist",confirm=True)
+            with patch("builtins.input",return_value="APPROVE"):
+                self.assertEqual(rd.launch(self.repo,"release",decision="approve",confirm=True),0)
+            self.assertEqual(before,{p:nd._sha(p) for p in before})
+            self.assertEqual(nd.read(original/"release.json")["contract"]["artist"],"")
+
+    def test_established_artist_cannot_be_replaced(self):
+        self.assemble()
+        with self.assertRaisesRegex(ValueError,"established export artist"):
+            rd.launch(self.repo,"release",artist="Different",confirm=True)
+        self.assertFalse(self.root.exists())
