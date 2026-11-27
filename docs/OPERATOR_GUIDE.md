@@ -112,7 +112,7 @@ song or unresolved external attempt automatically.
 | 401/403, quota or provider JSON error | Use the provider troubleshooting guide; check exact configured provider/model and account. No automatic fallback, no key in logs/chat. |
 | Unresolved text attempt | Consult the original receipt and [Autonomous CLI](AUTONOMOUS_CLI.md); one explicit `--retry-text ROLE` only for a matching unresolved stage. |
 | Plan stopped before synthesis | Use `--review-plan JOB`; `--continue-plan JOB --confirm-run` is only for the documented formerly parser-blocked retained plan, not arbitrary rejected plans. |
-| Native, ASR or listening interrupted | Preserve original evidence. Do not resubmit ambiguous mutations; follow the same-job recovery contract. |
+| Native, ASR or listening interrupted | Preserve the original job and follow same-job recovery. A saved Studio acknowledgment with a valid plan or song ID lets the agent continue the known job. If the acknowledgment is missing or ambiguous, inspect Studio before proceeding. |
 | Stale lock or concurrent writer | Inspect the exact lock; use [lock recovery](LOCAL_LOCK_RECOVERY.md) only for verified stale owner and matching marker hash. |
 | OOM or missing model | Stop and inspect native status/configuration, preserve journals. No unapproved changes, downloads or automatic retry. |
 | Missing/stale SQLite index | Rebuild just the requested derived index; see the offline guide. |

@@ -252,15 +252,17 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
     if abc is not None and "score_to_midi" not in tools:
         raise ValueError("Native score compatibility tool unavailable")
     journal_path=root/"journal_song.json"
+    receipt_path=root/"submission-response.json"
     if journal_path.exists():
         journal=read(journal_path)
-        if journal.get("request_sha256")!=request_sha or journal.get("brief_sha256")!=brief_sha:
+        if (not isinstance(journal,dict) or journal.get("request_sha256")!=request_sha
+                or journal.get("brief_sha256")!=brief_sha):
             raise ValueError("Journal identity differs")
         if expected_configuration is not None and journal.get("reference_configuration")!=expected_configuration:
             raise ValueError("Retained synthesis configuration differs from planner")
-        if journal.get("state") not in ("SUBMITTED","COMPLETED") or not journal.get("job_id"):
-            raise ValueError("Previous submission outcome unknown; inspect Studio, never resubmit")
     else:
+        if receipt_path.exists():
+            raise ValueError("Retained song receipt lacks a journal; never resubmit")
         schema=tools["song_create"]
         if not set(request)<=set(schema.get("properties",{})) or not set(schema.get("required",[]))<=set(request):
             raise ValueError("Song request does not fit advertised schema")
@@ -289,12 +291,20 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
         create_journal(journal_path,journal)
         print("Submitting one native song...",flush=True)
         raw=client.call("song_create",request)
-        atomic_write(root/"submission-response.json",raw)
-        job_id=extract_song_job_id(raw)
+        atomic_write(receipt_path,raw)
+    if journal.get("state")=="SUBMISSION_ATTEMPTED":
+        # Recover only from the original persisted Studio acknowledgment.
+        if (set(journal)!={"state","brief_sha256","request_sha256","reference_configuration"}
+                or not isinstance(journal["reference_configuration"],dict)
+                or not receipt_path.is_file() or (root/"latest-job-status.json").exists()):
+            raise ValueError("Previous submission outcome unknown; inspect Studio, never resubmit")
+        job_id=extract_song_job_id(read(receipt_path))
         if not job_id:
             raise ValueError("No unambiguous job ID; do not resubmit")
         journal.update(state="SUBMITTED",job_id=job_id)
         atomic_write(journal_path,journal)
+    elif journal.get("state") not in ("SUBMITTED","COMPLETED") or not journal.get("job_id"):
+        raise ValueError("Previous submission outcome unknown; inspect Studio, never resubmit")
     job_id=journal["job_id"]
     for attempt in range(max_waits+1):
         job=read_job(client,job_id)

@@ -96,6 +96,34 @@ class ArtistTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"file differs"):
                 ar.native_plan(BRIEF,intent("reviewed_native"),root,URL)
 
+    def test_plan_recovers_saved_receipt_without_resubmitting(self):
+        result={"id":"plan","status":"done","lm_seed":42,"abc":ABC,
+                "plans":[{"lm_seed":42,"abc":ABC}]}
+        receipt={"id":"plan","status":"running"}
+        journal_path=self.root/"journal_plan.json"
+        receipt_path=self.root/"plan-receipt.json"
+        write=nd.atomic_write
+
+        def interrupt(path,value):
+            if path==journal_path and value["state"]=="SUBMITTED":
+                raise OSError("interrupted after receipt")
+            write(path,value)
+
+        chosen=intent("reviewed_native")
+        with patch.object(ar,"Client") as factory,patch.object(ar,"_preflight",return_value={}):
+            client=factory.return_value.connect.return_value
+            client.call.side_effect=[receipt,result]
+            with patch.object(nd,"atomic_write",side_effect=interrupt):
+                with self.assertRaisesRegex(OSError,"interrupted after receipt"):
+                    ar.native_plan(BRIEF,chosen,self.root,URL)
+            self.assertEqual(nd.read(journal_path)["state"],"SUBMISSION_ATTEMPTED")
+            self.assertEqual(nd.read(receipt_path),receipt)
+            self.assertEqual(ar.native_plan(BRIEF,chosen,self.root,URL),(ABC,{}))
+            self.assertEqual([call.args[0] for call in client.call.call_args_list],
+                             ["score_compose","score_job_get"])
+            self.assertEqual(client.call.call_args.args[1],{"job_id":"plan"})
+            self.assertEqual(nd.read(journal_path)["state"],"COMPLETED")
+
     def test_ambiguous_plan_never_resubmitted(self):
         with patch.object(ar,"Client") as factory,patch.object(ar,"_preflight",return_value={}):
             client=factory.return_value.connect.return_value
@@ -157,6 +185,28 @@ class IntegratedDraftTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,"configuration changed"):
                     nd.execute(BRIEF,root/"wrong-config",URL,abc=ABC,artist=chosen,expected_configuration={"profile":"other"})
                 self.assertFalse(any(c.args[0]=="song_create" for c in client.call.call_args_list))
+                journal_path=run/"journal_song.json"
+                receipt_path=run/"submission-response.json"
+                write=nd.atomic_write
+
+                def interrupt(path,value):
+                    if path==journal_path and value["state"]=="SUBMITTED":
+                        raise OSError("interrupted after receipt")
+                    write(path,value)
+
+                with patch.object(nd,"atomic_write",side_effect=interrupt):
+                    with self.assertRaisesRegex(OSError,"interrupted after receipt"):
+                        nd.execute(BRIEF,run,URL,abc=ABC,artist=chosen,expected_configuration=config)
+                receipt=nd.read(receipt_path)
+                self.assertEqual(receipt,{"job_id":"job"})
+                self.assertEqual(nd.read(journal_path)["state"],"SUBMISSION_ATTEMPTED")
+                calls=list(client.call.call_args_list)
+                nd.atomic_write(receipt_path,{"status":"running"})
+                with self.assertRaisesRegex(ValueError,"No unambiguous job ID"):
+                    nd.execute(BRIEF,run,URL,abc=ABC,artist=chosen,expected_configuration=config)
+                self.assertEqual(client.call.call_args_list,calls)
+                self.assertEqual(nd.read(journal_path)["state"],"SUBMISSION_ATTEMPTED")
+                nd.atomic_write(receipt_path,receipt)
                 with self.assertRaisesRegex(ValueError,"Studio busy"):
                     nd.execute(BRIEF,run,URL,abc=ABC,artist=chosen,expected_configuration=config)
                 capture.side_effect=complete
