@@ -13,6 +13,7 @@ if /I "%~1"=="--export" goto exportrelease
 if /I "%~1"=="--feedback" goto feedback
 if /I "%~1"=="--inspect-lock" goto lockstatus
 if /I "%~1"=="--recover-lock" goto lockstatus
+if /I "%~1"=="--release-delivery" goto delivery
 if /I "%~1"=="--assemble-release" goto assemble
 if /I "%~1"=="--finish" goto finishaudio
 py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\music-output.txt" -- py -3 -u -m yue2_music_director.autonomous --repo "%ROOT%." --url "%YUE2_MCP_URL%" %*
@@ -61,4 +62,8 @@ exit /b %ERRORLEVEL%
 
 :assemble
 py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\assembly-output.txt" -- py -3 -u -m yue2_music_director.release_assembly --repo "%ROOT%." %*
+exit /b %ERRORLEVEL%
+
+:delivery
+py -3 -u -m yue2_music_director.release_delivery --repo "%ROOT%." %*
 exit /b %ERRORLEVEL%
