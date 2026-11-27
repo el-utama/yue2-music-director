@@ -82,5 +82,17 @@ class OwnedLockTests(unittest.TestCase):
                     self.assertEqual(ol.inspect(marker)["status"], "stale_owner")
 
 
+    def test_release_manifest_status_is_inspected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp).resolve()
+            root=repo/"results/release-delivery/one/one"
+            root.mkdir(parents=True)
+            (root/"delivery.json").write_text('{"status":"partial_missing_timing"}',encoding="utf-8")
+            marker=repo/lock_status.LOCKS["release-delivery"]
+            with ol.lock(marker,context={"root":root.relative_to(repo).as_posix()}):
+                result=lock_status.inspect(repo,"release-delivery")
+                self.assertEqual(result["journals"]["entries"][0]["state"],"partial_missing_timing")
+
+
 if __name__ == "__main__":
     unittest.main()
