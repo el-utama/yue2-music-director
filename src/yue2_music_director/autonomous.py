@@ -60,7 +60,7 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
     provider=provider_factory() if provider_factory else TextProvider.for_repo(repo)
     jobs=repo/"results/autonomous"
     root=jobs/job
-    with ld.lock(jobs/".active"):
+    with ld.lock(jobs/".active",context={"job":job,"root":root.relative_to(repo).as_posix(),"stage":"autonomous"}):
         identity={"schema":"autonomous-job-v1","job":job,"request":request,"language":language,
                   "duration_seconds":duration,"provider":provider.identity(),"studio_url":url,"production_policy":POLICY}
         if retry_role is not None:
@@ -99,7 +99,8 @@ def produce(repo,root,request,brief,intent,url,provider,*,retry_role=None):
     production=root/"production"
     # Same shared guards used by existing launchers. Native runner owns its
     # existing attempt and receipt semantics, not a second submission path.
-    with ld.lock(repo/"results/drafts/.active"), ld.lock(repo/"results/.critic-active"):
+    owner_context={"root":root.relative_to(repo).as_posix(),"stage":"native_and_listening"}
+    with ld.lock(repo/"results/drafts/.active",context=owner_context), ld.lock(repo/"results/.critic-active",context=owner_context):
         print("Native production",flush=True)
         report=artist_run.run(brief,intent,production,url)
         if report["status"]=="artistic_plan_stopped":
@@ -155,7 +156,7 @@ def retry_continuation_director(repo,job,url,*,confirm=False,provider_factory=No
         raise ValueError("Child Director retry requires --confirm-run")
     jobs=repo/"results/autonomous"
     root=jobs/job/"continuation-1"
-    with ld.lock(jobs/".active"):
+    with ld.lock(jobs/".active",context={"job":job,"root":root.relative_to(repo).as_posix(),"stage":"director_retry"}):
         if (not (root/"director.attempt.json").is_file()
                 or (root/"director.json").exists()
                 or (root/"director.retry-1.attempt.json").exists()
@@ -195,7 +196,7 @@ def continue_plan(repo,job,url,*,confirm=False,provider_factory=None,retry_role=
     if not confirm:
         print("Continuation plan only; zero provider or Studio calls.",flush=True)
         return 0
-    with ld.lock(jobs/".active"):
+    with ld.lock(jobs/".active",context={"job":job,"root":parent.relative_to(repo).as_posix(),"stage":"continuation"}):
         identity=nd.read(parent/"job.json")
         if (identity.get("job")!=job or identity.get("production_policy") not in POLICIES
                 or identity.get("studio_url")!=url):
