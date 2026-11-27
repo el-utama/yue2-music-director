@@ -118,6 +118,11 @@ def produce(repo,root,request,brief,intent,url,provider,*,retry_role=None):
         packet=ld.listen(production,brief,intent,row,url)
     print("Director judgment",flush=True)
     decision=cc.stage(root,"director",dd,provider,dd.context(request,brief,intent,report,packet),retry=retry_role=="director")
+    return finalize_result(root,report,row,decision)
+
+
+def finalize_result(root,report,row,decision):
+    production=root/"production"
     technical=report["headroom_pass"] and report["duration_cap_screen_pass"]
     if "native_completion" in report:
         from .native_completion import blocks_provisional
@@ -141,9 +146,48 @@ def produce(repo,root,request,brief,intent,url,provider,*,retry_role=None):
     return 0
 
 
-def continue_plan(repo,job,url,*,confirm=False,provider_factory=None):
+def retry_continuation_director(repo,job,url,*,confirm=False,provider_factory=None):
+    """One explicit child-scoped text retry; all music/listening is retained."""
+    from .retained_source import continuation_before_director
+    cc.validate_job(job,"placeholder","en",195)
+    url=configured_endpoint(url)
+    if not confirm:
+        raise ValueError("Child Director retry requires --confirm-run")
+    jobs=repo/"results/autonomous"
+    root=jobs/job/"continuation-1"
+    with ld.lock(jobs/".active"):
+        if (not (root/"director.attempt.json").is_file()
+                or (root/"director.json").exists()
+                or (root/"director.retry-1.attempt.json").exists()
+                or (root/"result.json").exists()):
+            raise ValueError("Only one explicit retry of the unresolved continuation Director is permitted")
+        source=continuation_before_director(repo,job)
+        identity=source["identity"]
+        if identity.get("studio_url")!=url:
+            raise ValueError("Retained Studio endpoint differs")
+        brief,intent,report,row,packet=(source[k] for k in ("brief","intent","report","row","packet"))
+        data=dd.context(identity["request"],brief,intent,report,packet)
+        attempt=nd.read(root/"director.attempt.json")
+        if attempt!={"role":"director","provider":identity["provider"],"prompt":dd.PROMPT,"input":data}:
+            raise ValueError("Retained Director inputs or contract differ; no replay under a changed policy")
+        provider=provider_factory() if provider_factory else TextProvider.for_repo(repo)
+        if provider.identity()!=identity["provider"]:
+            raise ValueError("Retained provider identity differs")
+        print("Continuation Director retry: one text completion; zero native/ASR/MOSS calls.",flush=True)
+        decision=cc.stage(root,"director",dd,provider,data,retry=True)
+        # Do not finalize against altered native/listening artifacts.
+        if continuation_before_director(repo,job)!=source:
+            raise ValueError("Retained continuation evidence changed during Director retry")
+        return finalize_result(root,report,row,decision)
+
+
+def continue_plan(repo,job,url,*,confirm=False,provider_factory=None,retry_role=None):
     """One distinct continuation of a retained parser-blocked plan, no new score."""
     from .retained_plan_review import inspect
+    if retry_role is not None:
+        if retry_role!="director":
+            raise ValueError("Only the child Director role can be retried on a continuation")
+        return retry_continuation_director(repo,job,url,confirm=confirm,provider_factory=provider_factory)
     cc.validate_job(job,"placeholder","en",195)
     url=configured_endpoint(url)
     jobs=repo/"results/autonomous"
@@ -236,9 +280,9 @@ def main():
     try:
         repo=a.repo.resolve()
         if a.continue_plan is not None:
-            if any(x is not None for x in (a.job,a.request,a.language,a.duration,a.retry_text)):
-                raise ValueError("Continuation does not allow job, brief or retry overrides")
-            return continue_plan(repo,a.continue_plan,a.url,confirm=a.confirm_run)
+            if any(x is not None for x in (a.job,a.request,a.language,a.duration)):
+                raise ValueError("Continuation does not allow job or brief overrides")
+            return continue_plan(repo,a.continue_plan,a.url,confirm=a.confirm_run,retry_role=a.retry_text)
         if a.retry_text and not a.job:
             raise ValueError("Text recovery requires the existing --job ID")
         job=a.job or ("song-"+uuid.uuid4().hex[:12])
