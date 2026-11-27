@@ -4,6 +4,7 @@ set "ROOT=%~dp0"
 if not exist "%ROOT%results" mkdir "%ROOT%results"
 if not defined YUE2_MCP_URL set "YUE2_MCP_URL=http://127.0.0.1:8791/mcp"
 set "PYTHONPATH=%ROOT%src"
+if /I "%~1"=="--styles" goto styles
 if /I "%~1"=="--knowledge" goto knowledge
 if /I "%~1"=="--artist-memory" goto artistmemory
 if /I "%~1"=="--ready" goto ready
@@ -21,6 +22,10 @@ if /I "%~1"=="--release-delivery" goto delivery
 if /I "%~1"=="--assemble-release" goto assemble
 if /I "%~1"=="--finish" goto finishaudio
 py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\music-output.txt" -- py -3 -u -m yue2_music_director.autonomous --repo "%ROOT%." --url "%YUE2_MCP_URL%" %*
+exit /b %ERRORLEVEL%
+
+:styles
+py -3 -u -m yue2_music_director.style_library --repo "%ROOT%." %2 %3 %4 %5 %6 %7 %8 %9
 exit /b %ERRORLEVEL%
 
 :knowledge
