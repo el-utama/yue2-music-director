@@ -10,6 +10,10 @@ Read [the active autonomous product roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROAD
 - Test offline with mock providers and failure injection; executable changes require green Windows/Linux CI before merge. Distinguish CI success from live execution and artistic quality. Use one short Windows launcher and a concise TXT report; operator is on another device.
 - Keep technical documentation in English, current roadmap and evidence status accurate. Do not claim a role/service or dataset is built when it is only designed. Before reporting completion, audit README entry points, command flags, actual manifests, CI evidence, privacy/rights boundaries, recovery steps and live acceptance gaps; update the relevant guide, CHANGELOG.md and PROJECT_MEMORY.md in the same PR. Use [offline knowledge workflow](docs/OFFLINE_KNOWLEDGE_WORKFLOW.md) as the consolidated user guide for the three indexes.
 
+## Operator and developer entry points
+
+Use [Operator guide](docs/OPERATOR_GUIDE.md) for the actual supported workflow and recovery, [Development](DEVELOPMENT.md) for the current engineering entry points, and PROJECT_MEMORY.md for open requirements. Historical checkpoints are evidence, not the current main or a request to rerun old tests. Before giving a command, check the current module and confirmation scope. Do not request a new checkout, configuration or inference on an already working host merely for verification.
+
 ## Modular failure isolation
 
 Separate provider, Composer, Lyricist, editorial review, native adapter, audio critic, persistence and interfaces. Keep role contracts independently testable. Save immutable per-stage inputs and receipts; failure must not replay completed upstream stages or trigger downstream work. Resume only validated matching identities; ambiguous mutations require explicit recovery. Test stage failures, cache integrity and non-duplication. Modular code in one process is not process-level fault isolation; persistent worker supervision is a later requirement.

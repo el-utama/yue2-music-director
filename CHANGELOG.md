@@ -1,5 +1,11 @@
 # Changelog and research milestones
 
+## Unreleased — operator and maintainer documentation
+
+- Consolidate installation/adoption, all 18 special launcher routes, confirmations, troubleshooting and existing-song release workflow in [Operator Guide](docs/OPERATOR_GUIDE.md).
+- Clarify current engineering entry points and distinguish historical checkpoint evidence from current main; preserve all open requirements. Documentation only; no new live validations.
+
+
 ## Unreleased — offline knowledge and original style selection (PRs 118–126)
 
 - Bundle seven historical OpenScore works (21 source assets); build a local role-specific FTS5 index with opt-in numerical text-only creative context. Full 26-work external import remains unverified.
