@@ -81,7 +81,10 @@ the body actually submitted to yue-server:
   score is therefore not interchangeable with an opening or chord bed.
 - Lyrics CRLF is normalized to LF at the engine boundary. Do not claim
   byte-identical operator lyrics at inference just because the retained
-  creative artifact preserves those bytes.
+  creative artifact preserves those bytes. Director saved-lyrics checks
+  accept exact text or that one documented transform, not arbitrary
+  whitespace changes. Retained brief, request and operator lyrics remain
+  unchanged, with their original hashes.
 - Nonnegative explicit lm_seed and seed are retained; missing/negative
   seeds are drawn separately. ABC and semantic sampling are separate
   validated presets. Harmony is passed only when the engine writes a score.

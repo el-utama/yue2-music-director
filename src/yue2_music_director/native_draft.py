@@ -130,13 +130,23 @@ def score_signature(abc, *, native=False):
     return signature+(score.bar_lengths,score.key_changes) if native else signature
 
 
+def native_lyrics_match(expected, observed):
+    """Accept only exact lyrics or Studio's documented CRLF -> LF transform.
+
+    Do not modify the retained brief, request, operator lyrics or hashes.
+    No trimming, Unicode normalization or replacement of lone CR characters.
+    """
+    return (isinstance(expected,str) and isinstance(observed,str)
+            and observed in (expected,expected.replace("\r\n","\n")))
+
+
 def verify_saved_directed_score(saved,abc,song_id,job_id,brief,*,native=False):
     if (not isinstance(saved,dict) or saved.get("id")!=song_id or not isinstance(saved.get("metadata"),dict)
             or saved["metadata"].get("job_id")!=job_id):
         raise ValueError("Directed song provenance mismatch")
     settings=saved.get("generation_settings")
     if (not isinstance(settings,dict) or settings.get("cot")!="full"
-            or settings.get("lyrics")!=brief["lyrics"]
+            or not native_lyrics_match(brief["lyrics"],settings.get("lyrics"))
             or not isinstance(settings.get("abc"),str)
             or score_signature(settings["abc"],native=native)!=score_signature(abc,native=native)):
         raise ValueError("Saved directed score or lyrics differ; retain song, do not regenerate")
@@ -329,7 +339,7 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
                     or not isinstance(saved.get("metadata"),dict) or saved["metadata"].get("job_id")!=job_id):
                 raise ValueError("Saved native song provenance mismatch")
             settings=saved.get("generation_settings")
-            if not isinstance(settings,dict) or settings.get("cot")!="full" or settings.get("lyrics")!=brief["lyrics"]:
+            if not isinstance(settings,dict) or settings.get("cot")!="full" or not native_lyrics_match(brief["lyrics"],settings.get("lyrics")):
                 raise ValueError("Saved native lyric conditioning differs")
         if artist is not None:
             from .native_completion import inspect_completion

@@ -201,3 +201,31 @@ class DraftTests(unittest.TestCase):
                     {"content":[{"type":"text","text":json.dumps({"ok":False,"error":"Expected native X:1 and blank T: header"})}]}):
             with self.assertRaisesRegex(ValueError,"Studio rejected score: Expected native X:1"):
                 extract_midi(raw)
+
+    def test_native_lyrics_only_permits_documented_line_endings(self):
+        raw="[Verse 1]\r\nOne  two\r\n\r\nThree\n"
+        lf=raw.replace("\r\n","\n")
+        brief={**self.brief,"lyrics":raw}
+        self.assertEqual(nd.request_for(brief)["lyrics"],raw)
+        self.assertTrue(nd.native_lyrics_match(raw,raw))
+        self.assertTrue(nd.native_lyrics_match(raw,lf))
+        for changed in (lf.strip(),lf.replace("  "," "),lf.replace("Three","Four"),
+                        lf.replace("\n","\r"),lf.replace("\n\n","\n"),None,True):
+            with self.subTest(changed=changed):
+                self.assertFalse(nd.native_lyrics_match(raw,changed))
+        self.assertFalse(nd.native_lyrics_match(lf,raw))
+        self.assertFalse(nd.native_lyrics_match("A\rB","A\nB"))
+        self.assertEqual(brief["lyrics"],raw)
+
+    def test_directed_score_verifies_native_normalized_operator_lyrics(self):
+        abc=(Path(__file__).resolve().parents[1]/"examples/director-demo/score.abc").read_text(encoding="utf-8")
+        brief=nd.load_brief(Path(__file__).resolve().parents[1]/"examples/director-demo/brief.json")
+        expected=brief["lyrics"].replace("\r\n","\n")
+        brief["lyrics"]=expected.replace("\n","\r\n")
+        saved={"id":"song","metadata":{"job_id":"job"},
+               "generation_settings":{"abc":abc,"cot":"full","lyrics":expected}}
+        for native in (False,True):
+            nd.verify_saved_directed_score(saved,abc,"song","job",brief,native=native)
+        saved["generation_settings"]["lyrics"]=expected+" "
+        with self.assertRaisesRegex(ValueError,"differ"):
+            nd.verify_saved_directed_score(saved,abc,"song","job",brief)
