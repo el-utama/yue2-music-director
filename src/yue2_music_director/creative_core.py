@@ -103,7 +103,7 @@ def launch(repo, job, request, language, duration, *, confirm_text=False, provid
     provider=provider_factory() if provider_factory else TextProvider.for_repo(repo)
     jobs=repo/"results/creative"
     root=jobs/job
-    with lock(jobs/".active"):
+    with lock(jobs/".active",context={"root":root.relative_to(repo).as_posix(),"stage":"creative","job":job}):
         identity={"schema":"creative-job-v1","request":request,"language":language,
                   "duration_seconds":duration,"provider":provider.identity()}
         manifest=root/"job.json"
