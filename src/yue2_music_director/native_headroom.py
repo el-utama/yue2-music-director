@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 
 from .acoustic import compare, _run
+from .headroom_policy import gain_for_true_peak
 from .mcp import Client, configured_endpoint, unpack
 from .native_process import inspect_preview, _run as processing_run, _verify_run
 from .native_recognition import _sha, _write, _busy_keys, capture, _recognition, recognition_preflight
@@ -25,11 +26,7 @@ def gain_plan(acoustic):
         raise ValueError("Missing finite acoustic metrics")
     if not -1<tp<=0 or abs(lb-la)>1:
         raise ValueError("Not a peak-only blocked preview")
-    # 0.05 dB measurement margin; no limiter, no amplification.
-    gain=math.floor((-1.05-tp)*100+1e-8)/100
-    if not -1.5<=gain<0:
-        raise ValueError("Headroom correction exceeds bounded gain budget")
-    return gain
+    return gain_for_true_peak(tp)
 
 
 def corrected_pass(before, after, gain):
