@@ -64,6 +64,60 @@
       }
     },
     {
+      "work_id": "schubert-d911-03",
+      "title": "Gefror’ne Thränen",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "5015499-analysis_automatic.rntxt",
+          "git_blob_sha": "f1c91ca5dc6af8225a15ef3a78d973ff9b8b608a",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/03_Gefror’ne_Thränen/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "5015499-lc5015499.mxl",
+          "git_blob_sha": "c65cdc2131842f9c54eb0af98a69c373a4827d20",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/03_Gefror’ne_Thränen/lc5015499.mxl"
+        },
+        "lyrics": {
+          "file": "5015499-lc5015499.txt",
+          "git_blob_sha": "e31e5943cdeeff6e7937028cf905390a6977e78d",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/03_Gefror’ne_Thränen/lc5015499.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-04",
+      "title": "Erstarrung",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "5015573-analysis_automatic.rntxt",
+          "git_blob_sha": "784078942554a6ed384910e20d0d0492118a5eea",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/04_Erstarrung/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "5015573-lc5015573.mxl",
+          "git_blob_sha": "52d6cc12f42a00a444f4bfb1a2ec2b552d7ae1e7",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/04_Erstarrung/lc5015573.mxl"
+        },
+        "lyrics": {
+          "file": "5015573-lc5015573.txt",
+          "git_blob_sha": "c732c60e91ac6b01dbe10fbc0d697cfa66a4210c",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/04_Erstarrung/lc5015573.txt"
+        }
+      }
+    },
+    {
       "work_id": "schubert-d911-05",
       "title": "Der Lindenbaum",
       "composer": "Franz Schubert",

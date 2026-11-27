@@ -37,8 +37,8 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Main `046e2b8d482c506f1f17f17096be1c0a84a05459` after PR #115; exact integrated head `03055a324bd4f15fb0c42294253a0380d5e24d8f` passed [four CI jobs](https://github.com/el-utama/yue2-music-director/actions/runs/45953514891). Windows live usage remains unverified.
-- PR #118: offline knowledge pilot; CI pending. R02/R03/R13 remain open.
+- Main `58d16138f39e3fb6b4c6b99cad6d79622f1af0ca` after PR #118. Exact head `343444a51134da2bf8f5f0caefe25b4fa184109f` passed [all four CI jobs](https://github.com/el-utama/yue2-music-director/actions/runs/45954453751); three actual works indexed in CI. Windows operator host not checked.
+- Follow-up: five bundled works, full 24-work pinned offline checkout manifest and additional descriptors, pending CI. R02/R03/R13 remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
   See [local release checkpoint](docs/LOCAL_RELEASE_CHECKPOINT.md) and
@@ -51,8 +51,8 @@ unpublished lyrics, audio, private paths or personal preferences here.
 | ID | Requirement / deliverable | Current verified state | Remaining acceptance work |
 |---|---|---|---|
 | R01 | Original song from natural-language brief; distinct Composer, Lyricist, reviewer, Director; native YuE2 first | Local alpha implemented, prior live workflow and retained reference succeeded; latest CI green | Independent generalization, artistic quality and usability; do not repeat successful reference |
-| R02 | Deep Lyricist knowledge base: many songs, multilingual structure, prosody, rhyme, narrative, imagery, genre and emotional arc | **OPEN; pilot PR bundles 3 German art songs and offline SQLite/FTS5 index and retrieval; CI pending.** No creative integration yet | Rights/source audit, actual ingestion, deduplication, searchable structured analysis, counts by language/genre and rights, integration with versioned creative policy, held-out editorial evaluation |
-| R03 | Composer knowledge: melody, harmony, arrangement, instruments, vocal phrasing, music theory and production | Native contracts/research docs and symbolic score review available; pilot MusicXML descriptors and automatic harmony search; CI pending, no creative integration | Source-backed knowledge entries and retrieval, versioned policy integration and meaningful artistic evaluation |
+| R02 | Deep Lyricist knowledge base: many songs, multilingual structure, prosody, rhyme, narrative, imagery, genre and emotional arc | **OPEN; three German art songs indexed by merged PR #118; follow-up bundles five and supports an offline full-cycle import of 24 (not yet tested on all 24).** No creative integration yet | Rights/source audit, actual ingestion, deduplication, searchable structured analysis, counts by language/genre and rights, integration with versioned creative policy, held-out editorial evaluation |
+| R03 | Composer knowledge: melody, harmony, arrangement, instruments, vocal phrasing, music theory and production | Native contracts/research docs and symbolic score review available; pilot MusicXML descriptors and automatic harmony search CI passed; new melodic descriptors pending CI; no creative integration | Source-backed knowledge entries and retrieval, versioned policy integration and meaningful artistic evaluation |
 | R04 | Native controls, actual installed capability and limitations | Source-pinned audit and live velocity fixture; velocity not retained in ABC, schedule coverage advisory only | Complete remaining melody/harmony/arrangement/replay/cover/adapter audit; installed binary identity not verified; no fake controls |
 | R05 | Human feedback, persistent artist profiles, confirmed vs inferred preference | Local immutable feedback and opt-in Artist Memory implemented/CI; explicit typed job selection | Live hosted typed-schema validation; usable profile management, no inferred preferences silently applied; artist naming PR115 merged; live usage pending |
 | R06 | Audio finishing, original preserved, separate variant | Gain-only finishing passed live technical check on retained reference | General mastering, repair and artistic comparison are not established; no automatic acceptance |
@@ -121,4 +121,6 @@ The memory requirement is implemented via PR #116; PR #115 merged after integrat
 repeat prior requirements.
 
 
-2026-11-27: Operator agreed offline-first SQLite + FTS5/BM25; optional CPU semantic retrieval only if needed. No GPU or hosted embedding dependency. See [offline knowledge bank](docs/KNOWLEDGE_BANK.md). PR #118 bundles three unique historical works with nine pinned assets; runtime tests pending. Expand rights-reviewed multilingual coverage, support local import, freeze retrieval in a versioned creative policy and evaluate before acceptance. No new synthesis or provider calls.
+2026-11-27: Operator agreed offline-first SQLite + FTS5/BM25; optional CPU semantic retrieval only if needed. No GPU or hosted embedding dependency. See [offline knowledge bank](docs/KNOWLEDGE_BANK.md). PR #118 indexed three unique historical works with nine pinned assets in CI. Expand rights-reviewed multilingual coverage, support local import, freeze retrieval in a versioned creative policy and evaluate before acceptance. No new synthesis or provider calls.
+
+2026-11-27: Follow-up adds two actual works and pinned full-cycle manifest (24 works, 72 assets, not bundled or imported in full). Offline import from an already obtained OpenScore checkout; checksum verification, atomic replacement, and lexical diversity plus score interval descriptors. No genre/language diversity yet. No transfer to provider; actual creative retrieval and held-out artistic evaluation remain open.

@@ -1,0 +1,661 @@
+{
+  "schema": "knowledge-bank-v1",
+  "source": {
+    "repository": "https://github.com/OpenScore/Lieder",
+    "revision": "38c5db510224d9facdc4b08d741fc788cfb58ea8",
+    "license": "CC0-1.0",
+    "rights_evidence": "https://www.themorgan.org/music-manuscripts-and-printed-music/115668",
+    "license_url": "https://github.com/OpenScore/Lieder/blob/38c5db510224d9facdc4b08d741fc788cfb58ea8/LICENSE.txt",
+    "scope": "1827 Winterreise works by Franz Schubert (d. 1828) and Wilhelm Müller (d. 1827); original German text only; OpenScore CC0 transcriptions and automatic harmonic annotations; no recording rights claimed"
+  },
+  "works": [
+    {
+      "work_id": "schubert-d911-01",
+      "title": "Gute Nacht",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/01_Gute_Nacht/analysis_automatic.rntxt",
+          "git_blob_sha": "57b3358494ebf9aef3263f276d0d55c77c60fffa",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/01_Gute_Nacht/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/01_Gute_Nacht/lc5015378.mxl",
+          "git_blob_sha": "2368e4c4ef0b1a67d9317ae05c20c22752a8fc45",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/01_Gute_Nacht/lc5015378.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/01_Gute_Nacht/lc5015378.txt",
+          "git_blob_sha": "e7fbe410e2fa1a0180aa9c999728b526d85b6de9",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/01_Gute_Nacht/lc5015378.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-02",
+      "title": "Die Wetterfahne",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/02_Die_Wetterfahne/analysis_automatic.rntxt",
+          "git_blob_sha": "05337000d5bd1107e91d2c9f90b3546688b1df9b",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/02_Die_Wetterfahne/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/02_Die_Wetterfahne/lc5015435.mxl",
+          "git_blob_sha": "92673071856460d4f1b00a4d78069f2c0ec9a950",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/02_Die_Wetterfahne/lc5015435.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/02_Die_Wetterfahne/lc5015435.txt",
+          "git_blob_sha": "03849e3f3cdd4152fadca63d473d53b0ca1a6a0e",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/02_Die_Wetterfahne/lc5015435.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-03",
+      "title": "Gefror’ne Thränen",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/03_Gefror’ne_Thränen/analysis_automatic.rntxt",
+          "git_blob_sha": "f1c91ca5dc6af8225a15ef3a78d973ff9b8b608a",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/03_Gefror’ne_Thränen/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/03_Gefror’ne_Thränen/lc5015499.mxl",
+          "git_blob_sha": "c65cdc2131842f9c54eb0af98a69c373a4827d20",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/03_Gefror’ne_Thränen/lc5015499.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/03_Gefror’ne_Thränen/lc5015499.txt",
+          "git_blob_sha": "e31e5943cdeeff6e7937028cf905390a6977e78d",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/03_Gefror’ne_Thränen/lc5015499.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-04",
+      "title": "Erstarrung",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/04_Erstarrung/analysis_automatic.rntxt",
+          "git_blob_sha": "784078942554a6ed384910e20d0d0492118a5eea",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/04_Erstarrung/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/04_Erstarrung/lc5015573.mxl",
+          "git_blob_sha": "52d6cc12f42a00a444f4bfb1a2ec2b552d7ae1e7",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/04_Erstarrung/lc5015573.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/04_Erstarrung/lc5015573.txt",
+          "git_blob_sha": "c732c60e91ac6b01dbe10fbc0d697cfa66a4210c",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/04_Erstarrung/lc5015573.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-05",
+      "title": "Der Lindenbaum",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/05_Der_Lindenbaum/analysis_automatic.rntxt",
+          "git_blob_sha": "55ee5933cc01419b81b38fb430492e13ba44fdf3",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/05_Der_Lindenbaum/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/05_Der_Lindenbaum/lc5016466.mxl",
+          "git_blob_sha": "703316810bcd5924fef30e78346c22e1c14110db",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/05_Der_Lindenbaum/lc5016466.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/05_Der_Lindenbaum/lc5016466.txt",
+          "git_blob_sha": "625bbb5717393b27191e402fd73dc38f66e85f4a",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/05_Der_Lindenbaum/lc5016466.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-06",
+      "title": "Wasserfluth",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/06_Wasserfluth/analysis_automatic.rntxt",
+          "git_blob_sha": "7960163316aa755c3a82e93b78f1571fab380c28",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/06_Wasserfluth/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/06_Wasserfluth/lc5016512.mxl",
+          "git_blob_sha": "715230ed9fecfc56ce3abce93363ce43527ad975",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/06_Wasserfluth/lc5016512.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/06_Wasserfluth/lc5016512.txt",
+          "git_blob_sha": "67af813951f5b05e49db13add5a81269f5a49ff2",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/06_Wasserfluth/lc5016512.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-07",
+      "title": "Auf dem Flusse",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/07_Auf_dem_Flusse/analysis_automatic.rntxt",
+          "git_blob_sha": "2b7ebe06e227c1040678c3396de93ebe64c696fb",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/07_Auf_dem_Flusse/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/07_Auf_dem_Flusse/lc5015410.mxl",
+          "git_blob_sha": "c2a83407270cce07c9db39ae3cb69fbc9adff399",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/07_Auf_dem_Flusse/lc5015410.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/07_Auf_dem_Flusse/lc5015410.txt",
+          "git_blob_sha": "aabc5be3cbdf06dbc7e4b76982a33e95860b2fe0",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/07_Auf_dem_Flusse/lc5015410.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-08",
+      "title": "Rückblick",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/08_Rückblick/analysis_automatic.rntxt",
+          "git_blob_sha": "3dafceeb1675c6ed087f4586d08bc9b88b61339f",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/08_Rückblick/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/08_Rückblick/lc5015521.mxl",
+          "git_blob_sha": "136e7011e11607eb9453e31ddda339b5b5a999ec",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/08_Rückblick/lc5015521.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/08_Rückblick/lc5015521.txt",
+          "git_blob_sha": "cfa0166f1b30bbe5668b24c4a059df4aae8e63c7",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/08_Rückblick/lc5015521.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-09",
+      "title": "Irrlicht",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/09_Irrlicht/analysis_automatic.rntxt",
+          "git_blob_sha": "c1a8b742acaad2ef02e2eb1ba8632e024505826a",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/09_Irrlicht/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/09_Irrlicht/lc5023438.mxl",
+          "git_blob_sha": "88eacadef8f4c7cadf443bcec07006545933d97a",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/09_Irrlicht/lc5023438.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/09_Irrlicht/lc5023438.txt",
+          "git_blob_sha": "41a629405e31ee715400689bcd6b121f371c5a18",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/09_Irrlicht/lc5023438.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-10",
+      "title": "Rast (Spätere Fassung)",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/10_Rast_(Spätere_Fassung)/analysis_automatic.rntxt",
+          "git_blob_sha": "bcb7f1904ffab310d38853af1288af16fc5b9d71",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/10_Rast_(Spätere_Fassung)/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/10_Rast_(Spätere_Fassung)/lc5023517.mxl",
+          "git_blob_sha": "73920d501352eb3e9eb04e673e030bdd6389780e",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/10_Rast_(Spätere_Fassung)/lc5023517.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/10_Rast_(Spätere_Fassung)/lc5023517.txt",
+          "git_blob_sha": "ad2ebd32292f477cac3068313df382e6232cc83a",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/10_Rast_(Spätere_Fassung)/lc5023517.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-11",
+      "title": "Frühlingstraum",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/11_Frühlingstraum/analysis_automatic.rntxt",
+          "git_blob_sha": "37bde4f1d603e720c2d3c2aec8e6202279767b4d",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/11_Frühlingstraum/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/11_Frühlingstraum/lc5023603.mxl",
+          "git_blob_sha": "1e59b58b7c19c5f5b286df281ea30331de6b6121",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/11_Frühlingstraum/lc5023603.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/11_Frühlingstraum/lc5023603.txt",
+          "git_blob_sha": "2200b3bcb929c04c38b8de8921485e51a3a3297f",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/11_Frühlingstraum/lc5023603.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-12",
+      "title": "Einsamkeit (Urspruengliche Fassung)",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/12_Einsamkeit_(Urspruengliche_Fassung)/analysis_automatic.rntxt",
+          "git_blob_sha": "5fad4874a86f2e922b6b28dbbe417822593e409a",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/12_Einsamkeit_(Urspruengliche_Fassung)/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/12_Einsamkeit_(Urspruengliche_Fassung)/lc5023662.mxl",
+          "git_blob_sha": "06bbb7a1d660cb3d429d14a5bf3f75bb9bbf8f29",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/12_Einsamkeit_(Urspruengliche_Fassung)/lc5023662.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/12_Einsamkeit_(Urspruengliche_Fassung)/lc5023662.txt",
+          "git_blob_sha": "82e41a961ae1107f0f783938e58fbbf9845e465b",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/12_Einsamkeit_(Urspruengliche_Fassung)/lc5023662.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-13",
+      "title": "Die Post",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/13_Die_Post/analysis_automatic.rntxt",
+          "git_blob_sha": "b95f5f2ca42d04286f434033632617013f3f3c9c",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/13_Die_Post/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/13_Die_Post/lc5007176.mxl",
+          "git_blob_sha": "9a32caf202c11481b16ffe2f1f792d60d53d3679",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/13_Die_Post/lc5007176.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/13_Die_Post/lc5007176.txt",
+          "git_blob_sha": "b26d8d56e3bfcf73534041f358ff32da317b130b",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/13_Die_Post/lc5007176.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-14",
+      "title": "Der greise Kopf",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/14_Der_greise_Kopf/analysis_automatic.rntxt",
+          "git_blob_sha": "f9aed7cf11f4a3d6d1c90feeda43dcbeda21bba4",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/14_Der_greise_Kopf/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/14_Der_greise_Kopf/lc5007178.mxl",
+          "git_blob_sha": "933a925bfb580b307dae0f6b5211a9ef0f9e870d",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/14_Der_greise_Kopf/lc5007178.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/14_Der_greise_Kopf/lc5007178.txt",
+          "git_blob_sha": "aeda8add34716f59f152a8646c2a15e5fdfcddad",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/14_Der_greise_Kopf/lc5007178.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-15",
+      "title": "Die Kraehe",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/15_Die_Kraehe/analysis_automatic.rntxt",
+          "git_blob_sha": "a4265829fcbdbf5e95e671f49225249cb223ae0d",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/15_Die_Kraehe/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/15_Die_Kraehe/lc5007179.mxl",
+          "git_blob_sha": "031ce518421a513aa6d4aa3aebdfb0b7083fbebb",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/15_Die_Kraehe/lc5007179.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/15_Die_Kraehe/lc5007179.txt",
+          "git_blob_sha": "3f76256230431ace895dd9b499a42993e114afee",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/15_Die_Kraehe/lc5007179.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-16",
+      "title": "Letzte Hoffnung",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/16_Letzte_Hoffnung/analysis_automatic.rntxt",
+          "git_blob_sha": "dfd1ec57cc617c350b2ab48e478290c5e5d79b5b",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/16_Letzte_Hoffnung/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/16_Letzte_Hoffnung/lc5007180.mxl",
+          "git_blob_sha": "a8ce06f88c5d0498d17a9e90beca8e1c36486e78",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/16_Letzte_Hoffnung/lc5007180.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/16_Letzte_Hoffnung/lc5007180.txt",
+          "git_blob_sha": "21e94b37951957a036d97769a296a47cfb238c2a",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/16_Letzte_Hoffnung/lc5007180.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-17",
+      "title": "Im Dorfe",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/17_Im_Dorfe/analysis_automatic.rntxt",
+          "git_blob_sha": "dffab4ee0843a1eba73137823c3c414666b1df47",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/17_Im_Dorfe/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/17_Im_Dorfe/lc5007181.mxl",
+          "git_blob_sha": "ba0e13abad4890f852d57887373420bde083fd25",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/17_Im_Dorfe/lc5007181.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/17_Im_Dorfe/lc5007181.txt",
+          "git_blob_sha": "f701e64a04255a43905031716f02aa069e130f63",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/17_Im_Dorfe/lc5007181.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-18",
+      "title": "Der stuermische Morgen",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/18_Der_stuermische_Morgen/analysis_automatic.rntxt",
+          "git_blob_sha": "d8d066bf61eb92330d8ea19b26fbc0efba6b907f",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/18_Der_stuermische_Morgen/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/18_Der_stuermische_Morgen/lc5007182.mxl",
+          "git_blob_sha": "2349b792dacb045b8c04fe1b1f302e518bef1048",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/18_Der_stuermische_Morgen/lc5007182.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/18_Der_stuermische_Morgen/lc5007182.txt",
+          "git_blob_sha": "174a02564d075f6c71f4ade814fc9eec0b146d41",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/18_Der_stuermische_Morgen/lc5007182.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-19",
+      "title": "Täuschung",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/19_Täuschung/analysis_automatic.rntxt",
+          "git_blob_sha": "6398417516ed76b050f2fbcae426855f89174f24",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/19_Täuschung/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/19_Täuschung/lc5009833.mxl",
+          "git_blob_sha": "f15cc014f9e173c76012ac126226b929f2a9e403",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/19_Täuschung/lc5009833.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/19_Täuschung/lc5009833.txt",
+          "git_blob_sha": "84aad9f3160ffbf32775627ee20d56a0d7a388a1",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/19_Täuschung/lc5009833.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-20",
+      "title": "Der Wegweiser",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/20_Der_Wegweiser/analysis_automatic.rntxt",
+          "git_blob_sha": "6ca4f2d986c5ef4e1f0e675f52806e28f9c92cd3",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/20_Der_Wegweiser/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/20_Der_Wegweiser/lc5009900.mxl",
+          "git_blob_sha": "3a6d89149d1a7c2a7694e85e4868c66135e32491",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/20_Der_Wegweiser/lc5009900.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/20_Der_Wegweiser/lc5009900.txt",
+          "git_blob_sha": "0c653f0d94512d04652cef87ace5e3ffe2a14234",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/20_Der_Wegweiser/lc5009900.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-21",
+      "title": "Das Wirthshaus",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/21_Das_Wirthshaus/analysis_automatic.rntxt",
+          "git_blob_sha": "49940ad6c9422783690526e8ad013821b1a7da76",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/21_Das_Wirthshaus/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/21_Das_Wirthshaus/lc5013945.mxl",
+          "git_blob_sha": "82fc8d213f52286dfbe6e168d01edf202844c94d",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/21_Das_Wirthshaus/lc5013945.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/21_Das_Wirthshaus/lc5013945.txt",
+          "git_blob_sha": "32ef1259b5e11128fd8dec628b27b4c7da3a52e1",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/21_Das_Wirthshaus/lc5013945.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-22",
+      "title": "Muth",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/22_Muth/analysis_automatic.rntxt",
+          "git_blob_sha": "3bc1b03bba85b181a26a605404fbed41bd75b99d",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/22_Muth/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/22_Muth/lc5013969.mxl",
+          "git_blob_sha": "4a320e59cdd767ed59b86acc9fe0f37a0b91a481",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/22_Muth/lc5013969.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/22_Muth/lc5013969.txt",
+          "git_blob_sha": "fb1c37ae4d97eabefa3f789cf15b9f0c5e730711",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/22_Muth/lc5013969.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-23",
+      "title": "Die Nebensonnen",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/23_Die_Nebensonnen/analysis_automatic.rntxt",
+          "git_blob_sha": "d613f5bd3ae5fb7e54f38c11e5dece305698c3a0",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/23_Die_Nebensonnen/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/23_Die_Nebensonnen/lc5014002.mxl",
+          "git_blob_sha": "f477d2ecd3d218a988c7e4cd3750234183bf090d",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/23_Die_Nebensonnen/lc5014002.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/23_Die_Nebensonnen/lc5014002.txt",
+          "git_blob_sha": "01894e3d6bb1d5d9fac6c7ad62c63dced45be750",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/23_Die_Nebensonnen/lc5014002.txt"
+        }
+      }
+    },
+    {
+      "work_id": "schubert-d911-24",
+      "title": "Der Leiermann (Spätere Fassung)",
+      "composer": "Franz Schubert",
+      "lyricist": "Wilhelm Müller",
+      "language": "de",
+      "genre": "Lied",
+      "published_year": 1828,
+      "rights": "approved_public_domain_cc0",
+      "assets": {
+        "harmony": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/24_Der_Leiermann_(Spätere_Fassung)/analysis_automatic.rntxt",
+          "git_blob_sha": "e385c9fcdca9d4a071258f2468e016b450bb0131",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/24_Der_Leiermann_(Spätere_Fassung)/analysis_automatic.rntxt"
+        },
+        "score": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/24_Der_Leiermann_(Spätere_Fassung)/lc5014023.mxl",
+          "git_blob_sha": "fa46da80785b60df793d63761e425f5a6f21699c",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/24_Der_Leiermann_(Spätere_Fassung)/lc5014023.mxl"
+        },
+        "lyrics": {
+          "file": "scores/Schubert,_Franz/Winterreise,_D.911/24_Der_Leiermann_(Spätere_Fassung)/lc5014023.txt",
+          "git_blob_sha": "dacafd5200cf61871f2a5eee9a1bd97d6a266995",
+          "source_path": "scores/Schubert,_Franz/Winterreise,_D.911/24_Der_Leiermann_(Spätere_Fassung)/lc5014023.txt"
+        }
+      }
+    }
+  ]
+}
