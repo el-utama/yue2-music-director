@@ -1,0 +1,32 @@
+{
+  "schema": "observed-style-metadata-v1",
+  "source": "Incompetech catalog",
+  "author": "Kevin MacLeod",
+  "official_catalog": "https://incompetech.com/agent-section/",
+  "metadata_snapshot": {
+    "repository": "https://github.com/ryanaryapramudya/Incompetech-api",
+    "revision": "52fab7e43006e528bce62d82b76d1b32f7c5914b",
+    "blob_sha": "2e8cd466866c33f748379bd9e2b2b43c54e36807",
+    "path": "data/catalog_enriched.json",
+    "reported_sync": "2026-10-09T09:00:04.993059Z",
+    "source_total": 1443
+  },
+  "attribution": "Kevin MacLeod (incompetech.com), CC BY 4.0, selected factual metadata from third-party snapshot; category mapping and selection by YuE2 Music Director",
+  "license_evidence": "https://incompetech.com/agent-section/",
+  "selection": "Round-robin across reported collections, up to 100 per exact source genre. Soundtrack mapped to backsound candidate; not evidence of TikTok use or dialogue suitability.",
+  "counts": {
+    "blues": 11,
+    "jazz": 74,
+    "lofi": 0,
+    "pop": 18,
+    "indie": 0,
+    "folk": 0,
+    "backsound": 100,
+    "hiphop": 0,
+    "lofihop": 0,
+    "trap": 0
+  },
+  "distinct_tracks": 203,
+  "rights_reviewed_tracks": 0,
+  "lyrics": 0
+}

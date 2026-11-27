@@ -37,8 +37,8 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Main `e2bd84e9393a3686ef4ae943d024d945764e1ade` after PR #120; exact head `a877741366ea4ddeefac0366f08102bf9170bab9` passed [four CI jobs](https://github.com/el-utama/yue2-music-director/actions/runs/45957836418). Seven bundled works (5 de, 2 en) and opt-in text-only context verified by CI; no live provider. Full 26-work import unverified.
-- PR #121: 1,000 original style recipes (100 per requested category), separate from collected corpus; CI pending, real-reference and lyric quotas still open.
+- Main `1cbbc3a5928f813accd47d745e1c485749c49782` after PR #121; exact head `fb4ce8c431bd14630b904777ae85985d9f384fde` passed [all four CI jobs](https://github.com/el-utama/yue2-music-director/actions/runs/45958267541). 1,000 original style recipes indexed in CI. No live generation.
+- Follow-up observed metadata pilot: 203 distinct candidate tracks; rights review and CI pending. Seven historical score/lyric works remain separate. R14 open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
   See [local release checkpoint](docs/LOCAL_RELEASE_CHECKPOINT.md) and
@@ -63,7 +63,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 | R11 | Multi-track/album creative scheduling and consistent artist direction | Release snapshots/assembly; no creative scheduling | Explicit track-level plans/budgets, deterministic resume, independent evidence and approval |
 | R12 | Project documentation, continuity and complete requirement coverage | This register plus native/release docs | Maintain on every substantive change, verify all outstanding rows before readiness |
 | R13 | Privacy, licensing, safe external use | Local private storage and explicit provider boundary | Validate every reference corpus source/rights, permitted use and hosted transfer; preserve originals and no unsupported claims |
-| R14 | 100 music styles per specified category, lyrics if available | 1,000 authored presets in follow-up branch; actual observed corpus quotas not met; CI pending | Rights-reviewed 100 observed records per category; source and lyric availability, deduplication, creative evaluation |
+| R14 | 100 music styles per specified category, lyrics if available | 1,000 authored presets merged/CI; 203 observed metadata candidates in follow-up, rights review and CI pending; actual quotas open | Rights-reviewed 100 observed records per category; source and lyric availability, deduplication, creative evaluation |
 
 ## Corpus and knowledge inventory — explicit gap, not optional to full product
 
@@ -129,3 +129,5 @@ repeat prior requirements.
 2026-11-27: PR #119 merged after exact-head green CI. Follow-up adds two historical English works with pinned bytes and retains them during the full German source import; expected full count 26, not measured. Explicit text-only knowledge opt-in sends bounded numeric descriptors only, freezes local provenance in job identity, and requires confirmation on resume. No live provider, Studio or quality evidence; still need broader corpus, meaningful technique retrieval and autonomous production integration.
 
 2026-11-27: **NEW operator requirement R14** — collect 100 music styles each for blues, jazz, lofi, pop, indie, folk, backsound (TikTok/social media), hip hop, lofihop, trap; lyrics if available/rights compatible. Total 1,000 category entries. Separate observed song/style references from authored presets. Follow-up branch provides 1,000 unique original unrendered style recipes (100/category), zero new real-track references and zero lyrics; actual corpus quotas remain OPEN. Candidate sources audited, bulk raw retrieval blocked. Offline FTS5 style library separate from real-song index, no GPU or provider calls. See docs/STYLE_LIBRARY.md. R02/R03/R13 remain open; do not count presets as historical songs.
+
+2026-11-27: Observed reference pilot, 203 distinct Incompetech metadata candidates with ISRC and source provenance, blues 11, jazz 74, lofi 0, pop 18, indie 0, folk 0, backsound 100, hiphop 0, lofihop 0, trap 0. Not independently reviewed per-track, no audio or lyrics, not production evidence. MTG-Jamendo raw access now succeeds via Git blob but license prohibits nonresearch use without authorization; excluded. See docs/OBSERVED_STYLES.md. No real reference quota closed.
