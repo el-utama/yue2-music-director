@@ -32,6 +32,18 @@ Confirmed preference notes and inferred observations remain separate,
 local, and **neither is automatically applied**. The operator may choose
 to translate a confirmed preference into a supported typed default.
 
+## Use a profile directly in a new song
+
+Run `music.cmd --artist-profile ARTIST` to preview a new job, or add
+`--confirm-run` to authorize the existing bounded production flow. Optional
+`--profile-revision N` pins a revision; `--creative-spec PATH` supplies partial
+song overrides. The job freezes the compiled spec and artist ID, revision
+and profile SHA-256 before provider work. Resume with `--job JOB --confirm-run`;
+no current profile lookup or new preference application. An existing job
+rejects another profile selection. Private notes are not sent to the
+provider. This uses the existing opt-in typed policy, whose hosted schema
+has not been live validated.
+
 ## Commands (Windows repository)
 
 - Inspect: `music.cmd --artist-memory ARTIST`

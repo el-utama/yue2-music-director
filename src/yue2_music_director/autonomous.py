@@ -49,12 +49,20 @@ def make_inputs(result, identity):
 
 
 def launch(repo, job, request, language, duration, url, *, confirm=False,
-           provider_factory=None, retry_role=None, typed_spec=None):
+           provider_factory=None, retry_role=None, typed_spec=None, artist_profile=None):
     if typed_spec is not None:
         typed_spec=tc.validate_spec(typed_spec)
+    if artist_profile is not None:
+        from .artist_memory import validate_selection
+        artist_profile=validate_selection(artist_profile)
+        if typed_spec is None:
+            raise ValueError("Artist profile selection requires a compiled typed spec")
     cc.validate_job(job,request,language,duration)
     url=configured_endpoint(url)
     print("Job:",job,flush=True)
+    if artist_profile is not None:
+        print("Artist profile:",artist_profile["artist"],"revision",artist_profile["revision"],flush=True)
+        print("Typed profile requirements will be sent only during confirmed production.",flush=True)
     print("Budget: up to four text stages, one native composition plan, one native song, one explicit ASR, two CPU excerpts.",flush=True)
     if retry_role is not None and (retry_role not in ROLES or not confirm):
         raise ValueError("Retry requires a valid text role and explicit confirmation")
@@ -69,6 +77,8 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
                   "duration_seconds":duration,"provider":provider.identity(),"studio_url":url,"production_policy":tc.POLICY if typed_spec is not None else POLICY}
         if typed_spec is not None:
             identity["creative_spec"]=typed_spec
+        if artist_profile is not None:
+            identity["artist_profile"]=artist_profile
         if retry_role is not None:
             if (not (root/(retry_role+".attempt.json")).is_file()
                     or (root/(retry_role+".json")).exists()
@@ -287,6 +297,8 @@ def main():
     p.add_argument("--continue-plan",metavar="JOB",help="Explicit continuation of a rechecked parser-blocked plan")
     p.add_argument("--request")
     p.add_argument("--creative-spec",type=Path,help="Optional explicit typed requirements and exact lyrics JSON")
+    p.add_argument("--artist-profile",help="Explicit local artist ID for a new typed job; --creative-spec supplies overrides")
+    p.add_argument("--profile-revision",type=int,help="Pin an artist profile revision (default: latest)")
     p.add_argument("--language",choices=sorted(cc.SUPPORTED))
     p.add_argument("--duration",type=int)
     p.add_argument("--confirm-run",action="store_true",
@@ -296,7 +308,7 @@ def main():
     try:
         repo=a.repo.resolve()
         if a.continue_plan is not None:
-            if any(x is not None for x in (a.job,a.request,a.language,a.duration,a.creative_spec)):
+            if any(x is not None for x in (a.job,a.request,a.language,a.duration,a.creative_spec,a.artist_profile,a.profile_revision)):
                 raise ValueError("Continuation does not allow job or brief overrides")
             return continue_plan(repo,a.continue_plan,a.url,confirm=a.confirm_run,retry_role=a.retry_text)
         if a.retry_text and not a.job:
@@ -306,13 +318,25 @@ def main():
         cc.validate_job(job,"placeholder","en",195)
         saved=repo/"results/autonomous"/job/"job.json"
         typed_spec=None
+        artist_profile=None
+        if a.profile_revision is not None and a.artist_profile is None:
+            raise ValueError("--profile-revision requires --artist-profile")
+        if saved.is_file() and a.artist_profile is not None:
+            raise ValueError("Existing job already freezes its profile; resume with --job only")
         if a.creative_spec is not None:
             from .creative_provider import strict_json
             if a.creative_spec.stat().st_size>100000:
                 raise ValueError("Creative specification exceeds size limit")
-            typed_spec=tc.validate_spec(strict_json(a.creative_spec.read_bytes().decode("utf-8-sig")))
+            override=strict_json(a.creative_spec.read_bytes().decode("utf-8-sig"))
+            typed_spec=override if a.artist_profile is not None else tc.validate_spec(override)
+        if a.artist_profile is not None:
+            from .artist_memory import compile_spec
+            compiled=compile_spec(repo,a.artist_profile,revision=a.profile_revision,overrides=typed_spec)
+            typed_spec=compiled["spec"]
+            artist_profile={k:compiled[k] for k in ("artist","revision","profile_sha256")}
         if saved.is_file():
             previous=nd.read(saved)
+            artist_profile=previous.get("artist_profile")
             if typed_spec is None:
                 typed_spec=previous.get("creative_spec")
             request=a.request if a.request is not None else previous["request"]
@@ -326,7 +350,7 @@ def main():
                 request=a.request
             language=a.language or "en"
             duration=a.duration if a.duration is not None else 195
-        return launch(repo,job,request,language,duration,a.url,confirm=a.confirm_run,retry_role=a.retry_text,typed_spec=typed_spec)
+        return launch(repo,job,request,language,duration,a.url,confirm=a.confirm_run,retry_role=a.retry_text,typed_spec=typed_spec,artist_profile=artist_profile)
     except (OSError,ValueError,KeyError,TypeError,MCPError,subprocess.SubprocessError,EOFError) as e:
         print("ERROR:",e,file=sys.stderr,flush=True)
         print("Preserve job and receipts. Resume only the same job; no blind retry.",file=sys.stderr,flush=True)

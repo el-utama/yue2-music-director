@@ -3,6 +3,7 @@
 ## Unreleased — local readiness and Artist Memory
 
 - Add read-only `music.cmd --ready` using existing native preflight, without provider or generation calls; PR #112 CI passed 372 Windows tests.
+- Add explicit new-job artist profile selection, freeze profile revision/hash and compiled typed spec, and resume without reading the current profile.
 - Add private append-only artist profile revisions and explicit typed spec compilation; no automatic learning or application, no alteration of historical jobs.
 
 ## Unreleased — native control and lyric evidence (PRs 104–109)

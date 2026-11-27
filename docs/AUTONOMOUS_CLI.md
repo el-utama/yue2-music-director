@@ -14,6 +14,14 @@ Tests inject provider and listening failures and mock native stage reuse; existi
 
 Provider endpoint/model references: [NVIDIA NIM LLM API](https://docs.api.nvidia.com/nim/reference/llm-apis), [Nemotron 3.5 Super VL](https://build.nvidia.com/nvidia/nemotron-3.5-super-vl-120b-a12b?section=deploy), [OpenRouter chat completion](https://openrouter.ai/docs/api/api-reference/chat/send-chat-completion-request). The default model name is not proof of the operator's account access or free quota.
 
+## Use an explicitly selected artist profile
+
+For a new song, `music.cmd --artist-profile ARTIST` previews a compiled typed
+spec (with optional `--profile-revision N` and `--creative-spec PATH` overrides).
+Add `--confirm-run` for the existing production budget. Existing jobs resume
+from their frozen spec and profile provenance without looking up the current
+profile. See [Artist Memory](ARTIST_MEMORY.md). No automatic profile choice.
+
 ## Read-only readiness check
 
 Run `music.cmd --ready` on the Windows Studio host before starting a new

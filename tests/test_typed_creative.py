@@ -140,3 +140,46 @@ class TypedCreativeTests(unittest.TestCase):
         for style in ("English folk with acoustic guitar","English folk male female vocals"):
             with self.subTest(style=style),self.assertRaisesRegex(ValueError,"compatible literal vocal cue"):
                 tc.validate_spec({**SPEC,"style":style,"vocal":None})
+
+
+
+class ArtistProfileProductionTests(unittest.TestCase):
+    def test_profile_selected_on_new_job_and_frozen_on_cli_resume(self):
+        import sys
+        from yue2_music_director import artist_memory as am
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            profile={"schema":am.PROFILE,"defaults":{"vocal":"female","opening":"direct_vocal"},
+                     "confirmed_preferences":["private confirmed note"],
+                     "inferred_observations":["private inference"],"provenance":"operator"}
+            first=am.save(repo,"fixture",profile,0,confirm=True)
+            override=repo/"override.json"
+            nd.atomic_write(override,{"schema":tc.SPEC_SCHEMA,"lyrics":WORDS,"narrator":"first person",
+                                      "section_purposes":SPEC["section_purposes"]})
+            p=Provider("one")
+            common=["music","--repo",str(repo),"--url",URL,"--job","one"]
+            args=common+["--request","A departure","--duration","90","--artist-profile","fixture",
+                         "--creative-spec",str(override)]
+            with patch.object(au.TextProvider,"for_repo",return_value=p),patch.object(au,"produce",return_value=0):
+                with patch.object(sys,"argv",args):
+                    self.assertEqual(au.main(),0)
+                self.assertFalse((repo/"results").exists())
+                self.assertEqual(p.calls,[])
+                with patch.object(sys,"argv",args+["--confirm-run"]):
+                    self.assertEqual(au.main(),0)
+                self.assertEqual(p.calls,["composer","reviewer"])
+                root=repo/"results/autonomous/one"
+                saved=nd.read(root/"job.json")
+                self.assertEqual(saved["artist_profile"],{"artist":"fixture","revision":1,"profile_sha256":first["sha256"]})
+                self.assertEqual(saved["creative_spec"]["lyrics"],WORDS)
+                self.assertEqual(saved["creative_spec"]["vocal"],"female")
+                self.assertNotIn("private confirmed note",str(saved))
+                self.assertNotIn("private inference",str(saved))
+                am.save(repo,"fixture",{**profile,"defaults":{"vocal":"male"}},1,confirm=True)
+                with patch.object(sys,"argv",common+["--confirm-run"]),patch.object(am,"compile_spec",side_effect=AssertionError("profile reread")):
+                    self.assertEqual(au.main(),0)
+                self.assertEqual(nd.read(root/"job.json"),saved)
+                self.assertEqual(p.calls,["composer","reviewer"])
+                with patch.object(sys,"argv",args+["--confirm-run"]):
+                    self.assertEqual(au.main(),2)
+                self.assertEqual(p.calls,["composer","reviewer"])
