@@ -170,6 +170,10 @@ class AutonomousTests(unittest.TestCase):
             result=nd.read(root/"creative-result.json")
             _,intent=au.make_inputs(result,identity)
             self.assertEqual(intent["constraints"]["opening"],{"mode":"must","value":"direct_vocal"})
+            self.assertEqual(intent["constraints"]["opening_timing"],{"mode":"must","value":"direct_vocal"})
+            previous={**identity,"production_policy":au.cd.PREVIOUS_POLICY}
+            _,previous_intent=au.make_inputs(result,previous)
+            self.assertEqual(previous_intent["constraints"],{"opening":{"mode":"must","value":"direct_vocal"}})
             legacy={**identity,"production_policy":au.LEGACY_POLICY}
             _,old_intent=au.make_inputs(result,legacy)
             self.assertEqual(old_intent["constraints"],{})
@@ -249,5 +253,30 @@ class CreativeSemanticRecoveryTests(unittest.TestCase):
             before={p:p.read_bytes() for p in root.iterdir()}
             self.assertNotIn("schema",nd.read(root/"composer.json"))
             self.assertEqual(cc.prepare(*args,duration_guidance=True),result)
+            self.assertEqual(provider.calls,["composer","lyricist","reviewer"])
+            self.assertEqual({p:p.read_bytes() for p in root.iterdir()},before)
+
+
+    def test_v2_retained_job_has_no_new_guidance_or_replay(self):
+        from yue2_music_director import creative_core as cc
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            provider=Provider(stop=True)
+            url="http://127.0.0.1:8791/mcp"
+            root=repo/"results/autonomous/one"
+            root.mkdir(parents=True)
+            identity={"schema":"autonomous-job-v1","job":"one","request":"A quiet goodbye",
+                      "language":"en","duration_seconds":150,"provider":provider.identity(),
+                      "studio_url":url,"production_policy":au.cd.PREVIOUS_POLICY}
+            nd.atomic_write(root/"job.json",identity)
+            result=cc.prepare(root,provider,identity["request"],"en",150,
+                              duration_guidance=True,direction_guidance=True)
+            nd.atomic_write(root/"creative-result.json",result)
+            before={p:p.read_bytes() for p in root.iterdir()}
+            self.assertNotIn("opening_timing_guidance",nd.read(root/"composer.attempt.json")["input"])
+            with patch.object(au.artist_run,"run") as native:
+                self.assertEqual(au.launch(repo,"one",identity["request"],"en",150,url,
+                                          confirm=True,provider_factory=lambda:provider),2)
+                native.assert_not_called()
             self.assertEqual(provider.calls,["composer","lyricist","reviewer"])
             self.assertEqual({p:p.read_bytes() for p in root.iterdir()},before)
