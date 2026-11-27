@@ -1,8 +1,18 @@
 # Development and validation
 
-**Current policy (2026-11-26):** follow the [generation-first architecture and implementation roadmap](docs/MUSIC_DIRECTOR_ARCHITECTURE.md) for new-song development and retain the [native-first audit and gates](docs/knowledge/DEVELOPMENT_AUDIT.md), [Studio capabilities](docs/knowledge/STUDIO_CAPABILITIES.md), and [community prior art](docs/knowledge/COMMUNITY_AND_EVALUATION.md). No new implementation without an identified gap and acceptance criteria. All technical documentation in English; README also includes Indonesian overview. The foundation and historical milestones below are not an active implementation backlog.
+**Current policy:** follow the [active autonomous product roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md) and [generation-first architecture](docs/MUSIC_DIRECTOR_ARCHITECTURE.md) for new-song development and retain the [native-first audit and gates](docs/knowledge/DEVELOPMENT_AUDIT.md), [Studio capabilities](docs/knowledge/STUDIO_CAPABILITIES.md), and [community prior art](docs/knowledge/COMMUNITY_AND_EVALUATION.md). No new implementation without an identified gap and acceptance criteria. All technical documentation in English; README also includes Indonesian overview. The foundation and historical milestones below are not an active implementation backlog.
 
-## Current phase: post-alpha 8.post3 development (experimental)
+## Agent onboarding and current evidence
+
+1. Read [AGENTS.md](AGENTS.md), [PROJECT_MEMORY.md](PROJECT_MEMORY.md), the active roadmap, [native audit](docs/NATIVE_AUDIT_CHECKPOINT.md) and [local release checkpoint](docs/LOCAL_RELEASE_CHECKPOINT.md).
+2. Verify main, exact pending PR head, CI evidence, source code, and actual data inventory. Choose an open requirement, not an old historical milestone.
+3. Read [operator guide](docs/OPERATOR_GUIDE.md) and the specific module contract. Keep supported confirmation semantics, private files, retained jobs and one short launcher intact.
+4. Make a coherent bounded change, with tests for normal, failure and resume paths. Use Windows/Linux Python 3.11/3.13 CI; local mock tests are not live Studio/provider validation. No extra inference unless explicitly authorized.
+5. Update the relevant user guide, README entry points when needed, changelog and PROJECT_MEMORY.md. Distinguish candidate metadata from approved references, implemented from tested, and technical from artistic acceptance.
+
+Current evidence after PR #127: three offline SQLite/FTS5 indexes, explicit authored-style selection in autonomous Composer, local artist profiles and bounded release specialists are implemented and CI-tested. Historical knowledge production integration, approved corpus, live typed/preset generalization, process supervision and private production service are open. The current register is authoritative. See [offline workflow](docs/OFFLINE_KNOWLEDGE_WORKFLOW.md) and [active roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md).
+
+## Historical phase: post-alpha 8.post3 development (experimental)
 
 See [research handbook](docs/RESEARCH_HANDBOOK.md) for current architecture, module status and decisions, and [changelog](CHANGELOG.md) for history. The foundation table below describes earlier v0.6.1 components. Current additions are listed separately.
 
@@ -63,7 +73,7 @@ Earlier v0.1/v0.5.2 stand-alone prototypes were developed and tested in another 
 
 ## Future work
 
-The [current roadmap](docs/MUSIC_DIRECTOR_ARCHITECTURE.md#7-implementation-roadmap-and-exit-criteria) is authoritative. P1 score evidence and hard/soft/unknown policy precede new generation; the following are longer-term research topics, not a queue to execute immediately.
+The [active product roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md) and [project memory](PROJECT_MEMORY.md) are authoritative; the architecture roadmap is historical design context. P1 score evidence and hard/soft/unknown policy precede new generation; the following are longer-term research topics, not a queue to execute immediately.
 
 - Verified lyric-to-note and phoneme alignment, to support safe rhythm changes.
 - Bridge recomposition rather than recycling a pre-chorus.

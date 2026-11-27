@@ -2,7 +2,9 @@
 
 Read with the [active roadmap](AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md), [native control contract](knowledge/NATIVE_CONTROL_CONTRACT.md), and [local release checkpoint](LOCAL_RELEASE_CHECKPOINT.md). This is a handover for subsequent sessions, not authorization for further inference.
 
-## Verified repository baseline
+## Historical verified repository baseline (PR #109)
+
+This checkpoint preserves native evidence. For the latest repository baseline and pending work, use [PROJECT_MEMORY.md](../PROJECT_MEMORY.md). For current commands and recovery, use the [operator guide](OPERATOR_GUIDE.md).
 
 Main after PR #109: `6fb0d62d6de8fb8f938049844f843399a3c87ffc`. Exact-head PR CI [45939412931](https://github.com/el-utama/yue2-music-director/actions/runs/45939412931) passed four Windows/Linux Python 3.11/3.13 jobs; the Windows 3.13 log records 368 tests and all four new lyric schedule tests passing. Recheck current main and CI at the beginning of a new session.
 

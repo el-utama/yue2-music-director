@@ -37,8 +37,8 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Main `44c49599c13d30472e1f36136f12d0266a5dfe75` after PR #126; exact head `28abfb2ba7faa96bda9f20d3d73135c684501acd` passed [all four CI jobs](https://github.com/el-utama/yue2-music-director/actions/runs/45962926812). 1,000 authored presets with explicit autonomous Composer selection, 853 candidate identifiers, and seven historical lyric/score works. 147 candidate slots open; rights, genre and identity review, historical production integration and artistic/live validation remain open.
-- Documentation audit follow-up: consolidate offline library workflow, correct stale checkpoints and status, retain historical evidence. No new corpus or inference.
+- Main `83736b4e3357a0c70c8bbab1c96366aeb1265058` after PR #127; exact head `156f43dad43b575b1c55a2307ab9075b8c01f23d` passed [all four CI jobs](https://github.com/el-utama/yue2-music-director/actions/runs/45963880022). Offline knowledge documentation synchronized. Inventory unchanged: 1,000 original presets, 853 candidate IDs, seven historical works; 147 metadata slots open.
+- Follow-up: operator guide, complete 18 special launcher routes, developer onboarding and historical checkpoint labels. No executable changes or live validation. R12 continuous.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
   See [local release checkpoint](docs/LOCAL_RELEASE_CHECKPOINT.md) and
@@ -109,6 +109,10 @@ can remain usable while the full product requirements are open.
 
 ## Links and decision history
 
+- [Operator guide](docs/OPERATOR_GUIDE.md)
+- [Offline knowledge workflow](docs/OFFLINE_KNOWLEDGE_WORKFLOW.md)
+- [Developer onboarding](DEVELOPMENT.md)
+
 - [Active roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md)
 - [Native control contract](docs/knowledge/NATIVE_CONTROL_CONTRACT.md)
 - [Native audit checkpoint](docs/NATIVE_AUDIT_CHECKPOINT.md)
@@ -145,3 +149,5 @@ repeat prior requirements.
 2026-11-27: PR #125 merged after corrected exact-head CI. PR #126 integrates explicit authored style recipe selection (`--style-id`) into the primary autonomous launcher. Snapshot is versioned and checksum-bound in job identity; exact saved style survives library removal and resume, only Composer receives the bounded authored style as advisory context during explicitly confirmed production. No observed or unreviewed source metadata or raw lyrics passed. Default production and continuation preserve old identity; no automatic genre selection, no live generation, mock tests pending. R02/R03/R14 remain open. Bulk FMA and HF dataset access still blocked in current environment; 147 candidate slots outstanding.
 
 2026-11-27: PR #126 merged after exact-head green CI. Documentation audit identified stale pending-PR claims, historical inventory presented without current context, disconnected entry points, and outdated source-access statements. Consolidated three-index guide, source/rights counts, preview and confirmed resume, recovery, README, roadmap and changelog. No new data, provider calls, Studio jobs or acceptance claims. Documentation audit does not close R02/R03/R13/R14; R12 is continuous.
+
+2026-11-27: PR #127 merged after exact-head green CI. Follow-up documentation audit mapped all 18 special launcher routes to actual guide files; added operator install/adoption, readiness, confirmation scope, recovery, release and developer onboarding entry points. Native and release checkpoints labeled historical. No new corpus, provider calls or Studio jobs. Relative file links in changed docs checked against repository tree; full historical example/anchor audit and live setup validation not established. R12 remains continuous; all open requirements retained.

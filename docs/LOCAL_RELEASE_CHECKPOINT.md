@@ -35,6 +35,8 @@ Real synthetic FLAC tests execute on both runner OSes. See
 
 ## Operator paths
 
+The [operator guide](OPERATOR_GUIDE.md) is the consolidated current entry point; this file retains specialist acceptance evidence, not the latest repository head. See [PROJECT_MEMORY.md](../PROJECT_MEMORY.md) for current baseline.
+
 - `music.cmd --finish JOB` is plan/status; explicit confirmation creates only a separate candidate if appropriate.
 - `music.cmd --feedback JOB --variant VARIANT` reads exact human evidence; writing/release decisions require explicit confirmation.
 - `music.cmd --release RELEASE --artwork PATH` plans preparation from an existing verified export and current explicit audio approvals. Confirmation copies assets into separate immutable assembly/delivery stages, never regenerates music or artwork.

@@ -4,6 +4,12 @@ Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, developing a ge
 
 > The repository is public. Never commit private audio, unpublished lyrics, local job journals, model weights or credentials.
 
+## Start here
+
+- [Operator guide](docs/OPERATOR_GUIDE.md): new/existing checkout, readiness, short commands, safe recovery, private bridge and release workflow.
+- [Offline knowledge workflow](docs/OFFLINE_KNOWLEDGE_WORKFLOW.md): local databases, styles and current inventory.
+- [Development and validation](DEVELOPMENT.md): agent onboarding, tests and evidence requirements.
+
 ## Project memory and acceptance register
 
 Read [PROJECT_MEMORY.md](PROJECT_MEMORY.md) before resuming development. It tracks outstanding user requirements, verified implementation and actual data counts, live evidence and limitations. Update it alongside substantive changes; P0 alpha is not full product readiness.
