@@ -1,0 +1,39 @@
+{
+  "schema": "curated-style-candidates-v1",
+  "sources": [
+    {
+      "repository": "https://github.com/ruvnet/AgentBBS",
+      "revision": "d5cc1f5e15be39270bf03eb7c191ecdd00fdc3a3",
+      "blob_sha": "6ac95df3201aa7fa32f5ae865394b4d4d3624dea",
+      "path": "docs/design/MUSIC.md",
+      "count": 95,
+      "category": "lofi",
+      "note": "Factual artist/title/source and reported license fields only. Third-party playlist category, no direct track license check. Album URL for some tracks."
+    },
+    {
+      "repository": "https://github.com/btahir/open-lofi",
+      "revision": "49a4aa7266a5974ea721007db1349d5cde2a6c44",
+      "blob_sha": "6c892653892eff247cdb9802da1153741a98d1f2",
+      "path": "catalog.json",
+      "count": 8,
+      "category": "lofihop",
+      "note": "Creator explicitly declares Suno v5 generation and CC0 donation in README; rights not independently verified. Separate AI-origin count."
+    }
+  ],
+  "counts": {
+    "blues": 100,
+    "jazz": 100,
+    "lofi": 100,
+    "pop": 100,
+    "indie": 100,
+    "folk": 100,
+    "backsound": 100,
+    "hiphop": 100,
+    "lofihop": 8,
+    "trap": 15
+  },
+  "distinct_candidate_ids": 823,
+  "added": 103,
+  "ai_origin": 8,
+  "lyrics": 0
+}
