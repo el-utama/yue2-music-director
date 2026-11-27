@@ -1,5 +1,12 @@
 # Changelog and research milestones
 
+## Unreleased — autonomous audit hardening and mix-only finishing
+
+- Preserve original/reference audio and historic receipts; validate role semantics before acceptance, version opening score evidence and correct Director LRA context.
+- Verify timing against exact retained source; centralize continuation/creative/listening provenance; preserve historical score receipts and append human feedback/explicit decisions separately.
+- Add standalone fixed-gain lossless finishing with decoded sample count and PCM verification, no-change receipt and interruption-safe candidate retention. Windows and Linux CI require real synthetic FFmpeg tests; no claim of live finishing or artistic improvement.
+
+
 ## Unreleased — matched direct-native comparison
 
 - Add explicitly confirmed direct-native baseline against the completed reviewed demo. Freeze brief, seed, configuration and original evidence; omit explicit ABC only. Separate journal and one song/one ASR, no extra score job.
