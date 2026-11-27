@@ -67,3 +67,7 @@ One earlier local song experiment verified score_to_midi, local generation, Whis
 ## Maintenance rule
 
 Before a new feature PR: state the intended problem, search this knowledge base and exact upstream source, check runtime capabilities, review official/community implementations and licenses, explain why native or reusable functionality is insufficient, and record an acceptance test. Refresh the MCP index from a new pinned source when upgrading; note changed/removed tool schemas and UI-only features. Do not copy old claims forward without status review. Keep all private song, dataset, recording, path, ID, manifest and checkpoint information local.
+
+## Deeper native control audit
+
+See [Native Control Contract](NATIVE_CONTROL_CONTRACT.md) for the source-traced score editor Apply path, velocity loss, grid/tempo limitations and conditioning-route matrix across the pinned and newer upstream revisions. Static inventory is not exhaustive engine validation.
