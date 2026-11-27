@@ -102,7 +102,7 @@ def append(repo,job,expected,payload):
         raise ValueError("Feedback source changed; do not transfer human approval")
     base=repo/"results/feedback"
     directory=base/job
-    with ld.lock(base/".active"):
+    with ld.lock(base/".active",context={"job":job,"root":directory.relative_to(repo).as_posix(),"stage":"human_feedback"}):
         # Recheck under the ledger lock before creating an exclusive receipt.
         source=load(repo,job)
         if identity(source)!=expected or nd._sha(source["audio"])!=expected["audio_sha256"]:
