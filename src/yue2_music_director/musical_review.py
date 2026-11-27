@@ -91,7 +91,7 @@ def _bar_signature(score, bar):
 def validate_constraints(constraints=None, max_seconds=None):
     constraints = {} if constraints is None else constraints
     if not isinstance(constraints,dict) or not set(constraints) <= {
-            "key","tempo_bpm","section_order","sung_sections","opening"}:
+            "key","tempo_bpm","section_order","sung_sections","opening","opening_timing"}:
         raise ValueError("Unknown review constraint")
     for name,c in constraints.items():
         if not isinstance(c,dict) or set(c)!={"mode","value"} or c["mode"] not in ("must","prefer","free"):
@@ -103,7 +103,7 @@ def validate_constraints(constraints=None, max_seconds=None):
         elif name=="tempo_bpm":
             if type(v) is not int or v<=0:
                 raise ValueError("Invalid tempo constraint")
-        elif name=="opening":
+        elif name in ("opening","opening_timing"):
             if v not in ("instrumental_intro","direct_vocal"):
                 raise ValueError("Invalid opening constraint")
         elif name=="key":
@@ -207,6 +207,11 @@ def review_score(abc, lyrics, *, constraints=None, max_seconds=None):
         elif first and first["section"]!="intro#1" and first["vocal"]["sounding_fraction"]>0:
             opening="direct_vocal"
         actual["opening"]=opening
+    opening_evidence=None
+    if "opening_timing" in constraints:
+        from .opening_evidence import assess
+        opening_evidence=assess(rows,notes,seconds_per_unit)
+        actual["opening_timing"]=opening_evidence["classification"]
     for name,c in constraints.items():
         mismatch=c["value"]!=actual[name] or (name=="key" and any(key!=c["value"] for _,key in score.key_changes))
         if c["mode"]!="free" and mismatch:
@@ -220,6 +225,8 @@ def review_score(abc, lyrics, *, constraints=None, max_seconds=None):
                        "vocal":_voice_metrics(notes["Vocal"],0,total,seconds_per_unit),
                        "ins":_voice_metrics(notes["Ins"],0,total,seconds_per_unit),
                        "chorus_comparisons":comparisons}
+    if opening_evidence is not None:
+        report["metrics"]["opening_evidence"]=opening_evidence
     if len(set(score.bar_lengths))>1 or score.key_changes:
         report["metrics"]["variable_grid"]={"bar_lengths_note_units":[str(x) for x in score.bar_lengths],
                   "key_changes":[{"seconds":float(at*seconds_per_unit),"key":key} for at,key in score.key_changes]}
