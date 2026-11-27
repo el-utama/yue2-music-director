@@ -51,3 +51,5 @@ jobs:
         if: runner.os == 'Windows'
         shell: cmd
         run: music.cmd --inspect-lock autonomous
+
+      - run: python -m yue2_music_director.release_assembly --help

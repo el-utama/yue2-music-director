@@ -47,8 +47,7 @@ No provider, Studio, ASR, MOSS or GPU calls; no library mutation. A
 candidate is not automatically preferred, artistically improved, release
 approved, or published. Original remains the preferred variant. The
 constant-gain PCM proof establishes the unchanged sample timeline, not
-acoustic accuracy of existing LRC/SRT. Export still packages the original
-until a separately approved variant is integrated.
+acoustic accuracy of existing LRC/SRT. Export still packages the original. The separate [release assembly](RELEASE_ASSEMBLY.md) command can package an explicitly listened-to and approved candidate from existing export assets.
 
 Regression tests generate synthetic mono/stereo FLAC with actual FFmpeg,
 including gain and waveform checks, safe no-change, silence, interrupted

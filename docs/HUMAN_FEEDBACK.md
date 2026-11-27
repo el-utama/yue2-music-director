@@ -32,8 +32,7 @@ technical passes and exit codes do not imply approval. A different result or
 audio hash cannot inherit these records. The approval is an operator decision
 about that source for the named release, not proof of a finished package,
 commercial readiness, copyright clearance or permission to publish. Export
-manifests retain their existing non-approved state. Candidate-specific
-approval and release orchestration are later extensions.
+manifests retain their existing non-approved state. Candidate-specific feedback and approval use the explicit --variant option, with a v2 identity binding the finishing report hash; see [release assembly](RELEASE_ASSEMBLY.md).
 
 No historical verdict is backfilled without the exact local audio identity.
 An interruption leaves evidence to inspect; do not delete ledger receipts.

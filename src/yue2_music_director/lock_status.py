@@ -9,7 +9,8 @@ from . import operation_lock as ol
 LOCKS={"autonomous":"results/autonomous/.active","drafts":"results/drafts/.active",
        "critic":"results/.critic-active","creative":"results/creative/.active",
        "artwork":"results/artwork/.active","exports":"results/exports/.active",
-       "feedback":"results/feedback/.active","finishing":"results/audio-finishing/.active"}
+       "feedback":"results/feedback/.active","finishing":"results/audio-finishing/.active",
+       "release-assembly":"results/release-assembly/.active"}
 
 
 def journals(repo,owner):
