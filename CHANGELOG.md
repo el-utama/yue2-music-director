@@ -4,6 +4,7 @@
 
 - Preserve original/reference audio and historic receipts; validate role semantics before acceptance, version opening score evidence and correct Director LRA context.
 - Verify timing against exact retained source; centralize continuation/creative/listening provenance; preserve historical score receipts and append human feedback/explicit decisions separately.
+- Add stable cross-type release IDs, safe Windows paths and immutable versioned snapshots. Local owned-lock inspection and exact-marker recovery preserve journals; explicit continuation Director retry uses frozen inputs without replaying completed upstream stages.
 - Add standalone fixed-gain lossless finishing with decoded sample count and PCM verification, no-change receipt and interruption-safe candidate retention. Windows and Linux CI require real synthetic FFmpeg tests; no claim of live finishing or artistic improvement.
 
 
