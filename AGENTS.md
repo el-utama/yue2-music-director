@@ -12,7 +12,7 @@ Read [the active autonomous product roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROAD
 
 ## Operator and developer entry points
 
-Use [Operator guide](docs/OPERATOR_GUIDE.md) for the actual supported workflow and recovery, [Development](DEVELOPMENT.md) for the current engineering entry points, and PROJECT_MEMORY.md for open requirements. Historical checkpoints are evidence, not the current main or a request to rerun old tests. Before giving a command, check the current module and confirmation scope. Do not request a new checkout, configuration or inference on an already working host merely for verification.
+Use [Operator guide](docs/OPERATOR_GUIDE.md) for the actual supported workflow and recovery, [Development](DEVELOPMENT.md) for the current engineering entry points, and PROJECT_MEMORY.md for open requirements. Historical checkpoints are evidence, not the current main or a request to rerun old tests. Run the offline documentation regression tests with the normal suite; they check tracked inline relative links, heading fragments and primary launcher route coverage, not external link availability or live behavior. Before giving a command, check the current module and confirmation scope. Do not request a new checkout, configuration or inference on an already working host merely for verification.
 
 ## Modular failure isolation
 
