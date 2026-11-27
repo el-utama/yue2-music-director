@@ -10,6 +10,7 @@ if /I "%~1"=="--inspect-ending" goto ending
 if /I "%~1"=="--review-plan" goto reviewplan
 if /I "%~1"=="--cover" goto cover
 if /I "%~1"=="--export" goto exportrelease
+if /I "%~1"=="--feedback" goto feedback
 py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\music-output.txt" -- py -3 -u -m yue2_music_director.autonomous --repo "%ROOT%." --url "%YUE2_MCP_URL%" %*
 exit /b %ERRORLEVEL%
 
@@ -35,4 +36,8 @@ exit /b %ERRORLEVEL%
 
 :exportrelease
 py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\export-output.txt" -- py -3 -u -m yue2_music_director.release_export --repo "%ROOT%." --url "%YUE2_MCP_URL%" %*
+exit /b %ERRORLEVEL%
+
+:feedback
+py -3 -u -m yue2_music_director.human_feedback --repo "%ROOT%." %*
 exit /b %ERRORLEVEL%
