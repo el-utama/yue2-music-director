@@ -36,8 +36,8 @@ def inspect_schedule(settings):
     result={"schema":"native-lyric-schedule-evidence-v1",
             "source":"saved_generation_settings","status":"unknown",
             "expected_sung_blocks":None,"scheduled_sung_blocks":None,
-            "mode":None,"first_vocal_score_seconds":None,
-            "last_vocal_score_seconds":None,
+            "mode":None,"first_scheduled_score_seconds":None,
+            "last_scheduled_score_seconds":None,
             "acoustic_alignment_verified":False,
             "interpretation":"Recorded section-level conditioning, not measured singing or syllable alignment."}
     if not isinstance(settings,dict):
@@ -57,7 +57,16 @@ def inspect_schedule(settings):
     mode=schedule["mode"]
     if mode=="bias" and (not _number(schedule.get("bias"),-60,0) or schedule["bias"]==0):
         return result
-    if settings.get("cot")=="off" or ("cfg_scale" in settings and settings["cfg_scale"]!=1):
+    # Saved engine defaults may contain the negative Auto sentinel. In
+    # full/melody mode the pinned engine resolves it to guidance 1.
+    cfg=settings.get("cfg_scale",-1)
+    if (settings.get("cot") not in ("full","melody")
+            or not _number(cfg,-1e308) or (cfg>=0 and cfg!=1)):
+        return result
+    lead=schedule.get("lead_sec")
+    behind=schedule.get("behind")
+    if (lead is not None and not _number(lead,0,30)
+            or behind is not None and (type(behind) is not int or not -1<=behind<=256)):
         return result
     entries=schedule.get("sections")
     if not isinstance(entries,list) or not 1<=len(entries)<=256:
@@ -80,5 +89,5 @@ def inspect_schedule(settings):
         times.append(start)
     result.update(status="all_blocks_recorded" if len(matched)==len(blocks) else "partial_blocks_recorded",
                   mode=mode,scheduled_sung_blocks=len(matched),
-                  first_vocal_score_seconds=times[0],last_vocal_score_seconds=times[-1])
+                  first_scheduled_score_seconds=times[0],last_scheduled_score_seconds=times[-1])
     return result
