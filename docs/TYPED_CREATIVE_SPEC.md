@@ -37,8 +37,12 @@ style cue checks are conservative, not complete semantic or acoustic
 verification. Arbitrary prose requirements are not automatically converted
 into mandatory constraints.
 
-A supplied lyrics string is preserved byte-for-byte in UTF-8 conditioning
-and TXT export, including whitespace and line endings. It must have valid
+A supplied lyrics string is preserved byte-for-byte in the retained UTF-8
+creative artifact, request and TXT export, including whitespace and line
+endings. Studio's native engine boundary may convert CRLF to LF; saved
+lyrics verification accepts only that documented transform or exact text
+(PR #108), not changes to words, spaces or blank lines. This is not a
+claim of byte-identical inference conditioning. It must have valid
 section tags and a compatible opening; no Lyricist provider call is made.
 A separate local operator-lyrics receipt proves origin and zero provider
 calls for that stage. Composer and Reviewer may receive these private
