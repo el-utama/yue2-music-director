@@ -41,17 +41,20 @@ def track(repo,job):
     return {k:music[k] for k in ("title","concept","emotional_arc","style")},source["evidence"]
 
 
-def launch(repo,release,jobs,*,title=None,artist="",direction="",confirm=False,provider_factory=None):
+def launch(repo,release,jobs,*,title=None,artist="",direction="",kind=None,confirm=False,provider_factory=None):
     cc.validate_job(release,"placeholder","en",195)
     if not 1<=len(jobs)<=24 or len(set(jobs))!=len(jobs):
         raise ValueError("Provide 1–24 distinct ordered song jobs")
     for value,limit,name in ((title,150,"title"),(artist,150,"artist"),(direction,2000,"direction")):
         if value is not None and (not isinstance(value,str) or len(value)>limit or (name=="title" and not value.strip())):
             raise ValueError("Invalid cover "+name)
-    if len(jobs)>1 and not title:
-        raise ValueError("Album requires an explicit release title")
+    kind=kind or ("single" if len(jobs)==1 else "album")
+    if kind not in ("single","ep","album") or kind=="single" and len(jobs)!=1:
+        raise ValueError("Select a single, EP or album with compatible track count")
+    if kind!="single" and not title:
+        raise ValueError("Album/EP requires an explicit release title")
     tracks,evidence=zip(*(track(repo,job) for job in jobs))
-    data={"release_type":"single" if len(jobs)==1 else "album",
+    data={"release_type":kind,
           "title":title or tracks[0]["title"],"artist":artist,"direction":direction,"tracks":list(tracks),
           "format":{"aspect_ratio":"1:1","artwork_only":True,"typography_separate":True}}
     print("Cover art:",data["title"],"("+data["release_type"]+")",flush=True)
@@ -100,13 +103,14 @@ def main():
     p.add_argument("--cover",required=True,metavar="RELEASE")
     p.add_argument("--song",action="append",help="Ordered retained job ID; repeat for album")
     p.add_argument("--title")
+    p.add_argument("--type",choices=("single","ep","album"))
     p.add_argument("--artist",default="")
     p.add_argument("--direction",default="")
     p.add_argument("--confirm-run",action="store_true")
     a=p.parse_args()
     try:
         return launch(a.repo.resolve(),a.cover,a.song or [a.cover],title=a.title,artist=a.artist,
-                      direction=a.direction,confirm=a.confirm_run)
+                      direction=a.direction,kind=a.type,confirm=a.confirm_run)
     except (OSError,ValueError,TypeError,KeyError) as exc:
         print("ERROR:",exc,file=sys.stderr)
         print("Music receipts untouched; no automatic retry.",file=sys.stderr)
