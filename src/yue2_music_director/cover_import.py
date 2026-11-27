@@ -62,6 +62,11 @@ def inspect(path):
         raise ValueError("Cover extension differs from image signature")
     if codec=="png":
         _png_chunks(path)
+    else:
+        with path.open("rb") as stream:
+            stream.seek(-2,2)
+            if stream.read(2)!=b"\xff\xd9":
+                raise ValueError("Incomplete or trailing-data JPEG")
     ffmpeg,ffprobe=shutil.which("ffmpeg"),shutil.which("ffprobe")
     if not ffmpeg or not ffprobe:
         raise ValueError("FFmpeg and ffprobe required for artwork validation")

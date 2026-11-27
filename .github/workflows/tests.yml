@@ -57,3 +57,16 @@ jobs:
       - run: python -m yue2_music_director.release_delivery --help
 
       - run: python -m yue2_music_director.release_workflow --help
+
+      - name: Verify actual Windows specialist help dispatch
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          call music.cmd --feedback --help || exit /b 1
+          call music.cmd --export --help || exit /b 1
+          call music.cmd --cover --help || exit /b 1
+          call music.cmd --assemble-release --help || exit /b 1
+          call music.cmd --release-delivery --help || exit /b 1
+          call music.cmd --release --help || exit /b 1
+          call music.cmd --inspect-ending --help || exit /b 1
+          call music.cmd --review-plan --help || exit /b 1

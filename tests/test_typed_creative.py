@@ -135,3 +135,8 @@ class TypedCreativeTests(unittest.TestCase):
         music["style"]="English folk, male and female vocals"
         with self.assertRaisesRegex(ValueError,"Conflicting literal"):
             tc.check_composer(music,tc.validate_spec(SPEC))
+
+    def test_impossible_exact_style_is_rejected_locally(self):
+        for style in ("English folk with acoustic guitar","English folk male female vocals"):
+            with self.subTest(style=style),self.assertRaisesRegex(ValueError,"compatible literal vocal cue"):
+                tc.validate_spec({**SPEC,"style":style,"vocal":None})
