@@ -59,8 +59,18 @@ def validate_spec(value):
     for k,limit in (("narrator",500),("style",2000),("lyrics",20000)):
         if spec[k] is not None and not _text(spec[k],limit):
             raise ValueError("Invalid requested "+k)
-    if spec["style"] is not None and spec["vocal"] is not None:
-        _style_cues(spec["style"],spec["vocal"])
+    if spec["style"] is not None:
+        if spec["vocal"] is not None:
+            _style_cues(spec["style"],spec["vocal"])
+        else:
+            for vocal in cd.VOICES:
+                try:
+                    _style_cues(spec["style"],vocal)
+                    break
+                except ValueError:
+                    pass
+            else:
+                raise ValueError("Exact style must contain a compatible literal vocal cue")
     spec["section_purposes"]=_purposes(spec["section_purposes"])
     constraints=spec["score_constraints"]
     if not isinstance(constraints,dict) or not set(constraints)<={"key","tempo_bpm","section_order","sung_sections"}:
