@@ -12,6 +12,8 @@
 
 Current evidence after PR #127: three offline SQLite/FTS5 indexes, explicit authored-style selection in autonomous Composer, local artist profiles and bounded release specialists are implemented and CI-tested. Historical knowledge production integration, approved corpus, live typed/preset generalization, process supervision and private production service are open. The current register is authoritative. See [offline workflow](docs/OFFLINE_KNOWLEDGE_WORKFLOW.md) and [active roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md).
 
+The offline documentation regression gate (`tests/test_documentation.py`) checks tracked Markdown inline relative file/directory links, heading fragments and the operator guide's primary launcher route table. Run from a Git checkout. It deliberately does not fetch external URLs, validate arbitrary Markdown syntax, or execute historical examples. Windows CI additionally builds/browses all three bundled indexes and previews a selected-style job with no provider or Studio calls.
+
 ## Historical phase: post-alpha 8.post3 development (experimental)
 
 See [research handbook](docs/RESEARCH_HANDBOOK.md) for current architecture, module status and decisions, and [changelog](CHANGELOG.md) for history. The foundation table below describes earlier v0.6.1 components. Current additions are listed separately.

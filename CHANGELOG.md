@@ -1,5 +1,10 @@
 # Changelog and research milestones
 
+## Unreleased — documentation regression gate
+
+- Audit 66 tracked Markdown documents, 263 inline relative link occurrences (11 heading fragments), and all 18 primary launcher routes. Add offline regression tests and Windows style/reference launcher smoke checks plus plan-only selected-style preview. No external-link availability or live validation claim.
+
+
 ## Unreleased — operator and maintainer documentation
 
 - Consolidate installation/adoption, all 18 special launcher routes, confirmations, troubleshooting and existing-song release workflow in [Operator Guide](docs/OPERATOR_GUIDE.md).
