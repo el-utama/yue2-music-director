@@ -107,7 +107,7 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
     if not confirm:
         print("Plan only; no writes or Studio calls.",flush=True)
         return 0
-    with ld.lock(exports/".active"):
+    with ld.lock(exports/".active",context={"root":root.relative_to(repo).as_posix(),"stage":"export","release":release}):
         if destination()!=(root,contract,index,record):
             raise ValueError("Release destination changed during preparation")
         if root.exists():
