@@ -1,8 +1,10 @@
 """Versioned musical direction guidance for new autonomous jobs only."""
 from .prosody import parse_lyrics
 
-POLICY="reviewed-score-v2"
+PREVIOUS_POLICY="reviewed-score-v2"
+POLICY="reviewed-score-v3"
 OPENINGS=("instrumental_intro","direct_vocal")
+TIMING_GUIDANCE={"version":"opening-timing-v1","guidance":"Direct vocal allows a short breath or pickup of at most two seconds on the score clock. An instrumental intro should be purposeful and vocal-free, with notated instrumental activity where supported, followed by a prompt vocal entry (within two seconds of the end of the intro). Do not invent instrumental notes or claim acoustic timing from notation. Longer intentional silence is outside this default opening policy and requires separate review."}
 VOICES=("male","female","duet","mixed","androgynous")
 GUIDANCE={
     "version":"opening-vocal-v1",
