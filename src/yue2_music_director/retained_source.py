@@ -45,7 +45,7 @@ def _creative(parent,identity,brief):
             or words_input!={**data,"composition":music}
             or {k:v for k,v in review_input.items() if k!="diagnostics"}!=
                 {**data,"composition":music,"lyrics":words["lyrics"]}
-            or not isinstance(review_input.get("diagnostics"),dict)
+            or not isinstance(review_input.get("diagnostics"),list)
             or review.get("decision")!="retain"):
         raise ValueError("Retained creative input lineage differs")
     creative=nd.read(parent/"creative-result.json")
