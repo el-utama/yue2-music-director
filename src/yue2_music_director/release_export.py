@@ -9,16 +9,12 @@ from pathlib import Path
 
 from . import native_draft as nd, creative_core as cc, listening_director as ld
 from .retained_source import load
+from . import release_identity as ri
+from .release_identity import safe_title
 from .mcp import MCPError, configured_endpoint
 from .temporal_evidence import parse_lrc, LINE
 from .export_timing import read_timing
 from .prosody import parse_lyrics
-
-
-def safe_title(title):
-    # Bounded portable path; release/job IDs disambiguate identical titles.
-    stem=re.sub(r'[<>:"/\\|?*\x00-\x1f]',"_",title).strip(" .")
-    return stem[:64].rstrip(" .") or "Untitled"
 
 
 def retained(repo,job):
@@ -85,7 +81,7 @@ def verify_export(root,contract):
     return manifest
 
 
-def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",confirm=False,timing_reader=None):
+def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=ri.DEFAULT_SNAPSHOT,confirm=False,timing_reader=None):
     cc.validate_job(release,"placeholder","en",195)
     if (kind not in ("single","album","ep") or not 1<=len(jobs)<=24
             or len(set(jobs))!=len(jobs) or (kind=="single" and len(jobs)!=1)):
@@ -96,27 +92,43 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",confirm=Fa
     url=configured_endpoint(url)
     tracks=[retained(repo,j) for j in jobs]
     title=title or tracks[0]["brief"]["title"]
-    folder={"single":"songs","album":"albums","ep":"eps"}[kind]
-    base=repo/"results/exports"/folder
-    root=base/(safe_title(title)+"--"+release)
-    contract={"schema":"release-export-v1","release":release,"type":kind,"title":title,"artist":artist,
-              "sources":[t["evidence"] for t in tracks],"audio_variant":"original",
-              "timing_policy":"studio-display-anchors-v2"}
+    exports=repo/"results/exports"
+    original_contract={"schema":"release-export-v1","release":release,"type":kind,"title":title,"artist":artist,
+                       "sources":[t["evidence"] for t in tracks],"audio_variant":"original",
+                       "timing_policy":"studio-display-anchors-v2"}
+    def destination():
+        original,index,record=ri.original(exports,original_contract)
+        root,contract=ri.revision(exports,original_contract,original,snapshot)
+        if snapshot!=ri.DEFAULT_SNAPSHOT:
+            verify_export(original,original_contract)
+        return root,contract,index,record
+    root,contract,index,record=destination()
     print("Export folder:",root,flush=True)
     if not confirm:
         print("Plan only; no writes or Studio calls.",flush=True)
         return 0
-    with ld.lock(repo/"results/exports/.active"):
+    with ld.lock(exports/".active"):
+        if destination()!=(root,contract,index,record):
+            raise ValueError("Release destination changed during preparation")
         if root.exists():
             manifest=verify_export(root,contract)
             print("Existing export verified:",root,flush=True)
             return 0 if manifest["status"]=="complete" else 2
+        names=[f"{i:02d} - {safe_title(t['brief']['title'])}" if kind!="single" else safe_title(t["brief"]["title"])
+               for i,t in enumerate(tracks,1)]
+        def paths(base):
+            return [base/"release.json",*[(base/name if kind!="single" else base)/(name+suffix)
+                    for name in names for suffix in (".flac",".txt",".lrc",".srt")]]
+        ri.ensure_paths([index,*paths(root)])
+        ri.reserve(index,record)
+        base=root.parent
         base.mkdir(parents=True,exist_ok=True)
         stage=Path(tempfile.mkdtemp(prefix=".export-",dir=base))
         try:
+            ri.ensure_paths(paths(stage))
             details=[]
             for i,t in enumerate(tracks,1):
-                name=f"{i:02d} - {safe_title(t['brief']['title'])}" if kind!="single" else safe_title(t["brief"]["title"])
+                name=names[i-1]
                 dest=stage/name if kind!="single" else stage
                 dest.mkdir(exist_ok=True)
                 target=dest/(name+".flac")
@@ -175,10 +187,11 @@ def main():
     p.add_argument("--type",choices=("single","album","ep"),default="single")
     p.add_argument("--title")
     p.add_argument("--artist",default="")
+    p.add_argument("--snapshot",default=ri.DEFAULT_SNAPSHOT,help="Explicit immutable revision of existing v1 release")
     p.add_argument("--confirm-run",action="store_true")
     a=p.parse_args()
     try:
-        return launch(a.repo.resolve(),a.export,a.song or [a.export],a.url,kind=a.type,title=a.title,artist=a.artist,confirm=a.confirm_run)
+        return launch(a.repo.resolve(),a.export,a.song or [a.export],a.url,kind=a.type,title=a.title,artist=a.artist,snapshot=a.snapshot,confirm=a.confirm_run)
     except (OSError,ValueError,KeyError,TypeError,MCPError) as exc:
         print("ERROR:",exc,file=sys.stderr)
         return 2
