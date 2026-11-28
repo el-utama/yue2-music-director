@@ -9,10 +9,17 @@ from .generation_control import result_score
 from .music import NOTE, parse_score, patch_score
 
 
-def preview_intro(abc, brief, intent, original):
+INTRO_SCHEMA = "retained-intro-continuation-v1"
+INTRO_SCORE = "intro-rest.abc"
+
+
+def propose_intro(abc, brief, intent, original):
     """Assess a narrowly scoped, vocal-free intro candidate in memory."""
     report = {"schema": "intro-rest-preview-v1", "status": "not_eligible",
               "studio_calls": 0, "provider_calls": 0, "render_authorized": False}
+    def reject(reason, **evidence):
+        return {**report, "reason": reason, **evidence}, None
+
     hard = original["hard_violations"]
     soft = original["soft_flags"]
     expected = [{"code": "constraint_mismatch", "field": field,
@@ -22,16 +29,16 @@ def preview_intro(abc, brief, intent, original):
             or len(soft) != 1
             or soft[0].get("code") != "notated_sung_sequence_differs"
             or soft[0].get("missing") != [] or soft[0].get("extra") != ["intro#1"]):
-        return {**report, "reason": "Requires only a vocal part in a planned instrumental intro"}
+        return reject("Requires only a vocal part in a planned instrumental intro")
     opening = original["metrics"]["opening_evidence"]
     if opening["intro_accompaniment"] != "notated_ins_activity":
-        return {**report, "reason": "Intro has no confirmed instrumental notation"}
+        return reject("Intro has no confirmed instrumental notation")
 
     score = parse_score(abc, native=True)
     notes = [note for note in score.events
              if note.voice == "Vocal" and note.kind == "note" and note.section == "intro#1"]
     if not notes or notes[-1].tied:
-        return {**report, "reason": "Cannot isolate the intro vocal notes from the next section"}
+        return reject("Cannot isolate the intro vocal notes from the next section")
     edits = [{"line": note.line, "start": note.start, "end": note.end, "old": note.raw,
               "new": "z" + (NOTE.fullmatch(note.raw).group("dur") or "")}
              for note in notes]
@@ -41,14 +48,46 @@ def preview_intro(abc, brief, intent, original):
     candidate_metrics = candidate_review["metrics"]
     if (review["decision"] != "retain" or candidate_metrics is None
             or candidate_metrics["score_seconds"] != original["metrics"]["score_seconds"]):
-        return {**report, "reason": "Candidate did not pass full score review with unchanged duration",
-                "opening_evidence": (candidate_metrics or {}).get("opening_evidence"),
-                "hard_violations": candidate_review["hard_violations"],
-                "soft_flags": candidate_review["soft_flags"]}
-    return {**report, "status": "candidate_available",
-            "vocal_notes_replaced_by_rests": len(edits),
-            "score_seconds": candidate_metrics["score_seconds"],
-            "opening_evidence": candidate_metrics["opening_evidence"]}
+        return reject("Candidate did not pass full score review with unchanged duration",
+                      opening_evidence=(candidate_metrics or {}).get("opening_evidence"),
+                      hard_violations=candidate_review["hard_violations"],
+                      soft_flags=candidate_review["soft_flags"])
+    preview = {**report, "status": "candidate_available",
+               "original_score_sha256": original["score_sha256"],
+               "candidate_score_sha256": candidate_review["score_sha256"],
+               "vocal_notes_replaced_by_rests": len(edits),
+               "score_seconds": candidate_metrics["score_seconds"],
+               "opening_evidence": candidate_metrics["opening_evidence"]}
+    return preview, {"abc": candidate, "review": review}
+
+
+def preview_intro(abc, brief, intent, original):
+    return propose_intro(abc, brief, intent, original)[0]
+
+
+def verify_frozen_intro(parent, child, contract):
+    """Bind the approved candidate to its frozen source and score review."""
+    source = parent / "production"
+    production = child / "production"
+    candidate = (production / INTRO_SCORE).read_bytes()
+    preview = contract["intro_preview"]
+    decision = nd.read(production / "plan-decision.json")
+    score_review = decision["score_review"]
+    if (contract.get("schema") != INTRO_SCHEMA
+            or preview.get("schema") != "intro-rest-preview-v1"
+            or preview.get("status") != "candidate_available"
+            or preview.get("render_authorized") is not False
+            or preview.get("original_score_sha256") != nd._sha(source / "native-plan.abc")
+            or preview.get("original_score_sha256") != nd._sha(production / "native-plan.abc")
+            or preview.get("candidate_score_sha256") != nd.digest(candidate)
+            or preview.get("candidate_score_sha256") != score_review.get("score_sha256")
+            or preview.get("score_seconds") != score_review["metrics"].get("score_seconds")
+            or preview.get("opening_evidence") != score_review["metrics"].get("opening_evidence")
+            or decision != contract["review"] or decision["decision"] != "retain"
+            or nd.load_brief(parent / "brief.json") != nd.load_brief(child / "brief.json")
+            or nd.read(parent / "intent.json") != nd.read(child / "intent.json")):
+        raise ValueError("Retained instrumental intro continuation differs")
+    return candidate.decode("utf-8")
 
 
 def inspect(repo,job,*,fit_duration=False,preview_instrumental_intro=False):

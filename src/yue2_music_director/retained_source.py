@@ -78,7 +78,8 @@ def _continuation(parent,root,job):
         return
     contract=nd.read(root/"continuation.json")
     from .duration_fit import FIT_SCHEMA
-    if (contract.get("schema") not in ("retained-plan-continuation-v1",FIT_SCHEMA)
+    from .retained_plan_review import INTRO_SCHEMA
+    if (contract.get("schema") not in ("retained-plan-continuation-v1",FIT_SCHEMA,INTRO_SCHEMA)
             or contract.get("parent_job")!=job
             or contract.get("original_job_sha256")!=nd._sha(parent/"job.json")
             or contract.get("original_stop_sha256")!=nd._sha(parent/"plan-stop.json")

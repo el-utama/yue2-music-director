@@ -457,6 +457,82 @@ class ApprovedDurationContinuationTests(unittest.TestCase):
                 self.assertEqual(produce.call_count,2)
 
 
+class ApprovedIntroContinuationTests(unittest.TestCase):
+    def test_approved_intro_reuses_text_and_retains_original_score(self):
+        from test_musical_review import HEADER, group
+        from yue2_music_director import retained_plan_review as rp, retained_source as rs
+
+        abc = HEADER + group("intro", "z8D8|", "D16|") + group("verse", "E16|", "Z|")
+        candidate = abc.replace("z8D8|", "z8z8|")
+        url = "http://127.0.0.1:8791/mcp"
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            parent = repo / "results/autonomous/intro"
+            child = parent / "continuation-1"
+            provider = Provider()
+            complete = provider.complete
+
+            def instrumental(role, prompt, data):
+                value = complete(role, prompt, data)
+                if role == "composer":
+                    value["performance"] = value["performance"].replace("direct_vocal", "instrumental_intro")
+                elif role == "lyricist":
+                    value["lyrics"] = "[Intro]\n[Verse]\nI left the key"
+                return value
+
+            def stopped_plan(brief, intent, root, url):
+                root.mkdir()
+                result = {"id": "plan", "status": "done", "abc": abc, "lm_seed": brief["seed"],
+                          "plans": [{"abc": abc, "lm_seed": brief["seed"]}]}
+                journal = {"id": "plan", "state": "COMPLETED", "configuration": {"fixture": True},
+                           "score_sha256": nd.digest(abc.encode()),
+                           "request_sha256": nd.digest(nd._canonical(au.artist_run.plan_request(brief, intent)))}
+                manifest = {"schema": "artist-run-v1", "brief": brief, "intent": intent,
+                            "route": "reviewed_native", "explicit_score_sha256": None}
+                review = au.artist_run.evaluate_plan(abc, brief, intent)
+                self.assertEqual(review["decision"], "stop")
+                for name, value in (("manifest", manifest), ("journal_plan", journal),
+                                    ("plan-result", result), ("plan-decision", review),
+                                    ("plan-receipt", {"id": "plan"})):
+                    nd.atomic_write(root / (name + ".json"), value)
+                (root / "native-plan.abc").write_bytes(abc.encode())
+                return {"status": "artistic_plan_stopped", "decision": review}
+
+            with patch.object(provider, "complete", side_effect=instrumental), \
+                 patch.object(au.artist_run, "run", side_effect=stopped_plan):
+                self.assertEqual(au.launch(repo, "intro", "Farewell", "en", 190, url,
+                                           confirm=True, provider_factory=lambda: provider), 2)
+            preview = rp.inspect(repo, "intro", preview_instrumental_intro=True)
+            self.assertEqual(preview["status"], "candidate_available")
+            self.assertEqual(preview["candidate_score_sha256"], nd.digest(candidate.encode()))
+            before = {path: path.read_bytes() for path in parent.rglob("*") if path.is_file()}
+            with patch.object(provider, "complete", side_effect=AssertionError("text replay")), \
+                 patch.object(au, "produce", return_value=0) as produce:
+                with self.assertRaisesRegex(ValueError, "requires --confirm-run"):
+                    au.continue_plan(repo, "intro", url, approve_intro=True)
+                self.assertFalse(child.exists())
+                with self.assertRaisesRegex(ValueError, "formerly unsupported"):
+                    au.continue_plan(repo, "intro", url, confirm=True)
+                for _ in range(2):
+                    self.assertEqual(au.continue_plan(repo, "intro", url, confirm=True, approve_intro=True,
+                                                      provider_factory=lambda: provider), 0)
+                contract = nd.read(child / "continuation.json")
+                self.assertEqual(contract["intro_preview"], preview)
+                self.assertEqual(produce.call_args.kwargs["fitted_abc"], candidate)
+                self.assertEqual(produce.call_args.kwargs["planner_configuration"], {"fixture": True})
+                self.assertTrue(produce.call_args.kwargs["strict_duration"])
+                with patch.object(au.artist_run, "evaluate_plan", side_effect=AssertionError("historical replay")):
+                    rs._inputs(parent, child, "intro")
+                    self.assertEqual(rp.verify_frozen_intro(parent, child, contract), candidate)
+                (child / "production" / rp.INTRO_SCORE).write_bytes(abc.encode())
+                with self.assertRaisesRegex(ValueError, "intro continuation differs"):
+                    au.continue_plan(repo, "intro", url, confirm=True, approve_intro=True,
+                                     provider_factory=lambda: provider)
+                self.assertEqual(produce.call_count, 2)
+            self.assertEqual(provider.calls, ["composer", "lyricist", "reviewer"])
+            self.assertEqual(before, {path: path.read_bytes() for path in before})
+
+
 class DefaultLyricLanguageTests(unittest.TestCase):
     def test_indonesian_idea_defaults_to_english_unless_explicit(self):
         with tempfile.TemporaryDirectory() as tmp:
