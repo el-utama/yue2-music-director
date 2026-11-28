@@ -330,3 +330,7 @@ snapshot tests added. Exact-head CI pending. Next: practical naming/path
 and selection usability audit, then one consolidated live acceptance on
 existing library tracks. Native format conversion remains distinct from
 byte-preserving export. No operator commands required yet.
+
+PR #144 initial CI 46093609468 failed on both OSes: invalid escaped quotes
+in the new line-LRC f-string caused 10 module import errors. Corrected
+format construction, no test relaxation. Exact corrected-head CI required.

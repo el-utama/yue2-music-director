@@ -142,7 +142,7 @@ def video_line_bytes(lrc,lyrics,duration,*,library_only=False):
         time=stamp(ms)
         if ms%10==0:
             time=time[:-1]
-        lines.append(f"[{time}]{row[\'text\']}")
+        lines.append("[{}]{}".format(time,row["text"]))
     return ("\n".join(lines)+"\n").encode("utf-8")
 
 
