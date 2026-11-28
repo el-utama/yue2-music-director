@@ -50,6 +50,22 @@ class AutonomousTests(unittest.TestCase):
                 self.assertLess(data["duration_plan"]["target_score_seconds"], 180)
             self.assertEqual(nd.read(root / "job.json")["song_form"], lyricist.COMPACT_FORM)
 
+    def test_overlong_audio_stops_before_listening_or_director(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            provider = Provider()
+            def overlong(brief, intent, root, url):
+                return {"status": "provisional_draft", "artistic_intent": intent,
+                        "acoustic": {"duration_seconds": 180.01}, "duration_cap_screen_pass": True}
+            with patch.object(au.artist_run, "run", side_effect=overlong), \
+                 patch.object(au.ld, "verify_take", return_value={}), \
+                 patch.object(au.ld, "listen", side_effect=AssertionError("overlong take")):
+                result = au.launch(repo, "overlong", "A quiet goodbye", "en", 180,
+                                   "http://127.0.0.1:8791/mcp", confirm=True,
+                                   provider_factory=lambda: provider)
+            self.assertEqual(result, 2)
+            self.assertEqual(provider.calls, ["composer", "lyricist", "reviewer"])
+
     def test_outro_compares_lines_with_only_the_last_chorus(self):
         from yue2_music_director.lyricist import diagnostics
         lyrics = ("[Chorus]\nOld hook\n[Final Chorus]\nA new line\nWe're leaving\n"

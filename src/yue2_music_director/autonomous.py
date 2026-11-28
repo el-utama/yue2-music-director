@@ -143,10 +143,11 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
         freeze(root/"brief.json",brief)
         freeze(root/"intent.json",intent)
         brief=nd.load_brief(root/"brief.json")
-        return produce(repo,root,request,brief,intent,url,provider,retry_role=retry_role)
+        return produce(repo,root,request,brief,intent,url,provider,retry_role=retry_role,
+                       strict_duration=identity.get("song_form") == COMPACT_FORM)
 
 
-def produce(repo,root,request,brief,intent,url,provider,*,retry_role=None,fitted_abc=None,planner_configuration=None,approve_audio_sha=None):
+def produce(repo,root,request,brief,intent,url,provider,*,retry_role=None,fitted_abc=None,planner_configuration=None,approve_audio_sha=None,strict_duration=False):
     production=root/"production"
     # Same shared guards used by existing launchers. Native runner owns its
     # existing attempt and receipt semantics, not a second submission path.
@@ -169,6 +170,12 @@ def produce(repo,root,request,brief,intent,url,provider,*,retry_role=None,fitted
         row=ld.verify_take(production/"draft",brief,report)
         if report.get("artistic_intent")!=intent:
             raise ValueError("Native artistic intent mismatch")
+        if strict_duration:
+            actual = report["acoustic"].get("duration_seconds")
+            cap = brief["duration_seconds"]
+            if type(actual) not in (int, float) or not 0 < actual <= cap:
+                print("Audio duration requires review:", actual, "seconds; cap:", cap, flush=True)
+                return 2
         print("Retained audio:",row["audio"],flush=True)
         print("Neutral audio evaluation",flush=True)
         packet=ld.listen(production,brief,intent,row,url)
@@ -362,9 +369,11 @@ def continue_plan(repo,job,url,*,confirm=False,provider_factory=None,retry_role=
         if fit is not None:
             print("Approved tempo:",approve_tempo,"BPM; original plan preserved.",flush=True)
             return produce(repo,root,identity["request"],brief,intent,url,provider,
+                           strict_duration=identity.get("song_form") == COMPACT_FORM,
                            fitted_abc=fitted_abc,planner_configuration=nd.read(source/"journal_plan.json")["configuration"],
                            **({"approve_audio_sha":approve_audio_sha} if approve_audio_sha is not None else {}))
-        return produce(repo,root,identity["request"],brief,intent,url,provider)
+        return produce(repo,root,identity["request"],brief,intent,url,provider,
+                       strict_duration=identity.get("song_form") == COMPACT_FORM)
 
 
 def main():
