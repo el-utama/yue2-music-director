@@ -38,7 +38,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Verified main `19f7357d736c7a7a8a76146b9b2c99cb6cf7af0a` after PR #147; both exact-head CI jobs passed 46102879921. Live native playlist passed, native album partial; see latest evidence.
+- Verified main `b7cb968b04d6f060e436f1b526524ca3a9fe1d14` after PR #148; both exact-head CI jobs passed 46103441059. Agreed draft Exporter sample acceptance passed across targeted Windows runs; next priority creative quality (R02/R03 and Reviewer), not another exporter rewrite. Seven historical works, 853 candidate IDs and 147 slots open.
 - P0 recovery follow-up (R01/R08/R09): a local interruption between saving the Studio acknowledgment and updating the journal can now recover the existing plan or song ID. Regression coverage injects that interruption and checks that planning and synthesis are each submitted once. Windows Studio recovery and independent live artistic acceptance remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
@@ -57,7 +57,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 | R04 | Native controls, actual installed capability and limitations | Source-pinned audit and live velocity fixture; velocity not retained in ABC, schedule coverage advisory only | Complete remaining melody/harmony/arrangement/replay/cover/adapter audit; installed binary identity not verified; no fake controls |
 | R05 | Human feedback, persistent artist profiles, confirmed vs inferred preference | Local immutable feedback and opt-in Artist Memory implemented/CI; explicit typed job selection | Live hosted typed-schema validation; usable profile management, no inferred preferences silently applied; artist naming PR115 merged; live usage pending |
 | R06 | Audio finishing, original preserved, separate variant | Gain-only finishing passed live technical check on retained reference | General mastering, repair and artistic comparison are not established; no automatic acceptance |
-| R07 | Cover art direction, draft export and complete release package | Cover prompt/original single export live; PRs #141–145 merged/CI: original and clean lyrics, native LRC/SRT, video line LRC, three presets, Single/EP/Album/Playlist, native library and exact name selection, M3U8, immutable snapshots and acceptance launcher | Final audit hardening pending CI; live consolidated Windows sample acceptance and human player review pending. Native conversion and editing remain Studio features. Full credits and actual cover optional for draft. Final approved assembly/delivery rights and approval separate; no publication |
+| R07 | Cover art direction, draft export and complete release package | Draft packaging sample acceptance **PASS** across #146–148 live Windows reports: Single, EP, manual/native Album, native Playlist, three presets, clean/original lyrics, LRC/SRT, fallback with native archive, numbered filenames and asset verification. Cover prompt live. | Human player/subtitle review, phonetic alignment, broader library coverage, native conversion outside Exporter, separate approved assembly/delivery and rights/approval remain open; no publication |
 | R08 | One short launcher, intuitive human-readable names and safe recovery | Readiness and multiple specialist launchers CI; previous launcher help failure fixed | Usability audit with real multiword/Unicode names, quoted paths, realistic input and minimal commands; actual Windows readiness not live checked |
 | R09 | Robust journals, failure isolation, no duplicate calls | Local locks, receipts, explicit recovery and CI | Supervised workers/process isolation, cross-client durable queue, startup/reconnect/ambiguous failures |
 | R10 | Private multi-device operation from Mac and Windows | Audit bridge only | Authenticated production service, queue, status, playback, approvals, reconnect, local host startup; no public exposure |
@@ -387,3 +387,41 @@ when safe; invalid lines/text remain partial, no fake word alignment.
 Remove duplicate filename numbering only for exact fully numbered native
 album/EP sequence, preserve full title. Album-only targeted acceptance.
 Exact-head CI pending; no new inference or native mutation.
+
+
+## Live draft exporter acceptance — 2026-11-28
+
+Operator-reported Windows acceptance at main b7cb968 (PR #148), following
+the earlier partial runs at PRs #146 and #147. Exact-head Windows/Linux
+Python 3.11 CI for #148 passed (46103441059).
+
+| Sample | Result |
+| --- | --- |
+| Single / video | Complete; semantic asset checks passed |
+| EP / distribution | Complete; two tracks, timing intentionally omitted |
+| Manual album / production | Complete; two tracks, timing exported |
+| Native playlist / video | Complete; one M4A instrumental, timing not applicable |
+| Native album / production | Complete; all 11 tracks; asset checks passed; exit 0 |
+
+Library discovery returned 255 playable songs and 15 collections (one
+album, 14 playlists). The last album-only run returned
+`album_checks_passed`, no timing issues, four word-timing fallbacks
+(tracks 3, 8, 9, 11), and correctly numbered portable filenames.
+The four fallbacks preserve original LRC separately and use validated
+native line onsets, not repaired word alignment. No native mutations
+or inference calls in any acceptance run.
+
+This closes the agreed draft-packaging sample acceptance across all
+requested release types and three presets, accumulated across targeted
+runs; not a single fresh full-suite run or validation of every library
+track. Human player/subtitle review and acoustic alignment are unverified.
+Final approved release, rights and publishing remain separate.
+Do not repeat successful acceptance or regenerate music solely for this
+checkpoint. Native format conversion remains a Studio feature.
+
+Next: improve English-first creative craft before synthesis. Audit current
+Lyricist/Composer/Reviewer evidence and prompts, strengthen narrative,
+natural idiom, imagery, emotional progression, singability, and musical
+intent, and add editorial evaluation fixtures. Technical QA is not artistic
+approval. No new live inference without authorization; preserve historical
+contracts and all deferred requirements.

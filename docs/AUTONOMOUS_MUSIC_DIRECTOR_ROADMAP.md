@@ -176,3 +176,39 @@ acceptance pending. No new generation or collection writes.
 Final export audit follow-up: long Windows track paths, staged package
 verification and semantic acceptance checks. Exact-head CI and installed
 native acceptance remain pending; no creative quality claim.
+
+
+## Live draft exporter acceptance — 2026-11-28
+
+Operator-reported Windows acceptance at main b7cb968 (PR #148), following
+the earlier partial runs at PRs #146 and #147. Exact-head Windows/Linux
+Python 3.11 CI for #148 passed (46103441059).
+
+| Sample | Result |
+| --- | --- |
+| Single / video | Complete; semantic asset checks passed |
+| EP / distribution | Complete; two tracks, timing intentionally omitted |
+| Manual album / production | Complete; two tracks, timing exported |
+| Native playlist / video | Complete; one M4A instrumental, timing not applicable |
+| Native album / production | Complete; all 11 tracks; asset checks passed; exit 0 |
+
+Library discovery returned 255 playable songs and 15 collections (one
+album, 14 playlists). The last album-only run returned
+`album_checks_passed`, no timing issues, four word-timing fallbacks
+(tracks 3, 8, 9, 11), and correctly numbered portable filenames.
+The four fallbacks preserve original LRC separately and use validated
+native line onsets, not repaired word alignment. No native mutations
+or inference calls in any acceptance run.
+
+This closes the agreed draft-packaging sample acceptance across all
+requested release types and three presets, accumulated across targeted
+runs; not a single fresh full-suite run or validation of every library
+track. Human player/subtitle review and acoustic alignment are unverified.
+Final approved release, rights and publishing remain separate.
+Do not repeat successful acceptance or regenerate music solely for this
+checkpoint. Native format conversion remains a Studio feature.
+
+Next priority: English-first Lyricist, Composer and Reviewer quality.
+Begin with source/prompt and editorial-gate audit; maintain the full
+knowledge-bank, rights and artistic evaluation requirements. Do not
+automatically submit a new synthesis job.

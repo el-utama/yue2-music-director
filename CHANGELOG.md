@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Draft exporter live acceptance — 2026-11-28
+
+- Operator-reported Windows checks passed across Single, EP, manual/native Album and native Playlist, all three presets; final 11-track album complete with four explicit line-only timing fallbacks. No native mutation/inference. Human playback and acoustic alignment unverified. Return to creative quality; preserve final release/approval requirements.
+
 ## Unreleased — native album timing recovery
 
 - Recover validated line-onset timing when enhanced word clocks fail, preserving native LRC separately. Clean redundant ordered title numbering and target only the remaining album acceptance case.
