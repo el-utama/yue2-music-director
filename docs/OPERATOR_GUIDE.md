@@ -68,6 +68,7 @@ The preferred sequence is **Intro → Verse 1 → Pre-Chorus → Chorus → Vers
 | Preview a new song | `music.cmd --job new-song --request "A quiet goodbye"` | No provider or Studio calls |
 | Inspect existing job | `music.cmd --job JOB` | Plan-only; no new generation |
 | Diagnose retained ending | `music.cmd --inspect-ending JOB` | Read-only retained evidence/loopback lookup |
+| Instrumental intro preview | `music.cmd --review-plan JOB --preview-intro` | Offline check of replacing intro vocal notes with rests |
 | Duration-only fit preview | `music.cmd --review-plan JOB --fit-duration` | Advisory local tempo candidate; no inference or repair |
 | Approved duration continuation | `music.cmd --continue-plan JOB --approve-tempo BPM --confirm-run` | Exact previewed BPM, one song; original unchanged |
 | Review a stopped plan | `music.cmd --review-plan JOB` | Retained local evidence; no new score |
@@ -117,6 +118,8 @@ before deciding whether a new job is necessary. Do not replay a successful
 song or unresolved external attempt automatically.
 
 ## 4. Failures and safe recovery
+
+If a planned instrumental intro is rejected because the score has vocal notes there, `--preview-intro` checks a candidate in memory. It requires existing instrumental notation and leaves the timing, remaining melody, instruments and original receipts intact. The candidate must pass the full score review, including prompt vocal entry after the intro. A vocal tie crossing the section boundary needs musical revision. This preview leaves no candidate file and does not authorize synthesis.
 
 | Symptom | Safe next action |
 |---|---|

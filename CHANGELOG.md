@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — Preview a vocal-free intro
+
+- Locally assess a stopped instrumental intro by replacing only its vocal notes with equal-length rests in a candidate score. Require documented instrumental activity and rerun full score review.
+
 ## Unreleased — Compact song form and ending review
 
 - Default new autonomous songs to a 180-second target with up to ten extra seconds for a natural ending. Add flexible section guidance, lyric craft review and final-chorus line comparisons in the outro. Job manifests freeze the new guidance for resume.
