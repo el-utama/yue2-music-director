@@ -139,14 +139,18 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
         return produce(repo,root,request,brief,intent,url,provider,retry_role=retry_role)
 
 
-def produce(repo,root,request,brief,intent,url,provider,*,retry_role=None):
+def produce(repo,root,request,brief,intent,url,provider,*,retry_role=None,fitted_abc=None,planner_configuration=None):
     production=root/"production"
     # Same shared guards used by existing launchers. Native runner owns its
     # existing attempt and receipt semantics, not a second submission path.
     owner_context={"root":root.relative_to(repo).as_posix(),"stage":"native_and_listening"}
     with ld.lock(repo/"results/drafts/.active",context=owner_context), ld.lock(repo/"results/.critic-active",context=owner_context):
         print("Native production",flush=True)
-        report=artist_run.run(brief,intent,production,url)
+        if fitted_abc is None:
+            report=artist_run.run(brief,intent,production,url)
+        else:
+            report=nd.execute(brief,production/"draft",url,abc=fitted_abc,artist=intent,
+                              expected_configuration=planner_configuration)
         if report["status"]=="artistic_plan_stopped":
             stopped={"schema":"autonomous-plan-stop-v1","status":"plan_review_required",
                      "decision":report["decision"],"automatic_acceptance":False,
@@ -226,10 +230,12 @@ def retry_continuation_director(repo,job,url,*,confirm=False,provider_factory=No
         return finalize_result(root,report,row,decision)
 
 
-def continue_plan(repo,job,url,*,confirm=False,provider_factory=None,retry_role=None):
+def continue_plan(repo,job,url,*,confirm=False,provider_factory=None,retry_role=None,approve_tempo=None):
     """One distinct continuation of a retained parser-blocked plan, no new score."""
     from .retained_plan_review import inspect
     if retry_role is not None:
+        if approve_tempo is not None:
+            raise ValueError("Director retry uses the frozen child; do not repeat tempo approval")
         if retry_role!="director":
             raise ValueError("Only the child Director role can be retried on a continuation")
         return retry_continuation_director(repo,job,url,confirm=confirm,provider_factory=provider_factory)
@@ -238,6 +244,8 @@ def continue_plan(repo,job,url,*,confirm=False,provider_factory=None,retry_role=
     jobs=repo/"results/autonomous"
     parent=jobs/job
     if not confirm:
+        if approve_tempo is not None:
+            raise ValueError("Tempo recovery requires --confirm-run")
         print("Continuation plan only; zero provider or Studio calls.",flush=True)
         return 0
     with ld.lock(jobs/".active",context={"job":job,"root":parent.relative_to(repo).as_posix(),"stage":"continuation"}):
@@ -248,7 +256,7 @@ def continue_plan(repo,job,url,*,confirm=False,provider_factory=None,retry_role=
         cc.validate_job(job,identity["request"],identity["language"],identity["duration_seconds"])
         review=inspect(repo,job)
         old=nd.read(parent/"production/plan-decision.json")
-        if (review["previous_status"]!="unassessable"
+        if approve_tempo is None and (review["previous_status"]!="unassessable"
                 or not any(x.get("code")=="unsupported_local_notation" for x in old["score_review"]["unknowns"])
                 or review["current_decision"]["decision"]!="retain"):
             raise ValueError("Only a formerly unsupported plan now retained by review may continue")
@@ -279,6 +287,19 @@ def continue_plan(repo,job,url,*,confirm=False,provider_factory=None,retry_role=
                   "explicit_score_sha256":None}
         if nd.read(source/"manifest.json")!=manifest:
             raise ValueError("Retained production manifest differs")
+        fit=None
+        fitted_abc=None
+        if approve_tempo is not None:
+            from . import duration_fit as df
+            if identity["production_policy"]!=POLICY or any(k in identity for k in ("creative_spec","artist_profile","style_recipe","knowledge_context")):
+                raise ValueError("Duration recovery currently requires a plain structured autonomous job")
+            if [x.get("code") for x in old["score_review"]["hard_violations"]]!=["score_clock_exceeds_cap"] or old["score_review"]["soft_flags"]:
+                raise ValueError("Original stop is not duration-only")
+            fit,candidate=df.propose((source/"native-plan.abc").read_bytes().decode("utf-8"),brief,intent,request=identity["request"])
+            if candidate is None or fit["candidate_tempo_bpm"]!=approve_tempo:
+                raise ValueError("No matching eligible duration candidate; preview and approve exact BPM")
+            fitted_abc,brief,intent=candidate["abc"],candidate["brief"],candidate["intent"]
+            review={"current_decision":candidate["review"]}
         files=("manifest.json","journal_plan.json","plan-result.json","plan-receipt.json","native-plan.abc")
         contract={"schema":"retained-plan-continuation-v1","parent_job":job,
                   "original_job_sha256":nd._sha(parent/"job.json"),
@@ -287,6 +308,8 @@ def continue_plan(repo,job,url,*,confirm=False,provider_factory=None,retry_role=
                   "source_files":{name:nd._sha(source/name) for name in files},
                   "review":review["current_decision"],
                   "budget":{"new_score_jobs":0,"song_jobs":1,"recognition_calls":1,"cpu_excerpts":2,"director_calls":1}}
+        if fit is not None:
+            contract.update(schema=df.FIT_SCHEMA,fit=fit,approved_tempo_bpm=approve_tempo)
         root=parent/"continuation-1"
         production=root/"production"
         if root.exists():
@@ -309,10 +332,20 @@ def continue_plan(repo,job,url,*,confirm=False,provider_factory=None,retry_role=
                     raise ValueError("Source changed during continuation initialization")
             nd.atomic_write(root/"brief.json",brief)
             nd.atomic_write(root/"intent.json",intent)
+            if fit is not None:
+                with (production/"duration-fit.abc").open("xb") as stream:
+                    stream.write(fitted_abc.encode("utf-8"))
+                nd.atomic_write(production/"plan-decision.json",contract["review"])
+        if fit is not None:
+            df.verify_frozen(parent,root,contract)
         freeze(root/"brief.json",brief)
         freeze(root/"intent.json",intent)
         print("Continuation:",root,flush=True)
         print("Budget: zero new composition plans, one native song, one ASR, two CPU excerpts, one Director.",flush=True)
+        if fit is not None:
+            print("Approved tempo:",approve_tempo,"BPM; original plan preserved.",flush=True)
+            return produce(repo,root,identity["request"],brief,intent,url,provider,
+                           fitted_abc=fitted_abc,planner_configuration=nd.read(source/"journal_plan.json")["configuration"])
         return produce(repo,root,identity["request"],brief,intent,url,provider)
 
 
@@ -322,6 +355,7 @@ def main():
     p.add_argument("--url",required=True)
     p.add_argument("--job")
     p.add_argument("--continue-plan",metavar="JOB",help="Explicit continuation of a rechecked parser-blocked plan")
+    p.add_argument("--approve-tempo",type=int,help="Approve exact previewed BPM for a duration-only --continue-plan; requires --confirm-run")
     p.add_argument("--request")
     p.add_argument("--style-id",help="Explicit original preset ID, e.g. trap-001; frozen for the job")
     p.add_argument("--knowledge-query",help="Local historical knowledge lexical preview; frozen for a confirmed job")
@@ -341,7 +375,9 @@ def main():
         if a.continue_plan is not None:
             if any(x is not None for x in (a.job,a.request,a.language,a.duration,a.creative_spec,a.artist_profile,a.profile_revision,a.style_id,a.knowledge_query)) or a.confirm_knowledge_context or a.knowledge_auto:
                 raise ValueError("Continuation does not allow job or brief overrides")
-            return continue_plan(repo,a.continue_plan,a.url,confirm=a.confirm_run,retry_role=a.retry_text)
+            return continue_plan(repo,a.continue_plan,a.url,confirm=a.confirm_run,retry_role=a.retry_text,approve_tempo=a.approve_tempo)
+        if a.approve_tempo is not None:
+            raise ValueError("--approve-tempo requires --continue-plan")
         if a.retry_text and not a.job:
             raise ValueError("Text recovery requires the existing --job ID")
         job=a.job or ("song-"+uuid.uuid4().hex[:12])

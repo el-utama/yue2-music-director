@@ -173,3 +173,27 @@ The preview does not save or render the candidate, and does not prove the
 native engine will follow the change. Artistic review and a separate
 immutable recovery implementation are still required. Do not edit existing
 receipts or use the parser-only continuation on this case.
+
+
+## Explicit duration-only continuation
+
+PR #135's live read-only preview correctly stopped on Composer-authored BPM
+text. The follow-up can propose a bounded adjustment for simple integer BPM
+descriptions, keeping source notes, lyrics, chords, meter and sections and
+rewriting only the tempo header and consistent numeric BPM descriptions in
+the separate child brief/intent. Original request tempo mentions, typed
+constraints, ambiguous ranges and conflicting descriptions remain blocked.
+Preview with `music.cmd --review-plan JOB --fit-duration`. A candidate
+requiring artistic review is not a failure or authorization. If the operator
+accepts the exact printed candidate BPM, use
+`music.cmd --continue-plan JOB --approve-tempo BPM --confirm-run` (replace BPM
+with the integer). Only plain structured autonomous jobs are currently
+supported. No new Composer, Lyricist, Reviewer or composition plan call.
+Budget: one song, one ASR, two CPU excerpts and one Director. Original plan
+and journals are copied unchanged into the existing fixed continuation-1;
+the revised score and decision have distinct receipts. Native MIDI and
+configuration checks remain mandatory. Same command resumes the same
+child; never rerun the parent. If Director alone is unresolved, use the
+existing child Director retry without the tempo flag. No automatic
+acceptance, automatic fit or unapproved synthesis. Offline CI and live
+native compatibility must be verified separately.

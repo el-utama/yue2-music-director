@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — approved duration-only continuation
+
+- Preserve rejected native plan and creative receipts; propose a bounded tempo-only candidate and synchronize simple consistent BPM advice in a separate child. Require exact operator BPM approval, full score re-review, native MIDI and frozen configuration checks; no new creative or planning calls. Ambiguous and explicit tempo requirements remain blocked. Live validation pending.
+
 ## Unreleased — P0 duration fit preview
 
 - Read-only bounded tempo fit for duration-only rejected native plans; full local re-review, notation identity except tempo, three-second reserve, no synthesis authorization. Live structured Composer passed; independent production acceptance still open.
