@@ -57,6 +57,12 @@ def prepare(repo,release,snapshot,variants):
         raise ValueError("Track or variant selection differs")
     selections=[]
     expected_files=set()
+    lyric_policy=manifest.get("lyric_assets")
+    if lyric_policy not in (None,ex.CLEAN_LYRIC_POLICY):
+        raise ValueError("Unknown export lyric asset policy")
+    timing_policy=contract.get("timing_policy")
+    if timing_policy not in (None,*ex.PRESETS.values()):
+        raise ValueError("Unknown export timing policy")
     for i,(e,t) in enumerate(zip(evidence,tracks),1):
         job=e["job"]
         source=ex.retained(repo,job)
@@ -75,8 +81,14 @@ def prepare(repo,release,snapshot,variants):
         expected=ex.lyric_bytes(source)
         if (stem+".txt" not in files or files[stem+".txt"].read_bytes()!=expected):
             raise ValueError("Export lyric text differs")
-        if t["timing"]["status"] not in ("exported_unverified_display_anchors","unavailable"):
-            raise ValueError("Unknown source timing status")
+        if lyric_policy==ex.CLEAN_LYRIC_POLICY:
+            clean=stem+".clean.txt"
+            if clean not in files or files[clean].read_bytes()!=ex.clean_lyric_bytes(source):
+                raise ValueError("Clean export lyric text differs")
+            expected_files.add(clean)
+        statuses=("not_requested",) if timing_policy==ex.PRESETS["distribution"] else ("exported_unverified_display_anchors","unavailable")
+        if t["timing"]["status"] not in statuses:
+            raise ValueError("Unknown source timing status for preset")
         timed=t["timing"]["status"]=="exported_unverified_display_anchors"
         expected_files.update((name,stem+".txt"))
         if timed:
@@ -90,7 +102,7 @@ def prepare(repo,release,snapshot,variants):
                            "audio":selected["audio"],"timing":t["timing"]})
     if set(files)!=expected_files:
         raise ValueError("Unexpected files in source package")
-    expected_status="complete" if all(s["timing"]["status"]=="exported_unverified_display_anchors" for s in selections) else "partial_missing_timing"
+    expected_status="complete" if all(s["timing"]["status"] in ("exported_unverified_display_anchors","not_requested") for s in selections) else "partial_missing_timing"
     if manifest.get("status")!=expected_status:
         raise ValueError("Source package timing status differs")
     return root,manifest,files,selections

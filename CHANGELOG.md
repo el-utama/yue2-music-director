@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — draft export priority
+
+- Add clean stanza lyric TXT alongside preserved tagged lyrics, production and distribution presets, and downstream clean-asset verification. Preserve historical packages, optional metadata and existing native timing policy. Operator prioritizes exporter before creative improvements; no new audio encoding or inference.
+
 ## Unreleased — English-first lyric acceptance
 
 - Record the negative human Indonesian lyric verdict and successful technical finishing. Preserve English default independently of brief language and add CLI regression tests. No prompt, production or historical job changes.

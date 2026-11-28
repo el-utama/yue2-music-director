@@ -24,3 +24,10 @@ Omit --variant to select originals; repeat it for different tracks. Use --snapsh
 Lyrics and existing LRC/SRT are copied byte-for-byte. A finished candidate is eligible because the finishing contract verifies a fixed-gain waveform and unchanged sample timeline; this does not establish acoustic alignment accuracy. Partial timing remains partial with exit 2, never fabricated. A missing approval also exits 2 without writing a package. This is not final publication approval: actual cover attachment, sidecar release metadata and package-level approval are separate steps in [local release delivery](RELEASE_DELIVERY.md). No approval is written by assembly.
 
 Synthetic integration tests exercise actual FFmpeg gain candidate, separate approvals, original export immutability, repeat verification, revocation, ordered multi-track export and tamper rejection. No live reference processing is implied.
+
+
+New exports may additionally contain the versioned clean lyric text; assembly
+verifies it against the retained source and copies both texts. Historical
+exports without the clean asset policy remain valid. Distribution-preset
+exports deliberately contain no timed pair; they are complete for that
+selected preset, not timing-validated or publication-approved.

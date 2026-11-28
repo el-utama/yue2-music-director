@@ -179,3 +179,9 @@ If a completed duration continuation has an acoustic hash mismatch, use the
 [explicit retained audio identity recovery](AUTONOMOUS_CLI.md#explicit-retained-audio-identity-recovery)
 only after the current exact hash is confirmed and approved. No new song
 submission is permitted on that path.
+
+
+Draft export does not require full credits, artwork or audio release approval.
+Use the default production preset for FLAC, tagged and clean lyric text and
+existing native timing, or `--preset distribution` for audio and lyric texts
+without timing reads. See [export presets](RELEASE_EXPORT.md#production-and-distribution-presets).

@@ -88,7 +88,7 @@ class ReleaseAssemblyTests(unittest.TestCase):
             self.assertEqual(ra.launch(self.repo,"release",variants=variant,confirm=True),0)
             self.assertEqual(ra.launch(self.repo,"release",variants=variant,confirm=True),0)
         self.assertEqual(nd._sha(self.root/"one.flac"),key["audio_sha256"])
-        for suffix in (".txt",".lrc",".srt"):
+        for suffix in (".txt",".clean.txt",".lrc",".srt"):
             self.assertEqual((self.root/("one"+suffix)).read_bytes(),(self.export/("one"+suffix)).read_bytes())
         self.assertEqual(before,{p:nd._sha(p) for p in before})
         manifest=nd.read(self.root/"assembly.json")
