@@ -7,7 +7,7 @@
 1. Read [AGENTS.md](AGENTS.md), [PROJECT_MEMORY.md](PROJECT_MEMORY.md), the active roadmap, [native audit](docs/NATIVE_AUDIT_CHECKPOINT.md) and [local release checkpoint](docs/LOCAL_RELEASE_CHECKPOINT.md).
 2. Verify main, exact pending PR head, CI evidence, source code, and actual data inventory. Choose an open requirement, not an old historical milestone.
 3. Read [operator guide](docs/OPERATOR_GUIDE.md) and the specific module contract. Keep supported confirmation semantics, private files, retained jobs and one short launcher intact.
-4. Make a coherent bounded change, with tests for normal, failure and resume paths. Use Windows/Linux Python 3.11/3.13 CI; local mock tests are not live Studio/provider validation. No extra inference unless explicitly authorized.
+4. Make a coherent bounded change, with tests for normal, failure and resume paths. Use Windows/Linux Python 3.11 PR CI (two jobs); local mock tests are not live Studio/provider validation. Run the full Python 3.11/3.13 matrix manually before releases and when changing dependencies or Python compatibility. No extra inference unless explicitly authorized.
 5. Update the relevant user guide, README entry points when needed, changelog and PROJECT_MEMORY.md. Distinguish candidate metadata from approved references, implemented from tested, and technical from artistic acceptance.
 
 Current evidence after PR #127: three offline SQLite/FTS5 indexes, explicit authored-style selection in autonomous Composer, local artist profiles and bounded release specialists are implemented and CI-tested. Historical knowledge production integration, approved corpus, live typed/preset generalization, process supervision and private production service are open. The current register is authoritative. See [offline workflow](docs/OFFLINE_KNOWLEDGE_WORKFLOW.md) and [active roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md).
@@ -82,3 +82,14 @@ The [active product roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md) and [pro
 - Instrument performance expression and optional audio analysis, based on robust objective + human ratings.
 - More real-world scores across keys, meters, and unusual ABC tokens.
 - Resource manager / resume-safe orchestration and optional LLM integrations.
+
+## CI execution policy
+
+Routine pull requests run the complete offline suite and existing smoke checks
+on Windows and Ubuntu with Python 3.11. Push events do not start a second
+workflow; updates to a PR cancel superseded runs. Direct pushes to main are
+not a substitute for a tested PR. In GitHub Actions, select Python tests,
+Run workflow, and leave full_matrix enabled for the four-job release or
+runtime/dependency compatibility check. Disable it for a manual two-job
+check. Check the current PR head before merging; prior four-job evidence
+remains historical. CI still does not perform Studio inference.

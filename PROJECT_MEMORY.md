@@ -21,8 +21,9 @@ unpublished lyrics, audio, private paths or personal preferences here.
    errors). Prefer short commands and human-facing names over internal IDs.
    The operator uses separate Mac and Windows hosts; avoid repeated manual
    testing and long commands.
-4. Implement, test, review and correct. Check exact-head CI on Windows and
-   Linux before merge. Preserve historical receipts, reference audio and
+4. Implement, test, review and correct. Check both exact-head Python 3.11 PR CI jobs on Windows and
+   Linux before merge; manually run the full 3.11/3.13 matrix before release
+   or runtime/dependency changes. Preserve historical receipts, reference audio and
    safety gates. Update this file and relevant docs in the same PR.
 5. Before claiming readiness, compare every relevant row below against
    actual evidence. Distinguish implemented, CI-tested, live-validated,
@@ -203,3 +204,14 @@ tempo-explicit briefs and ambiguous BPM text remain outside scope.
 Synthetic tests and docs added; exact-head CI and native MIDI/audio live
 acceptance pending. No actual operator score, private creative data or
 provider credentials transferred. All requirements retained.
+
+
+2026-11-28: PR #136 merged at bc735c6 after all four exact-head jobs
+passed (run 46086895832). Approved duration continuation remains pending
+live validation. Operator explicitly requested two routine CI jobs to
+reduce latency and duplicate push/PR executions. R12: use Windows and
+Ubuntu Python 3.11 for PRs, cancel superseded PR runs, no push-triggered
+workflow. Retain manual full Python 3.11/3.13 compatibility checks for
+release and runtime/dependency changes. No tests removed, no change to
+production inference or other requirements. New workflow validation
+and repository branch-rule compatibility must be checked before merge.
