@@ -38,6 +38,8 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
+- R01/R03/R08: native planning twice stopped before synthesis because a requested instrumental intro had notated vocal activity. One stopped score was inside the new cap and showed instrumental notation in the intro. `--review-plan JOB --preview-intro` checks a vocal-free candidate offline, keeping the original plan and applying the existing opening gate to the next vocal entry. Live candidate acceptance and any approved recovery to synthesis remain open.
+
 - R01/R02/R03: new autonomous jobs use a 180-second target with a 190-second hard cap and a flexible eight-section form. Editorial inputs include concrete lyric craft guidance and outro line matches against the final chorus. Offline regression cases exercise new and retained inputs and notated wordless sections. New jobs also stop before listening review when the measured take exceeds its cap. Independent listening and lyric-quality acceptance remain open.
 
 - Verified baseline main `0c20e7c2a60ffe24877d3726831764e5c3b63f7b` after PR #153. Head `a334db7` passed [Windows/Linux 3.11 CI](https://github.com/el-utama/yue2-music-director/actions/runs/46110159738). Fresh-host live validation remains open.

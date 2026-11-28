@@ -65,6 +65,38 @@ class MusicalReviewTests(unittest.TestCase):
         flag = next(f for f in report["soft_flags"] if f["code"] == "notated_sung_sequence_differs")
         self.assertEqual(flag["extra"], ["outro#1"])
 
+    def test_instrumental_intro_preview_preserves_timing_and_checks_next_entry(self):
+        from yue2_music_director import artist_run
+        from yue2_music_director.retained_plan_review import preview_intro
+
+        constraints = {field: {"mode": "must", "value": "instrumental_intro"}
+                       for field in ("opening", "opening_timing")}
+        intent = {"schema": "artist-intent-v1", "route": "reviewed_native",
+                  "concept": "Departure", "emotional_arc": "Loss to resolve",
+                  "performance": "Instrumental opening", "section_purposes": {"intro#1": "Set the tone"},
+                  "constraints": constraints, "retain_soft_flags": {}, "follow_lyrics": True,
+                  "budget": {"score_jobs": 1, "song_jobs": 1, "recognition_calls": 1}}
+        brief = {"lyrics": "[Intro]\n[Verse]\nOne step outside", "duration_seconds": 190}
+        for intro, instruments, verse, expected in (
+            ('"Dm"z8D8|', "D16|", "E16|", "candidate_available"),
+            ("z8D8|", "D16|", "Z2|E16|", "not_eligible"),
+            ("z8D8-|", "D16|", "D8E8|", "not_eligible"),
+            ("z8D8|", "Z|", "E16|", "not_eligible"),
+        ):
+            with self.subTest(intro=intro, instruments=instruments, verse=verse):
+                verse_bars = 3 if verse.startswith("Z2") else 1
+                abc = (HEADER + group("intro", intro, instruments)
+                       + group("verse", verse, "Z" + (str(verse_bars) if verse_bars > 1 else "") + "|"))
+                review = artist_run.evaluate_plan(abc, brief, intent)["score_review"]
+                self.assertEqual(len(review["hard_violations"]), 2, review)
+                result = preview_intro(abc, brief, intent, review)
+                self.assertEqual(result["status"], expected, result)
+                self.assertFalse(result["render_authorized"])
+                if expected == "candidate_available":
+                    self.assertEqual(result["score_seconds"], 4.0)
+                    self.assertEqual(result["vocal_notes_replaced_by_rests"], 1)
+                    self.assertEqual(result["opening_evidence"]["first_vocal_onset_seconds"], 2.0)
+
     def test_mandatory_and_cap(self):
         for kwargs in ({"constraints":{"key":{"mode":"must","value":"Am"}}},
                        {"max_seconds":19.99},
