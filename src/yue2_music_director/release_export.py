@@ -16,7 +16,7 @@ from .mcp import MCPError, configured_endpoint
 from .temporal_evidence import parse_lrc, LINE
 from .export_timing import read_timing
 from .prosody import parse_lyrics
-from . import native_collection as nc
+from . import native_collection as nc, native_library_export as nl
 
 
 def retained(repo,job):
@@ -25,6 +25,8 @@ def retained(repo,job):
 
 def lyric_bytes(track):
     lyrics=track["brief"]["lyrics"]
+    if "native_snapshot" in track:
+        return lyrics.encode("utf-8")
     if track.get("identity",{}).get("production_policy")=="reviewed-score-v4-typed" and track["identity"]["creative_spec"].get("lyrics") is not None:
         if lyrics!=track["identity"]["creative_spec"]["lyrics"]:
             raise ValueError("Exact supplied lyric text differs")
@@ -36,6 +38,26 @@ CLEAN_LYRIC_POLICY="section-stripped-stanzas-v1"
 PRESETS={"production":"studio-display-anchors-v2","distribution":"not-requested-v1"}
 
 
+def lyric_stanzas(lyrics,*,library_only=False):
+    if not library_only:
+        return [g["lines"] for g in parse_lyrics(lyrics) if g["lines"]]
+    # Native written text can be plain, tagged or instrumental. Keep words
+    # and stanza boundaries; never guess the meaning of an inline direction.
+    groups=[]
+    current=[]
+    for line in lyrics.splitlines():
+        line=line.strip()
+        if not line or re.fullmatch(r"\[[^\]]+\]",line):
+            if current:
+                groups.append(current)
+                current=[]
+        else:
+            current.append(line)
+    if current:
+        groups.append(current)
+    return groups
+
+
 def clean_lyric_bytes(track):
     """Use existing lyric section grammar, not a generative text rewrite.
 
@@ -43,9 +65,11 @@ def clean_lyric_bytes(track):
     bracket section/direction tags and excess blank lines are removed.
     Ambiguous inline directions remain for human review.
     """
-    groups=parse_lyrics(track["brief"]["lyrics"])
-    stanzas=["\n".join(group["lines"]) for group in groups if group["lines"]]
+    library_only="native_snapshot" in track
+    stanzas=["\n".join(lines) for lines in lyric_stanzas(track["brief"]["lyrics"],library_only=library_only)]
     if not stanzas:
+        if library_only:
+            return b""
         raise ValueError("No sung lyric lines to export")
     return ("\n\n".join(stanzas)+"\n").encode("utf-8")
 
@@ -59,7 +83,7 @@ def stamp(ms,*,srt=False):
     return f"{minutes:02}:{second:02}.{milli:03}"
 
 
-def timed_text(lrc,lyrics,duration):
+def timed_text(lrc,lyrics,duration,*,library_only=False):
     # Match the pinned Studio UI's subtitle display policy, independently
     # implemented from app/services/lrc-parser.ts (bfd35a0).
     # Section labels are not sung cues; preserve them in the original LRC.
@@ -72,7 +96,7 @@ def timed_text(lrc,lyrics,duration):
             continue
         sung.append(raw)
     rows=parse_lrc("\n".join(sung),duration)
-    expected=[line for group in parse_lyrics(lyrics) for line in group["lines"]]
+    expected=[line for group in lyric_stanzas(lyrics,library_only=library_only) for line in group]
     if [" ".join(r["text"].split()) for r in rows]!=[" ".join(x.split()) for x in expected]:
         raise ValueError("Native LRC does not cover the exact lyric lines in order")
     cues=[]
@@ -96,9 +120,10 @@ def timed_text(lrc,lyrics,duration):
     return lrc,"\n".join(cues)
 
 
-def playlist_bytes(names):
+def playlist_bytes(names,extensions=None):
     """Portable relative paths only, in exact exported track order."""
-    return ("#EXTM3U\n"+"\n".join(f"{name}/{name}.flac" for name in names)+"\n").encode("utf-8")
+    extensions=extensions or [".flac"]*len(names)
+    return ("#EXTM3U\n"+"\n".join(f"{name}/{name}{ext}" for name,ext in zip(names,extensions))+"\n").encode("utf-8")
 
 
 def verify_export(root,contract):
@@ -115,25 +140,36 @@ def verify_export(root,contract):
     return manifest
 
 
-def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=ri.DEFAULT_SNAPSHOT,confirm=False,timing_reader=None,preset="production",native_collection=None):
+def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=ri.DEFAULT_SNAPSHOT,confirm=False,timing_reader=None,preset="production",native_collection=None,native_songs=None,library_only=False):
     if preset not in PRESETS:
         raise ValueError("Unknown export preset")
     cc.validate_job(release,"placeholder","en",195)
     url=configured_endpoint(url)
     selection=None
+    if native_songs is not None:
+        if jobs or native_collection is not None or not native_songs:
+            raise ValueError("Select either native song IDs, a native collection or retained jobs")
+        library_only=True
+    if library_only and native_songs is None and native_collection is None:
+        raise ValueError("Library-only mode requires native song or collection IDs")
     if native_collection is not None:
         if jobs or kind!="single" or title is not None:
             raise ValueError("Native collection supplies its own type, title and order; do not override them")
         selection=nc.collection(url,native_collection)
         kind,title=selection["kind"],selection["name"]
-        jobs=nc.retained_jobs(repo,selection)
+        if library_only:
+            native_songs=selection["song_ids"]
+        else:
+            jobs=nc.retained_jobs(repo,selection)
+    if library_only:
+        jobs=native_songs
     if (kind not in ri.FOLDERS or not 1<=len(jobs)<=(100 if kind=="playlist" else 24)
             or len(set(jobs))!=len(jobs) or (kind=="single" and len(jobs)!=1)):
         raise ValueError("Select distinct ordered tracks: single 1, EP/album up to 24, playlist up to 100")
     if (title is not None and (not isinstance(title,str) or not title.strip() or len(title)>150)
             or not isinstance(artist,str) or len(artist)>150 or (kind!="single" and not title)):
         raise ValueError("Album/EP requires title; invalid release metadata")
-    tracks=[retained(repo,j) for j in jobs]
+    tracks=[nl.track(url,j) if library_only else retained(repo,j) for j in jobs]
     if selection is not None and [t["result"].get("song_id") for t in tracks]!=selection["song_ids"]:
         raise ValueError("Retained result does not match native collection order")
     title=title or tracks[0]["brief"]["title"]
@@ -141,6 +177,8 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
     original_contract={"schema":"release-export-v1","release":release,"type":kind,"title":title,"artist":artist,
                        "sources":[t["evidence"] for t in tracks],"audio_variant":"original",
                        "timing_policy":PRESETS[preset]}
+    if library_only:
+        original_contract["source_policy"]="native-library-draft-v1"
     if selection is not None:
         original_contract["native_collection"]=selection
     def destination():
@@ -153,7 +191,7 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
     print("Export folder:",root,flush=True)
     print("Export preset:",preset,flush=True)
     if not confirm:
-        print("Plan only; no package writes or inference." if selection is not None else "Plan only; no writes or Studio calls.",flush=True)
+        print("Plan only; no package writes or inference." if selection is not None or library_only else "Plan only; no writes or Studio calls.",flush=True)
         return 0
     with ld.lock(exports/".active",context={"root":root.relative_to(repo).as_posix(),"stage":"export","release":release}):
         if destination()!=(root,contract,index,record):
@@ -165,9 +203,10 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
         width=max(2,len(str(len(tracks))))
         names=[f"{i:0{width}d} - {safe_title(t['brief']['title'])}" if kind!="single" else safe_title(t["brief"]["title"])
                for i,t in enumerate(tracks,1)]
+        extensions=[t["audio"].suffix.lower() if library_only else ".flac" for t in tracks]
         def paths(base):
             return [base/"release.json",*([base/"playlist.m3u8"] if kind=="playlist" else []),*[(base/name if kind!="single" else base)/(name+suffix)
-                    for name in names for suffix in (".flac",".txt",".clean.txt",".lrc",".srt")]]
+                    for name,ext in zip(names,extensions) for suffix in (ext,".txt",".clean.txt",".lrc",".srt")]]
         ri.ensure_paths([index,*paths(root)])
         ri.reserve(index,record)
         base=root.parent
@@ -180,22 +219,28 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
                 name=names[i-1]
                 dest=stage/name if kind!="single" else stage
                 dest.mkdir(exist_ok=True)
-                target=dest/(name+".flac")
+                target=dest/(name+extensions[i-1])
                 shutil.copyfile(t["audio"],target)
                 if nd._sha(target)!=t["result"]["audio_sha256"] or nd._sha(t["audio"])!=t["result"]["audio_sha256"]:
                     raise ValueError("Audio changed during export")
                 lyrics=t["brief"]["lyrics"]
-                (dest/(name+".txt")).write_bytes(lyric_bytes(t))
-                (dest/(name+".clean.txt")).write_bytes(clean_lyric_bytes(t))
+                tagged=lyric_bytes(t)
+                clean=clean_lyric_bytes(t)
+                if tagged:
+                    (dest/(name+".txt")).write_bytes(tagged)
+                if clean:
+                    (dest/(name+".clean.txt")).write_bytes(clean)
                 timing={"status":"unavailable","acoustic_timing_verified":False}
-                if preset=="distribution":
+                if library_only and not clean:
+                    timing={"status":"not_applicable","acoustic_timing_verified":False}
+                elif preset=="distribution":
                     timing={"status":"not_requested","acoustic_timing_verified":False}
                 else:
                     try:
-                        lrc=(timing_reader or read_timing)(t,url)
+                        lrc=t["native_snapshot"]["lrc"] if library_only else (timing_reader or read_timing)(t,url)
                         if not lrc:
                             raise ValueError("No retained native karaoke LRC")
-                        lrc_out,srt_out=timed_text(lrc,lyrics,t["report"]["acoustic"]["duration_seconds"])
+                        lrc_out,srt_out=timed_text(lrc,lyrics,t["report"]["acoustic"]["duration_seconds"],library_only=library_only)
                     except (ValueError,MCPError,TypeError,KeyError,OSError) as exc:
                         timing["reason"]=str(exc)
                     else:
@@ -208,21 +253,26 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
                                 "srt_end_policy":"Studio UI word-tail/plain-line heuristic; capped at next onset, final 3 seconds and measured duration",
                                 "lrc_preserved":True}
                         if timing_reader is None:
-                            timing["source_identity_screen"]="matched_retained_audio_and_stable_library_snapshot_v1"
+                            timing["source_identity_screen"]="native_library_current_snapshot_v1" if library_only else "matched_retained_audio_and_stable_library_snapshot_v1"
                             timing["karaoke_provenance_verified"]=False
                 if nd._sha(t["audio"])!=t["result"]["audio_sha256"]:
                     raise ValueError("Source audio changed during timing export")
                 details.append({"track":i,"job":t["job"],"title":t["brief"]["title"],"audio_sha256":t["result"]["audio_sha256"],
                                 "source_status":t["result"]["status"],"timing":timing})
+                if library_only:
+                    details[-1].update(song_id=t["result"]["song_id"],audio_extension=extensions[i-1],clean_lyrics_available=bool(clean))
                 print("Track",i,":",timing["status"],flush=True)
+            if library_only:
+                for track in tracks:
+                    nl.verify_current(url,track)
             if selection is not None and nc.collection(url,native_collection)!=selection:
                 raise ValueError("Native collection changed during export; preserve previous package")
             if kind=="playlist":
-                (stage/"playlist.m3u8").write_bytes(playlist_bytes(names))
+                (stage/"playlist.m3u8").write_bytes(playlist_bytes(names,extensions))
             files={p.relative_to(stage).as_posix():nd._sha(p) for p in stage.rglob("*") if p.is_file()}
             manifest={"contract":contract,"tracks":details,"files":files,
                       "lyric_assets":CLEAN_LYRIC_POLICY,
-                      "status":"complete" if all(t["timing"]["status"] in ("exported_unverified_display_anchors","not_requested") for t in details) else "partial_missing_timing",
+                      "status":"complete" if all(t["timing"]["status"] in ("exported_unverified_display_anchors","not_requested","not_applicable") for t in details) else "partial_missing_timing",
                       "release_approved":False,"studio_mutations":0,"inference_calls":0}
             nd.atomic_write(stage/"release.json",manifest)
             if root.exists():
@@ -243,6 +293,9 @@ def main():
     p.add_argument("--export",required=True,nargs="?",const="",metavar="RELEASE")
     p.add_argument("--list-collections",action="store_true",help="Read native playlist and album IDs, names and track counts")
     p.add_argument("--native-collection",metavar="ID",help="Export exact native playlist or album in its current track order")
+    p.add_argument("--list-songs",action="store_true",help="List playable native song IDs and titles")
+    p.add_argument("--native-song",action="append",help="Select current native song ID, repeat for ordered tracks")
+    p.add_argument("--library-only",action="store_true",help="Export current native collection as draft, without Director receipts")
     p.add_argument("--song",action="append")
     p.add_argument("--type",choices=tuple(ri.FOLDERS),default="single")
     p.add_argument("--title")
@@ -252,14 +305,14 @@ def main():
     p.add_argument("--confirm-run",action="store_true")
     a=p.parse_args()
     try:
-        if a.list_collections:
-            if a.export or a.song or a.native_collection or a.confirm_run or a.title or a.artist or a.type!="single" or a.snapshot!=ri.DEFAULT_SNAPSHOT or a.preset!="production":
-                raise ValueError("Use --export --list-collections alone")
-            print(json.dumps(nc.collections(a.url),ensure_ascii=False,indent=2))
+        if a.list_collections or a.list_songs:
+            if (a.list_collections and a.list_songs or a.export or a.song or a.native_collection or a.native_song or a.library_only or a.confirm_run or a.title or a.artist or a.type!="single" or a.snapshot!=ri.DEFAULT_SNAPSHOT or a.preset!="production"):
+                raise ValueError("Use --export with exactly one list option alone")
+            print(json.dumps(nc.collections(a.url) if a.list_collections else nl.song_list(a.url),ensure_ascii=False,indent=2))
             return 0
         if not a.export:
             raise ValueError("Export release ID required")
-        return launch(a.repo.resolve(),a.export,a.song or ([] if a.native_collection else [a.export]),a.url,kind=a.type,title=a.title,artist=a.artist,snapshot=a.snapshot,confirm=a.confirm_run,preset=a.preset,native_collection=a.native_collection)
+        return launch(a.repo.resolve(),a.export,a.song or ([] if a.native_collection or a.native_song else [a.export]),a.url,kind=a.type,title=a.title,artist=a.artist,snapshot=a.snapshot,confirm=a.confirm_run,preset=a.preset,native_collection=a.native_collection,native_songs=a.native_song,library_only=a.library_only)
     except (OSError,ValueError,KeyError,TypeError,MCPError) as exc:
         print("ERROR:",exc,file=sys.stderr)
         return 2

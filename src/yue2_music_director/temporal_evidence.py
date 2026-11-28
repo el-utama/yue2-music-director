@@ -86,7 +86,7 @@ def native_song_read(url,song_id):
 
 def native_library_read(url,path):
     """Bounded read-only access to known loopback library routes."""
-    if not (path=="/v1/library/playlists" or path.startswith("/v1/library/playlists/") or path.startswith("/v1/library/songs/")):
+    if not (path in ("/v1/library/playlists","/v1/library/songs") or path.startswith("/v1/library/playlists/") or path.startswith("/v1/library/songs/")):
         raise ValueError("Unsupported native library read route")
     endpoint=urlsplit(configured_endpoint(url))
     if endpoint.path!="/mcp":

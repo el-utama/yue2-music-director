@@ -159,3 +159,8 @@ quality, without dropping other requirements or artistic rejection evidence.
 Operator added native Playlist export. Reuse native album/playlist membership
 and order, add relative M3U8. Initial adapter matches completed autonomous
 jobs; general Studio-only library export and live acceptance remain open.
+
+Native-library draft adapter: explicit current native song/collection source
+for music without Director receipts, byte-preserved formats and native
+written lyrics/karaoke. Strict retained-source workflow stays independent.
+CI and live acceptance pending; no new inference.

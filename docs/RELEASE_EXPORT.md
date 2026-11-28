@@ -101,3 +101,33 @@ not an aggregator release type; use an album/EP/single for release assembly.
 Production/distribution preset and optional metadata rules remain unchanged.
 No playlist mutation, generation, new ASR or publishing. Installed native
 route and real collection acceptance still need live verification.
+
+
+## Native library draft sources
+
+Use the explicit draft-only mode for music made directly in Studio or mixed
+collections with no Director receipts. This uses current library title,
+written lyrics, existing karaoke and exact local audio bytes; never invents
+Director or release approval. Source-pinned library_songs_list and
+library_song_get plus library_song_files supply native identity. ffprobe
+checks actual audio duration and supported codec (FLAC, PCM WAV, MP3); no
+encoding or inference. Plain lyrics and instrumentals are accepted; absent
+sung text gets no fake clean lyrics or timing. Native metadata and file
+identity are checked before and after export; changes abort staging.
+
+```powershell
+.\music.cmd --export --list-songs
+.\music.cmd --export DRAFT --native-song ID --confirm-run
+.\music.cmd --export DRAFT --native-collection ID --library-only --confirm-run
+```
+
+Repeat --native-song for a manually ordered album, EP or playlist (provide
+type and title). Existing strict --native-collection without --library-only
+continues to require completed Director receipts; no silent downgrade.
+Native draft source and retained source contracts remain distinct. Drafts
+cannot enter the Director-reviewed assembly workflow. Existing packages
+stay immutable; a changed source identity requires a new release ID.
+Native library-only timing remains advisory; absent timing for vocal text
+is an explicit partial result, instrumental text has no timing requirement.
+No automatic external release or native mutation. Synthetic tests pending
+exact-head CI; actual installed native library reads and formats unverified.

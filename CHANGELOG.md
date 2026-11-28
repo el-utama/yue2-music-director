@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — native library draft export
+
+- Add explicit native library song discovery and draft exports from native song or collection IDs, preserving current FLAC/PCM WAV/MP3 bytes, plain lyrics and instrumental handling, with mixed-format playlist paths. No Director or release approval inferred; strict retained-source workflow unchanged.
+
 ## Unreleased — native collection exports
 
 - Add read-only native playlist/album discovery and ordered retained-song selection, playlist folder and relative M3U8. No native collection writes or inference; Studio-only song source remains open.
