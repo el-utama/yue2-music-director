@@ -261,7 +261,14 @@ candidate's `draft/acoustic.json`.
 Compare the candidate with the original audio at the first phrase break.
 Listen for both phrases in full, hear how the intro and outro render, and
 check the measured duration. Shared score and seed define the comparison
-inputs. The resulting performance can vary.
+inputs. The resulting performance can vary. A text line break does not by
+itself add a rest to the Vocal score.
+
+Live checkpoint 2026-11-28: the operator rejected the same-score candidate
+because its sung words were less intelligible. Keep the original as the
+listening reference. Inspect saved lyric conditioning, the first section
+schedule and existing recognition before proposing another render. The
+cause of the acoustic regression remains unverified.
 
 ### Lyric language default and quality
 
