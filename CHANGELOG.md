@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — P0 duration fit preview
+
+- Read-only bounded tempo fit for duration-only rejected native plans; full local re-review, notation identity except tempo, three-second reserve, no synthesis authorization. Live structured Composer passed; independent production acceptance still open.
+
 ## Unreleased — P0 structured Composer direction
 
 - New default autonomous policy requests distinct musical direction fields, canonicalizes valid responses, preserves legacy job identities and opening timing gates. Missing fields still stop. Synthetic Indonesian brief regression; hosted and live validation pending.

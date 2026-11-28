@@ -158,3 +158,18 @@ explicit one-time retry, but is not silently migrated or repaired; this may
 still fail. Do not overwrite a rejected receipt or retry blindly.
 Offline tests cover structured responses and legacy preservation. Hosted
 schema compatibility and live acceptance remain unverified.
+
+## Duration-only plan fit preview
+
+Live P0 follow-up: structured Composer, Lyricist and Reviewer completed;
+sole score-review hard violation was a 207.887-second score against a
+195-second cap, with zero soft flags. No song was submitted. A read-only
+`music.cmd --review-plan JOB --fit-duration` checks whether a single global
+quarter-note tempo increase (at most 10%, with three seconds of reserve)
+would pass the full existing local review. No notes, lyrics, chords or
+section structure are changed. Reject explicit tempo constraints or BPM
+text, multiple tempo headers, other hard/soft flags or excessive adjustment.
+The preview does not save or render the candidate, and does not prove the
+native engine will follow the change. Artistic review and a separate
+immutable recovery implementation are still required. Do not edit existing
+receipts or use the parser-only continuation on this case.

@@ -174,3 +174,16 @@ compatibility tests added; exact-head CI and independent hosted/live
 acceptance pending. No new provider or Studio call. Do not count this as
 repair of the existing rejected job. Prioritize personal production
 readiness over convenience expansion, preserving every R02–R14 requirement.
+
+
+2026-11-28: PR #134 merged at 7b0a958, exact-head CI 46000945928
+passed all four jobs. Live operator report: Indonesian brief completed
+Composer, Lyricist and Reviewer, CUDA Q8 Studio ready, native plan submitted
+once; score blocked solely on 207.88732394366198 seconds vs 195-second cap,
+zero soft flags. No song, ASR, MOSS or Director calls. Preserve all private
+receipts. R01/R08/R09 still open. New offline duration-fit preview proposes
+a bounded tempo-only candidate with full re-review and unchanged notation
+except tempo; no inference, no writes to original or actual recovery.
+Exact-head CI pending. Next: inspect candidate, implement provenance-safe
+explicit recovery and evaluate native MIDI/audio. No automatic relaxation of
+cap, no truncation or unapproved new synthesis. All other requirements retained.
