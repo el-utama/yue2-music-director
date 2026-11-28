@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — Native replay memory troubleshooting
+
+- Document a successful Balanced Q6_K replay with model retention disabled on an 8 GB Windows GPU and how to recognize the VAE decode failure in the engine log.
+
 ## Unreleased — Advisor for low-VRAM hardware
 
 - Report a separate experimental Light CPU configuration and a pinned system RAM estimate on eligible low-VRAM and CPU hosts. Record the native selection and receipt audit ahead of any alternate Director production profile.

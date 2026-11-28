@@ -12,6 +12,8 @@ For an intentional user-approved switch: when Studio has no active work, Setting
 
 LoRA is a goal-specific optional intervention, not a required part of the agent. Native controls (e.g. voice/tempo, score planning, instrumental conversion, harmony, processing, export) must be considered first. If a capability still has an unmet acceptance criterion, evaluate an already available or public compatible adapter, then a fine-tune, and consider training only as a last resort on supported hardware. Existing adapters do not have to be used, retained in the active request, or individually benchmarked. Do not delete installed files merely to disable them.
 
+For a replay that completes NAR and then runs out of VRAM in the F32 decoder, see [VAE decode recovery](HARDWARE_ADVISOR.md#vae-decode-runs-out-of-gpu-memory).
+
 ## Restricted remote audit
 
 An operator-owned private Mac tunnel bridge has been verified for read-only identity/guides and synthetic velocity conversion. It is not a production remote service and does not replace the local Windows CLI. See [Restricted audit bridge](RESTRICTED_AUDIT_BRIDGE.md) for safe restart and scope; keep private endpoint configuration and secrets out of Git.

@@ -180,6 +180,28 @@ recommended keeping Balanced with no missing set files. This completed
 the targeted read-only check on the existing host. Provider, managed MOSS,
 actual model loading and synthesis fit have separate evidence requirements.
 
+## VAE decode runs out of GPU memory
+
+On the existing 8 GB Windows host, a stock Balanced Q6_K replay finished
+the acoustic (NAR) stage and loaded the F32 VAE weights. The decoder then
+reduced its tile from 512 to the minimum 64 frames and stopped with about
+0.31 GiB free. The operator reported that the replay succeeded with
+**Keep models loaded between songs** set to **No**.
+
+For this failure signature, check **Settings → Local engine → Engine log**
+and the effective **Now** line under the keep-loaded setting. When the
+engine keeps models loaded, wait until Studio is idle, choose **No** and
+use **Save and restart engine**. Verify that the engine reports **loaded
+for each song**. This allows the acoustic model to give up GPU memory
+before the VAE decodes. If this policy is already effective when decoding
+fails, inspect dedicated GPU memory use by process before another attempt.
+
+The [pinned decoder](https://github.com/timoncool/yue2.cpp/blob/892b9b0311512a1c45e42d6403881d17a991b87c/src/vae.h#L443-L485)
+reserves 768 MiB of GPU headroom when checking a tile. A graph smaller than
+the displayed free memory can therefore still be rejected. The successful
+replay is evidence for this host and configuration. Its final duration and
+musical ending require separate verification.
+
 ## Alternate production contract audit
 
 The Director reference uses Balanced Q6_K, VAE F32 and no selected
