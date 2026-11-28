@@ -131,3 +131,28 @@ Native library-only timing remains advisory; absent timing for vocal text
 is an explicit partial result, instrumental text has no timing requirement.
 No automatic external release or native mutation. Synthetic tests pending
 exact-head CI; actual installed native library reads and formats unverified.
+
+
+## Video preset and native timing corrections
+
+`music.cmd --export JOB --preset video --confirm-run` adds TITLE.line.lrc
+(simple sung-line onsets) to the existing production package. Native LRC is
+preserved byte-for-byte; derived line LRC keeps the native onset precision
+(two decimals for centiseconds, three for milliseconds). SRT retains the
+Studio display-end heuristic, not measured phonetic ends. Enhanced/plain
+line counts are recorded; no guessed word timing. Video mode accepts a BOM,
+standard non-timing LRC headers and zero offset without rewriting the native
+file. Unknown headers, nonzero offsets, missing/reordered words and invalid
+clocks remain partial timing, not silently adjusted. No video rendering.
+
+The pinned native MCP karaoke_set supports LRC or imported SRT/ASS/SSA and
+replaces saved timings. karaoke_make can generate timing with the native
+recognizer. Use the Studio's own authorized timing correction/import UI;
+exporter never invokes either mutating tool. To capture corrected timing
+without modifying the earlier package, repeat the identical export options
+with `--snapshot v2` (or another unused ID). If source audio, lyrics or
+collection membership changed, use a new release ID. Corrections must not
+alter the original audio identity for a retained Director source. Native
+library draft mode remains separate if tags or active version changed.
+No claim that native correction is phonetically exact. Installed route and
+player/editor acceptance still need a consolidated live check.

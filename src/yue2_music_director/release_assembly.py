@@ -99,6 +99,16 @@ def prepare(repo,release,snapshot,variants):
             expected_files.update((stem+".lrc",stem+".srt"))
         if any((stem+suffix in files)!=timed for suffix in (".lrc",".srt")):
             raise ValueError("Incomplete or unexpected timed text pair")
+        video=timing_policy==ex.PRESETS["video"] and timed
+        if video:
+            name_lrc=stem+".line.lrc"
+            if name_lrc not in files:
+                raise ValueError("Missing video line LRC")
+            expected=ex.video_line_bytes(files[stem+".lrc"].read_bytes().decode("utf-8"),
+                                         source["brief"]["lyrics"],source["report"]["acoustic"]["duration_seconds"])
+            if files[name_lrc].read_bytes()!=expected:
+                raise ValueError("Video line LRC differs from native timing")
+            expected_files.add(name_lrc)
         selected=av.select(repo,source,variants.get(job,"original"))
         key=selected["identity"]
         approval=hf.approval_receipt(repo,key,release)

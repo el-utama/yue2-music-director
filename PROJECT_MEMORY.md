@@ -38,7 +38,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Verified main `740680f09c01450179c581cfafc703ea3ced3400` after [PR #140](https://github.com/el-utama/yue2-music-director/pull/140); both exact-head Python 3.11 jobs passed CI 46090732870. English default guarded; negative Indonesian lyric feedback retained. Operator now prioritizes draft Exporter before creative improvements. Seven historical works, 853 candidate IDs and 147 slots open.
+- Verified main `fbf95765d56429a55f76274dcbf8250710e69319` after PR #143; both exact-head Python 3.11 CI jobs passed 46092440615. Draft Exporter remains operator priority; English default guarded and negative Indonesian lyric feedback retained. Seven historical works, 853 candidate IDs and 147 slots open.
 - P0 recovery follow-up (R01/R08/R09): a local interruption between saving the Studio acknowledgment and updating the journal can now recover the existing plan or song ID. Regression coverage injects that interruption and checks that planning and synthesis are each submitted once. Windows Studio recovery and independent live artistic acceptance remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
@@ -316,3 +316,21 @@ reviewed assembly. Tests and docs added; exact-head CI pending. Need
 installed route live acceptance, specialized presets, native timing
 correction and naming/usability audit before Exporter acceptance. No
 operator commands or new songs required at this development step.
+
+
+2026-11-28: PR #143 merged at fbf9576 after two exact-head green jobs
+(46092440615). R07 next increment adds video preset with preserved native
+LRC, derived line LRC and SRT, source line counts, known non-timing header
+handling and strict rejection of nonzero offset. Native source audit confirms
+karaoke_set supports LRC or SRT/ASS/SSA import, and karaoke_make generates
+native timing. Use Studio rather than duplicate an editor; export an explicit
+snapshot after correction. No library mutation or inference. Real synthetic
+FLAC/WAV/MP3 ffprobe duration tests, assembly video asset preservation and
+snapshot tests added. Exact-head CI pending. Next: practical naming/path
+and selection usability audit, then one consolidated live acceptance on
+existing library tracks. Native format conversion remains distinct from
+byte-preserving export. No operator commands required yet.
+
+PR #144 initial CI 46093609468 failed on both OSes: invalid escaped quotes
+in the new line-LRC f-string caused 10 module import errors. Corrected
+format construction, no test relaxation. Exact corrected-head CI required.

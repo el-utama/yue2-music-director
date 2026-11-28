@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — video timing preset
+
+- Add video export with native LRC preservation, simple line LRC, SRT and timing coverage diagnostics. Reuse native timing correction with explicit immutable snapshots. Add real native audio duration fixtures and downstream video asset verification.
+
 ## Unreleased — native library draft export
 
 - Add explicit native library song discovery and draft exports from native song or collection IDs, preserving current FLAC/PCM WAV/MP3 bytes, plain lyrics and instrumental handling, with mixed-format playlist paths. No Director or release approval inferred; strict retained-source workflow unchanged.

@@ -196,3 +196,7 @@ For ordinary Studio library tracks, use `music.cmd --export --list-songs`
 and `music.cmd --export DRAFT --native-song ID --confirm-run`. Native
 collection drafts use `--native-collection ID --library-only` with export.
 See [native draft sources](RELEASE_EXPORT.md#native-library-draft-sources).
+
+For video editors use `--preset video` to include original native LRC,
+plain line LRC and SRT. Correct timing in Studio and export a new immutable
+snapshot with the same preset. See [video preset](RELEASE_EXPORT.md#video-preset-and-native-timing-corrections).

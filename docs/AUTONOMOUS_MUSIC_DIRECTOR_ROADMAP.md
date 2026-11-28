@@ -164,3 +164,7 @@ Native-library draft adapter: explicit current native song/collection source
 for music without Director receipts, byte-preserved formats and native
 written lyrics/karaoke. Strict retained-source workflow stays independent.
 CI and live acceptance pending; no new inference.
+
+Video preset adds line-only LRC and SRT from existing native anchors; native
+karaoke correction/import remains in Studio, export captures new immutable
+snapshots. No separate timestamp editor or inference. CI/live pending.

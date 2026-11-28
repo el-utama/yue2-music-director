@@ -87,7 +87,13 @@ def duration(path):
             path.suffix.lower()==".mp3" and codec!="mp3" or
             path.suffix.lower()==".wav" and not codec.startswith("pcm_")):
         raise ValueError("Native audio format differs from supported file extension")
-    seconds=float(streams[0].get("duration") or data.get("format",{}).get("duration"))
+    raw=streams[0].get("duration")
+    if raw in (None,"","N/A"):
+        raw=data.get("format",{}).get("duration")
+    try:
+        seconds=float(raw)
+    except (ValueError,TypeError):
+        raise ValueError("Missing measurable native audio duration") from None
     if not math.isfinite(seconds) or not 0<seconds<=1800:
         raise ValueError("Invalid native audio duration")
     return seconds
