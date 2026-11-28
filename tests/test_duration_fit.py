@@ -4,7 +4,8 @@ from yue2_music_director.duration_fit import preview
 HEADER=('X:1\nT:\nM:2/4\nL:1/32\nQ:1/4=71\n'
         'V: Vocal clef=treble name="Vocal Melody" snm="Vocal"\n'
         'V: Ins clef=treble name="Ins Melody" snm="Inst."\nK:C\n')
-ABC=HEADER+'% verse\nV: Vocal\n'+'C16|'*123+'\nV: Ins\n'+'Z|'*123+'\n'
+# Native ABC requires paired groups of 1–4 bars per voice.
+ABC=HEADER+'% verse\n'+''.join('V: Vocal\n'+'C16|'*n+'\nV: Ins\n'+'Z|'*n+'\n' for n in [4]*30+[3])
 BRIEF={"lyrics":"[Verse]\nOne two","duration_seconds":195,"style":"English, folk, acoustic guitar"}
 INTENT={"schema":"artist-intent-v1","route":"reviewed_native","concept":"Farewell",
         "emotional_arc":"loss to resolve","performance":"Gentle delivery",

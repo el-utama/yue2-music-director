@@ -187,3 +187,5 @@ except tempo; no inference, no writes to original or actual recovery.
 Exact-head CI pending. Next: inspect candidate, implement provenance-safe
 explicit recovery and evaluate native MIDI/audio. No automatic relaxation of
 cap, no truncation or unapproved new synthesis. All other requirements retained.
+
+Initial PR #135 CI rejected the synthetic 123-bar fixture because it placed all bars in one native voice group; native ABC requires groups of 1–4 equal bars. Corrected fixture grouping without changing the intended duration, cap or eligibility gate. Exact corrected head CI remains required.
