@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — Compact song form and ending review
+
+- Default new autonomous songs to a 180-second cap. Add flexible section guidance, lyric craft review and final-chorus line comparisons in the outro. Job manifests freeze the new guidance for resume.
+
 ## Unreleased — Native replay memory troubleshooting
 
 - Document a successful Balanced Q6_K replay with model retention disabled on an 8 GB Windows GPU and how to recognize the VAE decode failure in the engine log.

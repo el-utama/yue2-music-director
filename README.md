@@ -10,6 +10,7 @@ Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, developing a ge
 
 - [Fresh Windows PC / first-run guide](docs/FRESH_INSTALL.md): install from zero, connect Studio, choose export-only or autonomous production, configure provider and recover safely.
 
+- [Song form and duration](docs/OPERATOR_GUIDE.md#song-form-and-duration) for the 3-minute default, flexible structure and ending review.
 - [Operator guide](docs/OPERATOR_GUIDE.md): new/existing checkout, readiness, short commands, safe recovery, private bridge and release workflow.
 - [Offline knowledge workflow](docs/OFFLINE_KNOWLEDGE_WORKFLOW.md): local databases, styles and current inventory.
 - [Development and validation](DEVELOPMENT.md): agent onboarding, tests and evidence requirements.

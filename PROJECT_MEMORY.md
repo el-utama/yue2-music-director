@@ -38,6 +38,8 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
+- R01/R02/R03: new autonomous jobs use a 180-second default cap and a flexible eight-section form. Editorial inputs include concrete lyric craft guidance and outro line matches against the final chorus. Offline regression cases exercise new and retained inputs and notated wordless sections. Independent listening and lyric-quality acceptance remain open.
+
 - Verified baseline main `0c20e7c2a60ffe24877d3726831764e5c3b63f7b` after PR #153. Head `a334db7` passed [Windows/Linux 3.11 CI](https://github.com/el-utama/yue2-music-director/actions/runs/46110159738). Fresh-host live validation remains open.
 - R04 (2026-11-28): The operator confirmed one native Balanced Q6_K replay on the existing 8 GB Windows host succeeded with model retention set to No after a VAE decode OOM. See [VAE decode recovery](docs/HARDWARE_ADVISOR.md#vae-decode-runs-out-of-gpu-memory). Playback of the ending and alternate-host fit remain unverified.
 - R04/R08/R12: `--advisor` implements read-only discovery and goal-specific advice, with simulation and private opt-in reporting. Existing Windows host read-only check passed on 2026-11-28. The Advisor now reports Light CPU as an experimental candidate for low-VRAM hardware. Fresh target-host evidence and production compatibility for the candidate remain open. Preserve the production gate and receipts. Retain the parallel creative quality and corpus requirements.
