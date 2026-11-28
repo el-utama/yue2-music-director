@@ -67,3 +67,37 @@ approved release delivery remain independent. Native audio format conversion
 and metadata capabilities should be reused after auditing installed route
 and output identity, not duplicated. Timestamp editing and more specialized
 video presets remain open. No new inference or publication.
+
+
+## Native playlists and albums
+
+The pinned Studio source exposes playlist_list/playlist_get through the
+loopback library routes. The native UI stores albums as playlists with an
+album:v1 marker or collection:v2 JSON envelope in description. The reader
+uses the same bounded GET transport as existing song metadata, extracts only
+ID/name/kind/ordered song IDs, and ignores cover payload and preferred take.
+See [native library UI](https://github.com/timoncool/YuE2-Studio/blob/bfd35a0e594cbd1268557833001d5675ebbdd2d3/app/services/nativeLibrary.ts#L135)
+and [MCP playlist_get](https://github.com/timoncool/YuE2-Studio/blob/bfd35a0e594cbd1268557833001d5675ebbdd2d3/crates/music-server/src/mcp.rs#L3653).
+
+```powershell
+.\music.cmd --export --list-collections
+.\music.cmd --export RELEASE --native-collection ID --confirm-run
+.\music.cmd --export RELEASE --type playlist --song JOB1 --song JOB2 --title "Playlist" --confirm-run
+```
+
+The native collection supplies its exact title, kind and order; no manual
+song/type/title overrides. First increment requires each native song ID to
+match exactly one completed autonomous Director result and verifies its full
+retained lineage. Studio-only songs or ambiguous identities are rejected,
+not silently skipped or synthesized. A separate native-library-only export
+source is still required. Collection identity is frozen in release contract;
+changes require a different release ID. Recheck membership before publishing
+the local staged package. Existing immutable export is verified without
+re-reading timing, though the selected collection is read again. Playlist
+supports up to 100 distinct tracks, native albums/manual EPs/albums up to 24.
+Playlist output is under results/exports/playlists with relative UTF-8
+playlist.m3u8 paths in exact order; no external player test yet. Playlist is
+not an aggregator release type; use an album/EP/single for release assembly.
+Production/distribution preset and optional metadata rules remain unchanged.
+No playlist mutation, generation, new ASR or publishing. Installed native
+route and real collection acceptance still need live verification.

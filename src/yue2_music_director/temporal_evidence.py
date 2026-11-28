@@ -81,10 +81,16 @@ class IncompleteLibraryResponse(ValueError):
 
 def native_song_read(url,song_id):
     """Same Studio router as MCP, without the tool's text truncation."""
+    return native_library_read(url,"/v1/library/songs/"+quote(song_id,safe=""))
+
+
+def native_library_read(url,path):
+    """Bounded read-only access to known loopback library routes."""
+    if not (path=="/v1/library/playlists" or path.startswith("/v1/library/playlists/") or path.startswith("/v1/library/songs/")):
+        raise ValueError("Unsupported native library read route")
     endpoint=urlsplit(configured_endpoint(url))
     if endpoint.path!="/mcp":
         raise ValueError("Native read fallback requires the standard /mcp endpoint")
-    path="/v1/library/songs/"+quote(song_id,safe="")
     target=urlunsplit((endpoint.scheme,endpoint.netloc,path,"",""))
     request=Request(target,headers={"Accept":"application/json"},method="GET")
     opener=build_opener(ProxyHandler({}),_NoRedirect())

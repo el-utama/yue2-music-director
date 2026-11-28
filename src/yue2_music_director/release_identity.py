@@ -6,7 +6,7 @@ import unicodedata
 
 from . import native_draft as nd, creative_core as cc
 
-FOLDERS={"single":"songs","album":"albums","ep":"eps"}
+FOLDERS={"single":"songs","album":"albums","ep":"eps","playlist":"playlists"}
 DEFAULT_SNAPSHOT="v1"
 RESERVED=re.compile(r"^(CON|PRN|AUX|NUL|CONIN\$|CONOUT\$|COM[1-9¹²³]|LPT[1-9¹²³])$",re.I)
 

@@ -287,3 +287,17 @@ Native timing correction, specialized video presets, real naming/usability
 and multi-track live acceptance remain open. No inference or new song.
 Exact-head two-job CI pending. All deferred R01/R02/R03 and other
 requirements retained; English lyric default unchanged.
+
+
+2026-11-28: PR #141 merged at a957443 after two green CI jobs (46091585013).
+Operator added playlist export and requested reuse of native playlist/album
+membership. Pinned source confirms playlist_list/playlist_get and albums
+encoded in native description envelope. R07 adds read-only collection
+listing/selection and ordered playlist M3U8, without collection writes or
+new inference. Initial scope: completed retained autonomous jobs only;
+Studio-only library songs require a separate source adapter, not fabricated
+Director receipts. Native collection/track limits, unchanged membership,
+relative M3U8 path and immutable package covered by synthetic tests. Actual
+installed collection reads and player acceptance remain unverified.
+Playlist is not final release type. Exact-head CI pending. Exporter remains
+priority before deferred creative work; preserve all other requirements.
