@@ -233,10 +233,10 @@ Live checkpoint 2026-11-28: a Windows instrumental intro continuation also
 completed explicit audio identity recovery with exit 0 and `review_required`.
 One rendered take measures 182.198667 seconds against its 190-second cap.
 The original plan and creative stages were reused. The operator accepted the
-vocal-free intro and the outro, and heard the start of Verse 1 cut off. Review
-the first intended lyric phrase and saved section schedule against the
-existing ASR and listening evidence. Section-level score and MIDI passes
-leave first-phrase delivery open. The cause of the cutoff is unverified.
+vocal-free intro and outro. Verse 1 began, but the opening line ran together
+at the clause boundary and omitted its final words. Review complete
+first-line delivery separately from opening time. Score and MIDI checks
+establish section-level evidence. The cause of the missing words is open.
 
 ### Lyric language default and quality
 
