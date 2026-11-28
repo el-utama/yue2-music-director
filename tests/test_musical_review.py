@@ -53,6 +53,18 @@ class MusicalReviewTests(unittest.TestCase):
         self.assertEqual(mismatch["missing"],["bridge#1"])
         self.assertFalse(mismatch["extra"])
 
+    def test_wordless_break_and_outro_in_short_form(self):
+        lyrics = "[Verse 1]\nA footstep\n[Chorus]\nOne more\n[Instrumental Break]\n[Outro]"
+        score = (HEADER + group("verse", "D16|", "Z|") + group("chorus", "F16|", "Z|")
+                 + group("interlude", "Z|", "D16|") + group("outro", "Z|", "F16|"))
+        report = review_score(score, lyrics, max_seconds=180)
+        self.assertEqual(report["status"], "local_review_ready")
+        self.assertEqual(report["metrics"]["sung_sections"], ["verse#1", "chorus#1"])
+        vocal_tail = score.rsplit("V: Vocal\nZ|", 1)
+        report = review_score("V: Vocal\nD16|".join(vocal_tail), lyrics, max_seconds=180)
+        flag = next(f for f in report["soft_flags"] if f["code"] == "notated_sung_sequence_differs")
+        self.assertEqual(flag["extra"], ["outro#1"])
+
     def test_mandatory_and_cap(self):
         for kwargs in ({"constraints":{"key":{"mode":"must","value":"Am"}}},
                        {"max_seconds":19.99},

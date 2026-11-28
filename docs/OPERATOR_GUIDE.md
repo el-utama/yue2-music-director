@@ -47,6 +47,12 @@ for direct Python module commands and tests. For development only,
 `py -3 -m unittest discover -s tests -v` runs the local test suite (audio
 fixtures require FFmpeg). No live generation is required.
 
+## Song form and duration
+
+New autonomous songs aim to finish within 180 seconds. Up to ten extra seconds allow a natural ending, giving a hard cap of 190 seconds. The Director checks the measured audio before listening review and flags any overrun, including a fraction of a second. To choose a different cap, supply `--duration SECONDS` on a new job. Resuming a job uses its frozen duration and text-role inputs.
+
+The preferred sequence is **Intro → Verse 1 → Pre-Chorus → Chorus → Verse 2 → Bridge → Instrumental Break → Outro**. The Composer may shorten or omit sections to suit the time available. A direct vocal opening or exact supplied lyrics take precedence. The Lyricist develops the narrator's situation across verses and revises filler, stock images and forced rhymes. The Reviewer sees which outro lines repeat a line in the final chorus and assesses whether that return serves the request. Empty instrumental sections give the score reviewer a basis for flagging unexpected vocal notes. Listening is still needed to judge the actual ending.
+
 ## 2. Choose the workflow
 
 | Goal | Starting command (examples are placeholders) | Effect |

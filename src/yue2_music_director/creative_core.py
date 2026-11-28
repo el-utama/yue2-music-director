@@ -64,8 +64,19 @@ def stage(root, role, module, provider, data, *, retry=False, semantic_check=Non
     return result
 
 
-def prepare(root, provider, request, language, duration, *, retry_role=None, duration_guidance=False, direction_guidance=False, timing_guidance=False, structured_direction=False, typed_spec=None, knowledge=None, style_recipe=None):
+def prepare(root, provider, request, language, duration, *, retry_role=None, duration_guidance=False, direction_guidance=False, timing_guidance=False, structured_direction=False, typed_spec=None, knowledge=None, style_recipe=None, song_form=None):
     data={"request":request,"language":language,"duration_seconds":duration}
+    if song_form is not None:
+        if song_form != lyricist.COMPACT_FORM:
+            raise ValueError("Unknown frozen song form")
+        data["song_form_guidance"] = lyricist.FORM_GUIDANCE
+
+    def review_words(music, lyrics):
+        diagnostics = lyricist.diagnostics(lyrics, language, compact_form=song_form is not None)
+        return stage(root, "reviewer", creative_reviewer, provider,
+                     {**data, "composition": music, "lyrics": lyrics, "diagnostics": diagnostics},
+                     retry=retry_role == "reviewer")
+
     def role_data(role, data):
         result=data
         if knowledge is not None:
@@ -78,9 +89,16 @@ def prepare(root, provider, request, language, duration, *, retry_role=None, dur
     if duration_guidance:
         # Advisory target only; the actual native score clock is screened before rendering.
         reserve=min(15,max(3,round(duration*0.08)))
+        if song_form == lyricist.COMPACT_FORM and duration == lyricist.DEFAULT_DURATION:
+            reserve = lyricist.ENDING_ALLOWANCE
         data["duration_plan"]={"hard_cap_seconds":duration,"target_score_seconds":duration-reserve,
               "ending_reserve_seconds":reserve,
               "guidance":"Plan a compact complete song, with a resolved final sung phrase and short instrumental tail inside the target. Allow room for introductions, instrumental breaks, breathing and sustained notes. Avoid redundant verses, long repeated choruses or extended outros. Lyricist should adapt line and section count to pacing; reviewer should stop implausibly long plans. Do not treat duration as an exact target or omit necessary closure."}
+        if song_form == lyricist.COMPACT_FORM and duration == lyricist.DEFAULT_DURATION:
+            data["duration_plan"]["ending_guidance"] = (
+                "Aim to finish within 180 seconds. Up to ten extra seconds are available for a "
+                "natural cadence, breath or ringing last chord. Do not plan extra lyrics to fill them."
+            )
     if typed_spec is not None:
         from . import typed_creative as tc, composer_typed
         if direction_guidance or timing_guidance or structured_direction:
@@ -110,9 +128,7 @@ def prepare(root, provider, request, language, duration, *, retry_role=None, dur
         else:
             words=stage(root,"lyricist",lyricist,provider,role_data("lyricist",{**data,"composition":music}),
                         retry=retry_role=="lyricist",semantic_check=lambda value:tc.check_lyrics(music,value["lyrics"],spec))
-        review=stage(root,"reviewer",creative_reviewer,provider,{**data,"composition":music,
-                     "lyrics":words["lyrics"],"diagnostics":lyricist.diagnostics(words["lyrics"],language)},
-                     retry=retry_role=="reviewer")
+        review=review_words(music, words["lyrics"])
         return {"composition":music,"lyrics":words["lyrics"],"review":review}
     if direction_guidance:
         from . import creative_direction as cd
@@ -125,8 +141,7 @@ def prepare(root, provider, request, language, duration, *, retry_role=None, dur
                 semantic_check=cd.parse_direction if direction_guidance else None)
     words=stage(root,"lyricist",lyricist,provider,role_data("lyricist",{**data,"composition":music}),retry=retry_role=="lyricist",
                 semantic_check=(lambda value: cd.validate_opening(music,value["lyrics"])) if direction_guidance else None)
-    review=stage(root,"reviewer",creative_reviewer,provider,{**data,"composition":music,
-                 "lyrics":words["lyrics"],"diagnostics":lyricist.diagnostics(words["lyrics"],language)},retry=retry_role=="reviewer")
+    review=review_words(music, words["lyrics"])
     return {"composition":music,"lyrics":words["lyrics"],"review":review}
 
 

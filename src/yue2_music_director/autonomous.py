@@ -11,6 +11,7 @@ from . import creative_core as cc, director_decision as dd, listening_director a
 from . import native_draft as nd, artist_run
 from .creative_provider import TextProvider, ROLES
 from .mcp import MCPError, configured_endpoint
+from .lyricist import COMPACT_FORM, DEFAULT_DURATION
 from .prosody import parse_lyrics
 from . import creative_direction as cd, typed_creative as tc
 from . import style_selection as ss, autonomous_knowledge as ak
@@ -65,6 +66,7 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
     cc.validate_job(job,request,language,duration)
     url=configured_endpoint(url)
     print("Job:",job,flush=True)
+    print("Duration cap:", duration, "seconds", flush=True)
     if artist_profile is not None:
         print("Artist profile:",artist_profile.get("display_name",artist_profile["artist"]),"revision",artist_profile["revision"],flush=True)
         print("Typed profile requirements will be sent only during confirmed production.",flush=True)
@@ -114,9 +116,14 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
             if (previous["production_policy"]==tc.POLICY)!=(typed_spec is not None):
                 raise ValueError("Retained typed job must use its exact specification")
             identity["production_policy"]=previous["production_policy"]
+            if "song_form" in previous:
+                if previous["song_form"] != COMPACT_FORM:
+                    raise ValueError("Unknown frozen song form")
+                identity["song_form"] = COMPACT_FORM
             if previous!=identity:
                 raise ValueError("Retained job identity differs")
         else:
+            identity["song_form"] = COMPACT_FORM
             root.mkdir(parents=True,exist_ok=False)
             nd.atomic_write(root/"job.json",identity)
         if (root/"plan-stop.json").exists():
@@ -127,7 +134,7 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
                           timing_guidance=identity["production_policy"] in TIMING_POLICIES,
                           structured_direction=identity["production_policy"]==POLICY,
                           typed_spec=identity.get("creative_spec"),style_recipe=identity.get("style_recipe"),
-                          knowledge=ak.retained_snapshot(identity))
+                          song_form=identity.get("song_form"), knowledge=ak.retained_snapshot(identity))
         freeze(root/"creative-result.json",result)
         if result["review"]["decision"]!="retain":
             print("Editorial stop. No native generation:",root/"creative-result.json",flush=True)
@@ -136,10 +143,11 @@ def launch(repo, job, request, language, duration, url, *, confirm=False,
         freeze(root/"brief.json",brief)
         freeze(root/"intent.json",intent)
         brief=nd.load_brief(root/"brief.json")
-        return produce(repo,root,request,brief,intent,url,provider,retry_role=retry_role)
+        return produce(repo,root,request,brief,intent,url,provider,retry_role=retry_role,
+                       strict_duration=identity.get("song_form") == COMPACT_FORM)
 
 
-def produce(repo,root,request,brief,intent,url,provider,*,retry_role=None,fitted_abc=None,planner_configuration=None,approve_audio_sha=None):
+def produce(repo,root,request,brief,intent,url,provider,*,retry_role=None,fitted_abc=None,planner_configuration=None,approve_audio_sha=None,strict_duration=False):
     production=root/"production"
     # Same shared guards used by existing launchers. Native runner owns its
     # existing attempt and receipt semantics, not a second submission path.
@@ -162,6 +170,12 @@ def produce(repo,root,request,brief,intent,url,provider,*,retry_role=None,fitted
         row=ld.verify_take(production/"draft",brief,report)
         if report.get("artistic_intent")!=intent:
             raise ValueError("Native artistic intent mismatch")
+        if strict_duration:
+            actual = report["acoustic"].get("duration_seconds")
+            cap = brief["duration_seconds"]
+            if type(actual) not in (int, float) or not 0 < actual <= cap:
+                print("Audio duration requires review:", actual, "seconds; cap:", cap, flush=True)
+                return 2
         print("Retained audio:",row["audio"],flush=True)
         print("Neutral audio evaluation",flush=True)
         packet=ld.listen(production,brief,intent,row,url)
@@ -282,7 +296,7 @@ def continue_plan(repo,job,url,*,confirm=False,provider_factory=None,retry_role=
                           timing_guidance=identity["production_policy"] in TIMING_POLICIES,
                           structured_direction=identity["production_policy"]==POLICY,
                           typed_spec=identity.get("creative_spec"),style_recipe=identity.get("style_recipe"),
-                          knowledge=ak.retained_snapshot(identity))
+                          song_form=identity.get("song_form"), knowledge=ak.retained_snapshot(identity))
         if nd.read(parent/"creative-result.json")!=result or result["review"]["decision"]!="retain":
             raise ValueError("Retained creative result differs")
         brief,intent=make_inputs(result,identity)
@@ -355,9 +369,11 @@ def continue_plan(repo,job,url,*,confirm=False,provider_factory=None,retry_role=
         if fit is not None:
             print("Approved tempo:",approve_tempo,"BPM; original plan preserved.",flush=True)
             return produce(repo,root,identity["request"],brief,intent,url,provider,
+                           strict_duration=identity.get("song_form") == COMPACT_FORM,
                            fitted_abc=fitted_abc,planner_configuration=nd.read(source/"journal_plan.json")["configuration"],
                            **({"approve_audio_sha":approve_audio_sha} if approve_audio_sha is not None else {}))
-        return produce(repo,root,identity["request"],brief,intent,url,provider)
+        return produce(repo,root,identity["request"],brief,intent,url,provider,
+                       strict_duration=identity.get("song_form") == COMPACT_FORM)
 
 
 def main():
@@ -377,7 +393,7 @@ def main():
     p.add_argument("--artist-profile",help="Explicit local artist display name or ID for a new typed job; --creative-spec supplies overrides")
     p.add_argument("--profile-revision",type=int,help="Pin an artist profile revision (default: latest)")
     p.add_argument("--language",choices=sorted(cc.SUPPORTED))
-    p.add_argument("--duration",type=int)
+    p.add_argument("--duration", type=int, help="Hard duration cap in seconds (default: aim for 180, allow up to 190)")
     p.add_argument("--confirm-run",action="store_true",
                    help="Authorize up to four external text stages, one native score plan, one local song, ASR and two CPU excerpts")
     p.add_argument("--retry-text",choices=ROLES,help="One explicitly authorized retry of the named unresolved text stage")
@@ -428,7 +444,9 @@ def main():
             else:
                 request=a.request
             language=a.language or "en"
-            duration=a.duration if a.duration is not None else 195
+            duration=a.duration if a.duration is not None else DEFAULT_DURATION
+            if a.duration is None:
+                print("Song target: 3:00, with up to 10 seconds for a natural ending.", flush=True)
         return launch(repo,job,request,language,duration,a.url,confirm=a.confirm_run,retry_role=a.retry_text,typed_spec=typed_spec,artist_profile=artist_profile,style_id=a.style_id,
                       knowledge_query=a.knowledge_query,confirm_knowledge_context=a.confirm_knowledge_context,knowledge_auto=a.knowledge_auto)
     except (OSError,ValueError,KeyError,TypeError,MCPError,subprocess.SubprocessError,EOFError,sqlite3.Error) as e:

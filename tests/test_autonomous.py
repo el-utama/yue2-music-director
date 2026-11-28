@@ -26,6 +26,64 @@ class Provider:
 
 
 class AutonomousTests(unittest.TestCase):
+    def test_new_song_form_and_duration_reach_all_text_roles(self):
+        import sys
+        from yue2_music_director import lyricist
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            root = repo / "results/autonomous/compact"
+            provider = Provider(stop=True)
+            argv = ["music", "--repo", tmp, "--url", "http://127.0.0.1:8791/mcp",
+                    "--job", "compact", "--request", "A quiet goodbye", "--confirm-run"]
+            with patch.object(sys, "argv", argv), patch.object(au.TextProvider, "for_repo", return_value=provider), \
+                 patch.object(au, "produce", side_effect=AssertionError("synthesis after editorial stop")):
+                self.assertEqual(au.main(), 2)
+                self.assertEqual(au.main(), 2)
+            self.assertEqual(provider.calls, ["composer", "lyricist", "reviewer"])
+            for role in provider.calls:
+                data = nd.read(root / (role + ".attempt.json"))["input"]
+                self.assertEqual(data["song_form_guidance"]["preferred_sections"],
+                                 ["[Intro]", "[Verse 1]", "[Pre-Chorus]", "[Chorus]", "[Verse 2]",
+                                  "[Bridge]", "[Instrumental Break]", "[Outro]"])
+                self.assertIn(role, data["song_form_guidance"])
+                self.assertEqual(data["duration_plan"]["hard_cap_seconds"], 190)
+                self.assertEqual(data["duration_plan"]["target_score_seconds"], 180)
+            self.assertEqual(nd.read(root / "job.json")["song_form"], lyricist.COMPACT_FORM)
+
+    def test_audio_boundary_preserves_natural_ending_allowance(self):
+        for seconds, expected in ((180.01, 0), (190.0, 0), (190.01, 2)):
+            with self.subTest(seconds=seconds):
+                self._check_audio_boundary(seconds, expected)
+
+    def _check_audio_boundary(self, seconds, expected):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            provider = Provider()
+            def measured_take(brief, intent, root, url):
+                return {"status": "provisional_draft", "artistic_intent": intent,
+                        "acoustic": {"duration_seconds": seconds}, "duration_cap_screen_pass": True}
+            with patch.object(au.artist_run, "run", side_effect=measured_take), \
+                 patch.object(au.ld, "verify_take", return_value={"audio": "fixture"}), \
+                 patch.object(au.ld, "listen", return_value={}) as listen, \
+                 patch.object(au.dd, "context", return_value={}), \
+                 patch.object(au, "finalize_result", return_value=0):
+                result = au.launch(repo, "boundary", "A quiet goodbye", "en", 190,
+                                   "http://127.0.0.1:8791/mcp", confirm=True,
+                                   provider_factory=lambda: provider)
+            self.assertEqual(result, expected)
+            self.assertEqual(listen.called, expected == 0)
+            self.assertEqual("director" in provider.calls, expected == 0)
+
+    def test_outro_compares_lines_with_only_the_last_chorus(self):
+        from yue2_music_director.lyricist import diagnostics
+        lyrics = ("[Chorus]\nOld hook\n[Final Chorus]\nA new line\nWe're leaving\n"
+                  "[Outro]\nOld hook\nWe’re leaving!\nOne more word")
+        self.assertEqual(diagnostics(lyrics, "en", compact_form=True)[-1]["final_chorus_line_matches"], [2])
+        self.assertNotIn("final_chorus_line_matches", diagnostics(lyrics, "en")[-1])
+        instrumental = "[Chorus]\nA new line\n[Instrumental Break]\n[Outro]"
+        self.assertEqual(diagnostics(instrumental, "en", compact_form=True)[-1]["final_chorus_line_matches"], [])
+
+
     def test_offline_and_editorial_stop(self):
         with tempfile.TemporaryDirectory() as tmp, patch.object(au.artist_run,"run") as native:
             f=Provider(stop=True)
