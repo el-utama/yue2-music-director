@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — retained audio identity recovery
+
+- Add explicitly approved, one-time current audio identity binding for completed duration continuations before ASR. Preserve the original journal and acoustic evidence; verify native song and score lineage. No original-waveform equivalence claim or new generation. Force technical review.
+
 ## Unreleased — two-job routine CI
 
 - Run the unchanged offline suite and platform smoke checks on Windows and Linux Python 3.11 per PR; remove duplicate push-triggered runs, cancel superseded PR runs, retain manually triggered four-job compatibility checks for releases/runtime changes.

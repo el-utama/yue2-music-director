@@ -74,6 +74,11 @@ def inputs(repo, demo=False):
 
 def verify_take(draft, brief, report, *, historical=False):
     journal = nd.read(draft / "journal_song.json")
+    if (draft/"audio-identity-recovery.json").exists() or "audio_identity_recovery" in report:
+        effective,record=nd.effective_audio_identity(draft,journal)
+        if record is None or report.get("audio_identity_recovery")!=record:
+            raise ValueError("Retained audio recovery record differs")
+        journal={**journal,"audio_sha256":effective}
     if historical:
         # Bind the frozen request to its original hash and stable brief fields,
         # not to the evolving current request builder.

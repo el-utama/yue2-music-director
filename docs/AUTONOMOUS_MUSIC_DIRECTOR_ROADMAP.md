@@ -116,3 +116,10 @@ P0 follow-up: live duration preview stopped on literal BPM advice. Add explicit
 exact-BPM approval with immutable revised child and existing native synthesis
 gates. No automatic fit, regeneration or relaxation of explicit tempo
 constraints. Verify exact-head CI and real retained-job acceptance.
+
+
+Live P0 duration recovery passed native MIDI and one native song synthesis,
+with saved score/lyrics verification; QA stopped on differing audio hashes.
+Current file matches the acoustic receipt; cause is unknown. Explicit
+one-time current-hash recovery before ASR retains original journal and
+requires technical review. Live QA/recovery and artistic acceptance open.
