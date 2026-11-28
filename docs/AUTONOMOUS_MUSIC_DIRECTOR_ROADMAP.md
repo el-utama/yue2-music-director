@@ -134,3 +134,11 @@ listening and optional separate fixed-gain candidate of this existing take;
 do not rerun generation or criticism. This establishes supervised recovery,
 not unattended personal-production acceptance. Remaining product and corpus
 requirements unchanged.
+
+
+Operator acceptance checkpoint: fixed-gain candidate verified live, but
+Indonesian lyric quality explicitly rejected. Keep English as the default
+independent of idea language; Indonesian is opt-in. Prioritize narrative
+coherence, idiomatic and singable English, concrete imagery, and meaningful
+editorial gates before native generation. Multilingual research remains an
+open requirement; technical success does not erase negative human feedback.

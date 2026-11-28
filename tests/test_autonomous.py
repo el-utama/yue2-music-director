@@ -397,3 +397,14 @@ class ApprovedDurationContinuationTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     au.continue_plan(repo,"fit",url,confirm=True,provider_factory=lambda:f,approve_tempo=77)
                 self.assertEqual(produce.call_count,2)
+
+
+class DefaultLyricLanguageTests(unittest.TestCase):
+    def test_indonesian_idea_defaults_to_english_unless_explicit(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            argv=["autonomous","--repo",tmp,"--url","http://127.0.0.1:8791/mcp",
+                  "--job","language-fixture","--request","Sebuah hubungan harus berakhir"]
+            for flags,expected in (([],"en"),(["--language","id"],"id")):
+                with self.subTest(language=expected),patch("sys.argv",argv+flags),patch.object(au,"launch",return_value=0) as launch:
+                    self.assertEqual(au.main(),0)
+                    self.assertEqual(launch.call_args.args[3],expected)
