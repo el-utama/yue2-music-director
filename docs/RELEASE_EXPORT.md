@@ -89,8 +89,7 @@ The native collection supplies its exact title, kind and order; no manual
 song/type/title overrides. First increment requires each native song ID to
 match exactly one completed autonomous Director result and verifies its full
 retained lineage. Studio-only songs or ambiguous identities are rejected,
-not silently skipped or synthesized. A separate native-library-only export
-source is still required. Collection identity is frozen in release contract;
+not silently skipped or synthesized. For Studio-only songs, use the explicit native-library draft source below. Collection identity is frozen in release contract;
 changes require a different release ID. Recheck membership before publishing
 the local staged package. Existing immutable export is verified without
 re-reading timing, though the selected collection is read again. Playlist
@@ -129,8 +128,7 @@ cannot enter the Director-reviewed assembly workflow. Existing packages
 stay immutable; a changed source identity requires a new release ID.
 Native library-only timing remains advisory; absent timing for vocal text
 is an explicit partial result, instrumental text has no timing requirement.
-No automatic external release or native mutation. Synthetic tests pending
-exact-head CI; actual installed native library reads and formats unverified.
+No automatic external release or native mutation. Synthetic tests passed exact-head CI in PR #143; actual installed native library reads and formats remain unverified.
 
 
 ## Video preset and native timing corrections
@@ -156,3 +154,38 @@ alter the original audio identity for a retained Director source. Native
 library draft mode remains separate if tags or active version changed.
 No claim that native correction is phonetically exact. Installed route and
 player/editor acceptance still need a consolidated live check.
+
+
+## Select by song title or collection name
+
+```powershell
+.\music.cmd --export my-song --song-name "My Song" --confirm-run
+.\music.cmd --export my-album --collection-name "Evening Sessions" --confirm-run
+```
+
+Names are exact, Unicode NFC-normalized and case-insensitive. Duplicate
+names are rejected with matching IDs; never choose the first take silently.
+Use --native-song or --native-collection for an exact ID. Name selection
+uses current native draft sources, not Director approval. Retained job and
+strict native collection commands remain unchanged. The output ID is the
+operator's stable short label, separate from the song or collection name.
+Omit confirmation to preview folder, preset and ordered track titles.
+
+## Consolidated local acceptance
+
+```powershell
+.\music.cmd --export --check-library --confirm-run
+```
+
+This explicit command selects up to two existing playable songs and one
+smallest native album/playlist of at most eight tracks each, exercising
+single/video, EP/distribution, album/production and playlist/video. If a
+suitable native collection is absent, a manual ordered sample is used and
+native acceptance remains incomplete. No collection creation, karaoke
+inference, generation or settings changes. Writes only a unique local
+results/export-check/run-... directory with sample exports and report.json.
+Original packages and source recordings are untouched. Without confirmation
+it lists a plan only. Missing timing or absent native collection yields
+incomplete (exit 2); missing timing is not an inference request. Inspect
+report and sample package files; human subtitle/player and acoustic timing
+review remain separate. Do not share private audio or lyrics in transcripts.

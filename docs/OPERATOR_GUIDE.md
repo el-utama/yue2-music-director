@@ -190,7 +190,7 @@ Native collection discovery: `music.cmd --export --list-collections`.
 Use `music.cmd --export RELEASE --native-collection ID --confirm-run` to
 package an existing playlist or album of completed autonomous results.
 See [native playlists and albums](RELEASE_EXPORT.md#native-playlists-and-albums).
-Studio-only library songs remain unsupported in this increment.
+Studio-only songs use the explicit draft source below.
 
 For ordinary Studio library tracks, use `music.cmd --export --list-songs`
 and `music.cmd --export DRAFT --native-song ID --confirm-run`. Native
@@ -200,3 +200,7 @@ See [native draft sources](RELEASE_EXPORT.md#native-library-draft-sources).
 For video editors use `--preset video` to include original native LRC,
 plain line LRC and SRT. Correct timing in Studio and export a new immutable
 snapshot with the same preset. See [video preset](RELEASE_EXPORT.md#video-preset-and-native-timing-corrections).
+
+Use `--song-name "My Song"` or `--collection-name "My Album"` for an
+unambiguous native draft selection. See [name selection](RELEASE_EXPORT.md#select-by-song-title-or-collection-name).
+For consolidated native export acceptance use `music.cmd --export --check-library --confirm-run` after updating to the verified main. See [acceptance](RELEASE_EXPORT.md#consolidated-local-acceptance).

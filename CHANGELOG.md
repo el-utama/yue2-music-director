@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — exporter usability and acceptance
+
+- Add exact native title/collection selection with ambiguity rejection, ordered preview and consolidated local native library sample acceptance across export types and presets. Preserve prior outputs and avoid inference or native mutation.
+
 ## Unreleased — video timing preset
 
 - Add video export with native LRC preservation, simple line LRC, SRT and timing coverage diagnostics. Reuse native timing correction with explicit immutable snapshots. Add real native audio duration fixtures and downstream video asset verification.
