@@ -345,3 +345,55 @@ class StructuredComposerTests(unittest.TestCase):
             self.assertEqual(before,{p:p.read_bytes() for p in root.iterdir()})
             _,intent=au.make_inputs(result,identity)
             self.assertIn("opening_timing",intent["constraints"])
+
+
+class ApprovedDurationContinuationTests(unittest.TestCase):
+    def test_approved_fit_retains_original_and_reuses_child(self):
+        from test_duration_fit import ABC
+        from yue2_music_director import retained_plan_review as rp, duration_fit as df
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            f=Provider()
+            original=f.complete
+            def complete(role,prompt,data):
+                value=original(role,prompt,data)
+                if role=="composer":
+                    value["style"]="English, folk, 70 BPM"
+                elif role=="lyricist":
+                    value["lyrics"]="[Verse]\nOne two"
+                return value
+            f.complete=complete
+            url="http://127.0.0.1:8791/mcp"
+            args=(repo,"fit","A quiet goodbye","en",195,url)
+            parent=repo/"results/autonomous/fit"
+            def native(brief,intent,root,url):
+                root.mkdir(parents=True)
+                nd.atomic_write(root/"manifest.json",{"schema":"artist-run-v1","brief":brief,"intent":intent,"route":"reviewed_native","explicit_score_sha256":None})
+                review=au.artist_run.evaluate_plan(ABC,brief,intent)
+                nd.atomic_write(root/"plan-decision.json",review)
+                nd.atomic_write(root/"journal_plan.json",{"state":"COMPLETED","score_sha256":nd.digest(ABC.encode()),"configuration":{"fixture":True}})
+                for name in ("plan-result.json","plan-receipt.json"):
+                    nd.atomic_write(root/name,{"fixture":True})
+                (root/"native-plan.abc").write_bytes(ABC.encode())
+                return {"status":"artistic_plan_stopped","decision":review}
+            with patch.object(au.artist_run,"run",side_effect=native):
+                self.assertEqual(au.launch(*args,confirm=True,provider_factory=lambda:f),2)
+            before={p:p.read_bytes() for p in parent.rglob("*") if p.is_file()}
+            old=nd.read(parent/"production/plan-decision.json")
+            with patch.object(rp,"inspect",return_value={"previous_status":"blocked","current_decision":old}),patch.object(au,"produce",return_value=0) as produce:
+                with self.assertRaisesRegex(ValueError,"approve exact BPM"):
+                    au.continue_plan(repo,"fit",url,confirm=True,provider_factory=lambda:f,approve_tempo=76)
+                for _ in range(2):
+                    self.assertEqual(au.continue_plan(repo,"fit",url,confirm=True,provider_factory=lambda:f,approve_tempo=77),0)
+                self.assertEqual(produce.call_count,2)
+                child=parent/"continuation-1"
+                contract=nd.read(child/"continuation.json")
+                self.assertEqual(contract["schema"],df.FIT_SCHEMA)
+                self.assertEqual(df.verify_frozen(parent,child,contract)[0],ABC.replace("Q:1/4=71","Q:1/4=77"))
+                self.assertEqual(produce.call_args.kwargs["planner_configuration"],{"fixture":True})
+                self.assertEqual(f.calls,["composer","lyricist","reviewer"])
+                self.assertEqual(before,{p:p.read_bytes() for p in before})
+                (child/"production/duration-fit.abc").write_bytes(ABC.encode())
+                with self.assertRaises(ValueError):
+                    au.continue_plan(repo,"fit",url,confirm=True,provider_factory=lambda:f,approve_tempo=77)
+                self.assertEqual(produce.call_count,2)

@@ -31,7 +31,8 @@ def inspect(repo,job,*,fit_duration=False):
     review=ar.evaluate_plan(abc,brief,intent)
     if fit_duration:
         from .duration_fit import preview
-        return preview(abc,brief,intent)
+        identity=nd.read(root/"job.json")
+        return preview(abc,brief,intent,request=identity["request"])
     return {"schema":"retained-plan-recheck-v1","job":job,"previous_status":old["score_review"]["status"],
             "current_decision":review,"song_jobs":0,"provider_calls":0,"inference_calls":0,
             "original_receipts_changed":False,"render_authorized":False}

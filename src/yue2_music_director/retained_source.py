@@ -77,7 +77,8 @@ def _continuation(parent,root,job):
     if root==parent:
         return
     contract=nd.read(root/"continuation.json")
-    if (contract.get("schema")!="retained-plan-continuation-v1"
+    from .duration_fit import FIT_SCHEMA
+    if (contract.get("schema") not in ("retained-plan-continuation-v1",FIT_SCHEMA)
             or contract.get("parent_job")!=job
             or contract.get("original_job_sha256")!=nd._sha(parent/"job.json")
             or contract.get("original_stop_sha256")!=nd._sha(parent/"plan-stop.json")
@@ -89,6 +90,7 @@ def _continuation(parent,root,job):
             raise ValueError("Retained continuation source differs: "+name)
     if contract.get("review")!=nd.read(root/"production/plan-decision.json"):
         raise ValueError("Retained continuation review differs")
+    return contract
 
 
 def _packet(production,brief,intent,row):
@@ -131,14 +133,20 @@ def _inputs(parent,root,job):
             or identity.get("production_policy") not in POLICIES):
         raise ValueError("Retained autonomous identity differs")
     cc.validate_job(job,identity["request"],identity["language"],identity["duration_seconds"])
-    _continuation(parent,root,job)
+    contract=_continuation(parent,root,job)
     brief=nd.load_brief(root/"brief.json")
     intent=nd.read(root/"intent.json")
-    if (brief!=nd.load_brief(parent/"brief.json") or intent!=nd.read(parent/"intent.json")
-            or identity["duration_seconds"]!=brief["duration_seconds"] or identity["language"]!=brief["language"]):
+    original_brief=nd.load_brief(parent/"brief.json")
+    original_intent=nd.read(parent/"intent.json")
+    from .duration_fit import FIT_SCHEMA, verify_frozen
+    if contract and contract["schema"]==FIT_SCHEMA:
+        verify_frozen(parent,root,contract)
+    elif brief!=original_brief or intent!=original_intent:
         raise ValueError("Retained brief/intent identity differs")
-    creative=_creative(parent,identity,brief)
-    if any(intent.get(k)!=creative["composition"][k] for k in ("concept","emotional_arc","performance")):
+    if identity["duration_seconds"]!=brief["duration_seconds"] or identity["language"]!=brief["language"]:
+        raise ValueError("Retained brief/intent identity differs")
+    creative=_creative(parent,identity,original_brief)
+    if any(original_intent.get(k)!=creative["composition"][k] for k in ("concept","emotional_arc","performance")):
         raise ValueError("Retained creative intent differs")
     if identity["production_policy"]=="reviewed-score-v4-typed":
         spec=identity["creative_spec"]

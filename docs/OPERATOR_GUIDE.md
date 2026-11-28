@@ -58,6 +58,7 @@ fixtures require FFmpeg). No live generation is required.
 | Inspect existing job | `music.cmd --job JOB` | Plan-only; no new generation |
 | Diagnose retained ending | `music.cmd --inspect-ending JOB` | Read-only retained evidence/loopback lookup |
 | Duration-only fit preview | `music.cmd --review-plan JOB --fit-duration` | Advisory local tempo candidate; no inference or repair |
+| Approved duration continuation | `music.cmd --continue-plan JOB --approve-tempo BPM --confirm-run` | Exact previewed BPM, one song; original unchanged |
 | Review a stopped plan | `music.cmd --review-plan JOB` | Retained local evidence; no new score |
 | Inspect lock | `music.cmd --inspect-lock autonomous` | Read-only journal summary |
 | Preview finishing | `music.cmd --finish JOB` | Existing source, no new song |
@@ -112,7 +113,7 @@ song or unresolved external attempt automatically.
 | Studio unavailable, not idle, or schema mismatch | Check installed Studio and local loopback MCP; use readiness, then the configuration guide. No remote-public endpoint. |
 | 401/403, quota or provider JSON error | Use the provider troubleshooting guide; check exact configured provider/model and account. No automatic fallback, no key in logs/chat. |
 | Unresolved text attempt | Consult the original receipt and [Autonomous CLI](AUTONOMOUS_CLI.md); one explicit `--retry-text ROLE` only for a matching unresolved stage. |
-| Plan stopped before synthesis | Use `--review-plan JOB`; `--continue-plan JOB --confirm-run` is only for the documented formerly parser-blocked retained plan, not arbitrary rejected plans. |
+| Plan stopped before synthesis | Use `--review-plan JOB`; `--continue-plan JOB --confirm-run` is only for the documented formerly parser-blocked retained plan; duration-only stops require the separately documented exact tempo approval. |
 | Native, ASR or listening interrupted | Preserve the original job and follow same-job recovery. A saved Studio acknowledgment with a valid plan or song ID lets the agent continue the known job. If the acknowledgment is missing or ambiguous, inspect Studio before proceeding. |
 | Stale lock or concurrent writer | Inspect the exact lock; use [lock recovery](LOCAL_LOCK_RECOVERY.md) only for verified stale owner and matching marker hash. |
 | OOM or missing model | Stop and inspect native status/configuration, preserve journals. No unapproved changes, downloads or automatic retry. |

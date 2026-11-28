@@ -27,10 +27,27 @@ class DurationFitTests(unittest.TestCase):
 
     def test_refuses_large_change_and_explicit_tempo(self):
         self.assertEqual(preview(ABC,{**BRIEF,"duration_seconds":170},INTENT)["status"],"not_eligible")
-        self.assertEqual(preview(ABC,{**BRIEF,"style":"folk, 71 BPM"},INTENT)["status"],"not_eligible")
+        self.assertEqual(preview(ABC,{**BRIEF,"style":"folk, 71 BPM"},INTENT)["status"],"artistic_review_required")
         constrained={**INTENT,"constraints":{"tempo_bpm":{"mode":"must","value":71}}}
         self.assertEqual(preview(ABC,BRIEF,constrained)["status"],"not_eligible")
 
     def test_refuses_other_flags_and_already_valid(self):
         self.assertEqual(preview(ABC,{**BRIEF,"duration_seconds":208},INTENT)["status"],"not_eligible")
         self.assertEqual(preview(ABC,{**BRIEF,"lyrics":"[Verse]\nOne\n[Chorus]\nTwo"},INTENT)["status"],"not_eligible")
+
+
+    def test_bpm_advice_revised_only_after_exact_approval(self):
+        from yue2_music_director.duration_fit import propose
+        brief={**BRIEF,"style":"folk, 70 BPM"}
+        intent={**INTENT,"performance":"Gentle delivery, BPM: 70"}
+        result,candidate=propose(ABC,brief,intent,request="Aku pergi demi dia")
+        self.assertEqual(result["status"],"artistic_review_required",result)
+        self.assertEqual(result["tempo_text_fields"],{"style":[70],"performance":[70]})
+        self.assertEqual(candidate["brief"]["style"],"folk, 77 BPM")
+        self.assertEqual(candidate["intent"]["performance"],"Gentle delivery, BPM: 77")
+        self.assertEqual(candidate["abc"],ABC.replace("Q:1/4=71","Q:1/4=77"))
+        self.assertEqual(brief["style"],"folk, 70 BPM")
+        self.assertFalse(result["render_authorized"])
+        self.assertIsNone(propose(ABC,brief,intent,request="keep 70 BPM")[1])
+        self.assertIsNone(propose(ABC,{**brief,"style":"folk, 70–75 BPM"},intent)[1])
+        self.assertIsNone(propose(ABC,{**brief,"style":"folk, 72 BPM"},intent)[1])

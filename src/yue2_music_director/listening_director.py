@@ -95,6 +95,17 @@ def verify_take(draft, brief, report, *, historical=False):
         score_sha=nd.digest(abc.encode("utf-8"))
         if plan.get("state")!="COMPLETED" or plan.get("score_sha256")!=score_sha:
             raise ValueError("Retained reviewed score identity mismatch: planner receipt")
+        fit_path=draft.parent/"duration-fit.abc"
+        if fit_path.exists():
+            from .duration_fit import verify_frozen, FIT_SCHEMA
+            child=draft.parent.parent
+            contract=nd.read(child/"continuation.json")
+            if contract.get("schema")!=FIT_SCHEMA:
+                raise ValueError("Duration fit lacks approved continuation")
+            abc,b,_=verify_frozen(child.parent,child,contract)
+            if b!=brief:
+                raise ValueError("Duration fit brief differs")
+            score_sha=nd.digest(abc.encode("utf-8"))
         if decision.get("decision")!="retain" or decision.get("score_review",{}).get("score_sha256")!=score_sha:
             raise ValueError("Retained reviewed score identity mismatch: plan decision")
         pre=nd.read(draft/"score-review.json")

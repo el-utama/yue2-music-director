@@ -110,3 +110,9 @@ requirements remain open as recorded in project memory.
 native plan stop (207.887 seconds vs 195 cap). Add advisory bounded local
 fit preview; actual recovery, native MIDI and live acceptance remain open.
 Preserve original evidence and approved budget; do not weaken the cap.
+
+
+P0 follow-up: live duration preview stopped on literal BPM advice. Add explicit
+exact-BPM approval with immutable revised child and existing native synthesis
+gates. No automatic fit, regeneration or relaxation of explicit tempo
+constraints. Verify exact-head CI and real retained-job acceptance.

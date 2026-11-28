@@ -189,3 +189,17 @@ explicit recovery and evaluate native MIDI/audio. No automatic relaxation of
 cap, no truncation or unapproved new synthesis. All other requirements retained.
 
 Initial PR #135 CI rejected the synthetic 123-bar fixture because it placed all bars in one native voice group; native ABC requires groups of 1–4 equal bars. Corrected fixture grouping without changing the intended duration, cap or eligibility gate. Exact corrected head CI remains required.
+
+
+2026-11-28: PR #135 merged at 8abb994 after exact-head CI 46086398042
+passed four jobs. Operator's live fit preview returned not_eligible on BPM
+text, with zero provider/Studio calls and no render authorization. Git
+fast-forward succeeded despite commit-graph metadata maintenance error;
+separate Git health item remains deferred. R01/R08/R09: follow-up proposes
+simple consistent BPM advice adjustment and explicit exact-BPM approval
+for a fixed separate duration continuation, preserving original creative
+and native receipts, no additional planning or creative calls. Typed or
+tempo-explicit briefs and ambiguous BPM text remain outside scope.
+Synthetic tests and docs added; exact-head CI and native MIDI/audio live
+acceptance pending. No actual operator score, private creative data or
+provider credentials transferred. All requirements retained.
