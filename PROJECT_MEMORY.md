@@ -1,6 +1,6 @@
 # Project memory — requirements, evidence and outstanding work
 
-Last verified: 2026-11-27. This is the durable, editable project memory for
+Last verified: 2026-11-28. This is the durable, editable project memory for
 all development agents. Read before proposing or implementing work; update
 with each change. It records requirements and evidence, not automatic
 authorization for new inference, publication or external data transfer.
@@ -38,7 +38,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Main `bd35bc9db5680639852da8e41b72a02816e754ad` after [PR #132](https://github.com/el-utama/yue2-music-director/pull/132). Its final head `41fcb4f4816c73cdccc66e77ffc50446ac656053` passed [four CI jobs](https://github.com/el-utama/yue2-music-director/actions/runs/45971043570). Opt-in brief-derived retrieval uses normalized Unicode and freezes the local match or abstention. Seven historical works, 853 candidate IDs, 147 slots open. Retrieval relevance and artistic quality remain unverified.
+- Verified main `5d0fd91f8cec2e2dd6885be440b31903af9375c0` after [PR #138](https://github.com/el-utama/yue2-music-director/pull/138); both exact-head Python 3.11 jobs passed [CI 46088068656](https://github.com/el-utama/yue2-music-director/actions/runs/46088068656). Operator-reported live duration and audio-identity recovery completed one Indonesian natural-language song through Director, with review_required and exit 0. No new planning, synthesis or repeated recognition in recovery; see latest checkpoint below. Seven historical works, 853 candidate IDs and 147 slots open.
 - P0 recovery follow-up (R01/R08/R09): a local interruption between saving the Studio acknowledgment and updating the journal can now recover the existing plan or song ID. Regression coverage injects that interruption and checks that planning and synthesis are each submitted once. Windows Studio recovery and independent live artistic acceptance remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
@@ -51,7 +51,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 | ID | Requirement / deliverable | Current verified state | Remaining acceptance work |
 |---|---|---|---|
-| R01 | Original song from natural-language brief; distinct Composer, Lyricist, reviewer, Director; native YuE2 first | Local alpha implemented, prior live workflow and retained reference succeeded; latest CI green | Independent generalization, artistic quality and usability; do not repeat successful reference |
+| R01 | Original song from natural-language brief; distinct Composer, Lyricist, reviewer, Director; native YuE2 first | Local alpha; previous reference and a second Indonesian natural-language song completed through Director with explicit duration/audio-identity recovery; review_required | Independent one-command generalization without manual intervention, human musical acceptance and usability; do not repeat successful reference or new song |
 | R02 | Deep Lyricist knowledge base: many songs, multilingual structure, prosody, rhyme, narrative, imagery, genre and emotional arc | **OPEN; seven historical works indexed by merged PR #120, including two English works; optional text-only role context CI passed.** Explicit historical autonomous context merged/CI (#130); deeper craft metrics merged/CI (#131); corpus expansion and artistic evaluation open | Rights/source audit, actual ingestion, deduplication, searchable structured analysis, counts by language/genre and rights, integration with versioned creative policy, held-out editorial evaluation |
 | R03 | Composer knowledge: melody, harmony, arrangement, instruments, vocal phrasing, music theory and production | Native contracts/research docs and symbolic score review available; pilot MusicXML descriptors and automatic harmony search CI passed; melodic descriptors CI passed; opt-in historical text-only context CI passed; explicit original style selection in autonomous Composer merged/CI (#126), no live validation | Source-backed knowledge entries and retrieval, versioned policy integration and meaningful artistic evaluation |
 | R04 | Native controls, actual installed capability and limitations | Source-pinned audit and live velocity fixture; velocity not retained in ABC, schedule coverage advisory only | Complete remaining melody/harmony/arrangement/replay/cover/adapter audit; installed binary identity not verified; no fake controls |
@@ -232,3 +232,24 @@ evidence without altering original journal or resubmitting. Technical
 review required. Exact-head CI and live recovery pending. All other
 requirements retained; no private song IDs, full hashes, lyrics or audio
 committed.
+
+
+2026-11-28: PR #138 merged at 5d0fd91, exact-head CI 46088068656
+passed two jobs. Operator reported successful live approved hash recovery:
+same completed native job and verified saved score/lyrics; original journal
+preserved, one outstanding ASR, two CPU excerpts, one Director completion,
+review_required, exit 0. No new composition or synthesis. Actual duration
+191.359s, notated early vocal onset approximately 1.17s, six scheduled
+sung blocks, ASR WER disagreement approximately 12.6%, true peak near 0 dBTP.
+Original waveform equivalence and cause of file hash change remain unknown.
+MOSS gave advisory intimate male-vocal descriptions but also unsupported
+stereo claims and ambiguous excerpt endings; Director correctly kept
+truncation and pronunciation unverified. R01/R08/R09 advance to second
+end-to-end live workflow with supervised recovery; unattended generation,
+future prevention of identity drift and process supervision remain open.
+Next: human listening of the existing audio, read-only completed-source
+checks and optional separately approved fixed-gain finishing (R06), not
+another synthesis or critic replay. No automatic artistic/release approval.
+Add offline historical-source regression for the recovery sidecar, including
+mutation rejection. All other requirements remain open as applicable. No
+private song IDs, hashes, lyrics, audio or operator filesystem paths committed.

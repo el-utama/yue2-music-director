@@ -123,3 +123,14 @@ with saved score/lyrics verification; QA stopped on differing audio hashes.
 Current file matches the acoustic receipt; cause is unknown. Explicit
 one-time current-hash recovery before ASR retains original journal and
 requires technical review. Live QA/recovery and artistic acceptance open.
+
+
+2026-11-28: operator-reported approved audio-identity recovery succeeded
+on main 5d0fd91 (PR #138, two green CI jobs). Existing Indonesian song
+completed all remaining QA stages and Director with review_required/exit 0;
+no repeated creative or synthesis work. Original waveform equivalence,
+headroom, pronunciation and ending remain subject to review. Prioritize
+listening and optional separate fixed-gain candidate of this existing take;
+do not rerun generation or criticism. This establishes supervised recovery,
+not unattended personal-production acceptance. Remaining product and corpus
+requirements unchanged.
