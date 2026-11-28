@@ -215,3 +215,20 @@ workflow. Retain manual full Python 3.11/3.13 compatibility checks for
 release and runtime/dependency changes. No tests removed, no change to
 production inference or other requirements. New workflow validation
 and repository branch-rule compatibility must be checked before merge.
+
+
+2026-11-28: PR #137 merged at 25aaa50 after exact-head CI 46087150990
+passed both Linux and Windows 3.11 jobs; manual release matrix not run.
+Live PR #136 duration continuation: 71 BPM source score 207.887s, 77 BPM
+candidate 191.688s, style BPM text synchronized; original creative receipts
+reused, native MIDI passed, one song completed/imported, saved score and
+lyric conditioning verified, native completion not_flagged. Acoustic
+measurement 191.359s, 48 kHz stereo 24-bit FLAC, -13.85 LUFS, approximately
+0 dBTP. Original journal file hash differs from measurement and independently
+re-read current file hash, which match one another. Cause and waveform
+equivalence unknown; no ASR attempt reported. R01/R08/R09: one-time explicit
+hash approval can bind the current verified native song to retained acoustic
+evidence without altering original journal or resubmitting. Technical
+review required. Exact-head CI and live recovery pending. All other
+requirements retained; no private song IDs, full hashes, lyrics or audio
+committed.

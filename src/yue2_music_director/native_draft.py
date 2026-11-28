@@ -193,8 +193,62 @@ def inspect_artist_demo(repo,url):
     return 0
 
 
-def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=None,expected_configuration=None):
+def audio_recovery_record(root, journal, approved_sha, *, create=False):
+    """Bind an explicitly approved replacement byte identity to unchanged evidence.
+
+    This never proves equality to the original waveform. The original journal
+    remains untouched, and a second change cannot be approved on this path.
+    """
+    import re
+    path=root/"audio-identity-recovery.json"
+    acoustic_path=root/"acoustic.json"
+    acoustic=read(acoustic_path)
+    original=journal.get("audio_sha256")
+    if (journal.get("state")!="COMPLETED"
+            or not all(isinstance(x,str) and re.fullmatch(r"[0-9a-f]{64}",x)
+                       for x in (original,approved_sha))
+            or approved_sha==original or acoustic.get("sha256")!=approved_sha
+            or extract_song_job_id(read(root/"submission-response.json"))!=journal.get("job_id")
+            or read(root/"score-review.json").get("score_sha256")!=digest(read(root/"request.json")["abc"].encode("utf-8"))
+            or read(root/"saved-score-review.json").get("score_sha256")!=_sha(root/"saved-score.abc")):
+        raise ValueError("Audio recovery requires matching completed job, score and retained acoustic evidence")
+    record={"schema":"native-audio-identity-recovery-v1",
+            "job_id":journal["job_id"],"song_id":journal["song_id"],
+            "journal_sha256":_sha(root/"journal_song.json"),
+            "request_sha256":journal["request_sha256"],
+            "original_audio_sha256":original,"approved_audio_sha256":approved_sha,
+            "acoustic_sha256":_sha(acoustic_path),
+            "saved_score_sha256":_sha(root/"saved-score.abc"),
+            "original_waveform_equivalence_verified":False,
+            "reason":"Operator approved the current byte identity of the same verified native library song",
+            "new_song_jobs":0}
+    if path.exists():
+        if read(path)!=record:
+            raise ValueError("Retained audio recovery identity differs; no further replacement")
+    elif create:
+        if (root/"recognition").exists() or (root/"report.json").exists():
+            raise ValueError("Audio identity recovery must precede recognition and completed report")
+        atomic_write(path,record)
+    else:
+        raise ValueError("Missing retained audio recovery record")
+    return record
+
+
+def effective_audio_identity(root,journal):
+    path=root/"audio-identity-recovery.json"
+    if not path.exists():
+        return journal.get("audio_sha256"),None
+    record=audio_recovery_record(root,journal,read(path)["approved_audio_sha256"])
+    return record["approved_audio_sha256"],record
+
+
+def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=None,expected_configuration=None,approve_audio_sha=None):
     request=request_for(brief)
+    if approve_audio_sha is not None:
+        if (abc is None or artist is None or not (root/"journal_song.json").is_file()
+                or not (root/"acoustic.json").is_file()
+                or read(root/"journal_song.json").get("state")!="COMPLETED"):
+            raise ValueError("Audio recovery requires an existing completed reviewed-native draft")
     if artist is not None:
         from .artist_run import evaluate_plan, route_for
         route=route_for(artist)
@@ -236,6 +290,12 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
         if report["brief_sha256"]!=brief_sha or report["request_sha256"]!=request_sha:
             raise ValueError("Saved report identity differs")
         audio=Path(report["audio"])
+        if (root/"audio-identity-recovery.json").exists() or approve_audio_sha is not None:
+            current,record=effective_audio_identity(root,read(root/"journal_song.json"))
+            if (record is None or report.get("audio_identity_recovery")!=record
+                    or current!=report["audio_sha256"]
+                    or approve_audio_sha is not None and approve_audio_sha!=current):
+                raise ValueError("Saved audio recovery identity differs")
         if _sha(audio)!=report["audio_sha256"]:
             raise ValueError("Saved draft audio changed")
         return report
@@ -332,9 +392,22 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
         raise ValueError("Expected existing absolute native FLAC")
     audio=audio.resolve(strict=True)
     audio_sha=_sha(audio)
+    audio_recovery=None
+    recovery_pending=False
     if journal["state"]=="COMPLETED":
-        if journal.get("song_id")!=song_id or journal.get("audio_sha256")!=audio_sha:
-            raise ValueError("Completed audio identity changed")
+        if journal.get("song_id")!=song_id:
+            raise ValueError("Completed song identity changed")
+        expected_audio,audio_recovery=effective_audio_identity(root,journal)
+        if approve_audio_sha is not None and approve_audio_sha!=audio_sha:
+            raise ValueError("Current audio does not match the explicitly approved hash")
+        if expected_audio!=audio_sha:
+            if (approve_audio_sha is None or audio_recovery is not None or abc is None
+                    or artist is None or route!="reviewed_native"
+                    or (root/"recognition").exists()):
+                raise ValueError("Completed audio identity changed; preserve journal, never resubmit")
+            recovery_pending=True
+        elif approve_audio_sha is not None and audio_recovery is None:
+            raise ValueError("Audio identity already matches journal; no recovery necessary")
     else:
         journal.update(state="COMPLETED",song_id=song_id,audio_sha256=audio_sha)
         atomic_write(journal_path,journal)
@@ -373,6 +446,15 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
                 post_review={"status":"unassessable","reason":"Saved native ABC unavailable",
                              "render_authorized":False}
             atomic_write(root/"saved-score-review.json",post_review)
+    if recovery_pending:
+        # The native metadata, score, lyrics and completion checks above must
+        # pass before accepting a different file identity. Preserve the old
+        # journal and the original acoustic evidence; no inference on mismatch.
+        wait_for_idle(client,"retained audio identity recovery")
+        if _sha(audio)!=audio_sha:
+            raise ValueError("Audio changed during recovery validation")
+        audio_recovery=audio_recovery_record(root,journal,approve_audio_sha,create=True)
+        print("Accepted explicitly approved current audio hash; original journal preserved.",flush=True)
     print("Measuring existing native draft...",flush=True)
     acoustic_path=root/"acoustic.json"
     if acoustic_path.exists():
@@ -380,8 +462,8 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
     else:
         acoustic=_measure(audio,ffmpeg,ffprobe)
         atomic_write(acoustic_path,acoustic)
-    if acoustic["sha256"]!=audio_sha:
-        raise ValueError("Acoustic evidence identity differs")
+    if acoustic["sha256"]!=audio_sha or _sha(audio)!=audio_sha:
+        raise ValueError("Acoustic evidence identity differs; preserve evidence, never resubmit")
     recognition=root/"recognition"
     if not recognition.exists():
         wait_for_idle(client,"local lyric recognition")
@@ -415,6 +497,10 @@ def execute(brief,root,url,*,max_waits=20,restore_stock=False,abc=None,artist=No
                         "Duration is a generation cap, not guaranteed song length.",
                         "Reference policy is stock Balanced only, not a universal model preference.",
                         "No automatic regeneration, finishing, export, or further model changes."]}
+    if audio_recovery is not None:
+        report["audio_identity_recovery"]=audio_recovery
+        report["warnings"].append("Original waveform equivalence is unverified; operator approved the current native library file.")
+        report["status"]="technical_review_required"
     if artist is not None:
         report["generation_path"]=route
         report["native_completion"]=completion

@@ -197,3 +197,22 @@ child; never rerun the parent. If Director alone is unresolved, use the
 existing child Director retry without the tempo flag. No automatic
 acceptance, automatic fit or unapproved synthesis. Offline CI and live
 native compatibility must be verified separately.
+
+
+## Explicit retained audio identity recovery
+
+If a completed duration continuation stops at acoustic identity, retain the
+original journal and acoustic.json. The file may have changed after import;
+a byte mismatch does not prove metadata-only changes or waveform equivalence.
+With operator approval of the full current SHA-256 (matching the existing
+acoustic evidence), use the same continuation command with
+`--approve-audio-sha SHA256` alongside the exact approved tempo and
+`--confirm-run`. This is only for an existing completed reviewed-native
+duration continuation before any ASR attempt. The job, song, original
+submission acknowledgment, saved native score/lyrics and original acoustic
+evidence are checked; an immutable sidecar binds old and approved identities.
+Original journal stays unchanged. A second change stops. The recovered
+report is explicitly marked technical_review_required. No new song or score
+job, no additional creative stages; the original outstanding QA budget
+remains. No claim of original waveform equivalence or metadata-only change.
+Do not edit hashes or delete evidence. Live recovery remains unverified.

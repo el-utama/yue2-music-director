@@ -229,3 +229,63 @@ class DraftTests(unittest.TestCase):
         saved["generation_settings"]["lyrics"]=expected+" "
         with self.assertRaisesRegex(ValueError,"differ"):
             nd.verify_saved_directed_score(saved,abc,"song","job",brief)
+
+
+    def test_approved_recovery_of_completed_audio_without_replay(self):
+        from test_duration_fit import ABC, INTENT
+        brief={**self.brief,"lyrics":"[Verse]\nOne two","duration_seconds":240}
+        intent=INTENT
+        url="http://127.0.0.1:8791/mcp"
+        old_sha=nd._sha(self.audio)
+        def measure(audio,*_):
+            # Simulate a native library file change after the journal is saved.
+            audio.write_bytes(b"updated fixture")
+            return {"sha256":nd._sha(audio),"true_peak_dbtp":-1.2,
+                    "integrated_lufs":-17,"duration_seconds":207.8}
+        saved={"id":"song","metadata":{"job_id":"job"},
+               "generation_settings":{"abc":ABC,"lyrics":brief["lyrics"],"cot":"full"}}
+        with patch.object(nd,"Client") as factory,patch.object(nd,"reference_configuration",return_value={}), \
+             patch.object(nd,"recognition_preflight"),patch.object(nd.shutil,"which",return_value="fixture"), \
+             patch.object(nd,"_measure",side_effect=measure) as acoustic, \
+             patch.object(nd,"capture",side_effect=self.fake_capture) as capture, \
+             patch("yue2_music_director.midi.extract_midi",return_value=b"fixture"), \
+             patch("yue2_music_director.midi.midi_header",return_value={"tracks":2}), \
+             patch("yue2_music_director.temporal_evidence.native_song_read",return_value=saved):
+            client=factory.return_value.connect.return_value
+            self.setup_client(client)
+            client.tools.return_value.append({"name":"score_to_midi","inputSchema":{"properties":{"abc":{}}}})
+            for tool in client.tools.return_value:
+                if tool["name"]=="song_create":
+                    tool["inputSchema"]["properties"]["abc"]={}
+            call=client.call.side_effect
+            client.call.side_effect=lambda name,args: {} if name=="score_to_midi" else call(name,args)
+            args=(brief,self.run,url)
+            kwargs={"abc":ABC,"artist":intent,"expected_configuration":{}}
+            with self.assertRaisesRegex(ValueError,"Acoustic evidence identity differs"):
+                nd.execute(*args,**kwargs)
+            journal=(self.run/"journal_song.json").read_bytes()
+            self.assertEqual(nd.read(self.run/"journal_song.json")["audio_sha256"],old_sha)
+            new_sha=nd._sha(self.audio)
+            capture.assert_not_called()
+            for approval in (None,"f"*64):
+                with self.assertRaises(ValueError):
+                    nd.execute(*args,**kwargs,approve_audio_sha=approval)
+            self.assertFalse((self.run/"audio-identity-recovery.json").exists())
+            report=nd.execute(*args,**kwargs,approve_audio_sha=new_sha)
+            self.assertEqual(report["audio_sha256"],new_sha)
+            self.assertEqual(report["status"],"technical_review_required")
+            self.assertFalse(report["audio_identity_recovery"]["original_waveform_equivalence_verified"])
+            self.assertEqual((self.run/"journal_song.json").read_bytes(),journal)
+            self.assertEqual(nd.execute(*args,**kwargs),report)
+            self.assertEqual(sum(c.args[0]=="song_create" for c in client.call.call_args_list),1)
+            acoustic.assert_called_once()
+            capture.assert_called_once()
+            self.audio.write_bytes(b"third version")
+            with self.assertRaises(ValueError):
+                nd.execute(*args,**kwargs,approve_audio_sha=nd._sha(self.audio))
+
+    def test_audio_approval_without_completed_draft_never_connects(self):
+        with patch.object(nd,"Client") as client:
+            with self.assertRaisesRegex(ValueError,"existing completed"):
+                nd.execute(self.brief,self.run,"unused",approve_audio_sha="a"*64)
+            client.assert_not_called()
