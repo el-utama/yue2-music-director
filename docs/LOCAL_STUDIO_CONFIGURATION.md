@@ -1,6 +1,6 @@
 # Local Studio configuration and compatibility
 
-Run `music.cmd --advisor` to [inspect hardware and Studio configuration](HARDWARE_ADVISOR.md). The report distinguishes upstream stock tiers, measured resources, and the existing reference production requirements.
+Run `music.cmd --advisor` to [inspect hardware and Studio configuration](HARDWARE_ADVISOR.md). The report distinguishes upstream stock tiers, measured resources, and the existing reference production requirements. A low-VRAM report can include a separate experimental native Studio CPU configuration with a pinned system RAM estimate.
 
 For a newly installed Studio, follow [first-run onboarding](FRESH_INSTALL.md). Discover actual hardware, installed assets and local MCP URL before any change. The stock reference below is the current strict autonomous production gate, not a requirement for export or offline work. No automatic download or forced switch.
 

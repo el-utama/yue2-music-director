@@ -172,6 +172,41 @@ class AdvisorTests(unittest.TestCase):
             for probe in (studio, nvidia, ram, which, disk):
                 probe.assert_not_called()
 
+    def test_low_vram_cpu_candidate_preserves_stock_gate(self):
+        for ram, status in ((None, "unknown"), (8 * GIB, "blocked"),
+                            (advisor.LIGHT_CPU_RAM_ESTIMATE, "candidate_unverified"),
+                            (16 * GIB, "candidate_unverified")):
+            with self.subTest(ram=ram):
+                report = advisor.inspect(Path.cwd(), None, "production",
+                                         simulation=("nvidia", 4 * GIB, ram))
+                self.assertEqual(report["advice"]["status"], "blocked")
+                self.assertEqual(report["advice"]["stock_tiers"], [])
+                alternative = report["advice"]["cpu_candidate"]
+                self.assertEqual(alternative["status"], status)
+                self.assertEqual(alternative["engine_options"],
+                                 {"backend": "cpu", "kv_cache": "f16", "keep_loaded": "no", "max_batch": 1})
+                self.assertAlmostEqual(alternative["estimated_system_ram_bytes"] / GIB, 8.94, places=2)
+                self.assertIn("Experimental native Studio option", advisor.summary(report))
+                self.assertFalse(report["execution_authorized"])
+                self.assertFalse(report["synthesis_fit_verified"])
+        for kind, vram in (("nvidia", int(5.5 * GIB)), ("vulkan", None), ("unknown", None)):
+            report = advisor.inspect(Path.cwd(), None, "production", simulation=(kind, vram, 16 * GIB))
+            self.assertNotIn("cpu_candidate", report["advice"])
+        report = advisor.inspect(Path.cwd(), None, "production", simulation=("cpu", None, 16 * GIB))
+        self.assertEqual(report["advice"]["cpu_candidate"]["status"], "candidate_unverified")
+
+    def test_live_catalog_can_rule_out_pinned_cpu_candidate(self):
+        host = {"platform": "win32", "gpu": {"kind": "nvidia", "memory": {"total_bytes": 4 * GIB}},
+                "ram": {"total_bytes": 16 * GIB}}
+        light = {"installable": True, "components": {
+            key: {"bytes": value} for key, value in advisor.LIGHT_CPU_WEIGHTS.items()
+        }}
+        catalog = {"light": light}
+        self.assertIsNotNone(advisor._light_cpu_candidate(host, catalog, "studio_catalog"))
+        light["components"]["backbone-q5"]["bytes"] += 1
+        self.assertIsNone(advisor._light_cpu_candidate(host, catalog, "studio_catalog"))
+        self.assertIsNone(advisor._light_cpu_candidate(host, {}, "studio_catalog"))
+
     def test_unavailable_disabled_and_independent_goals(self):
         fresh = self.inspect_fixture({})
         self.assertEqual(fresh["advice"]["status"], "unknown")

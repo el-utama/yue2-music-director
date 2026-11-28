@@ -50,8 +50,29 @@ Studio, disk, drivers, providers or local runtime state. `--simulate vulkan`,
 4 GiB dedicated VRAM falls below the documented 5.5 GiB Light stock GPU
 tier. Offline indexes, existing-audio export, cover direction and separately
 authorized text work can still be evaluated on their own prerequisites.
-CPU and Vulkan paths need their own validation. A 16 GiB RAM figure or the
-size of a GGUF file does not establish actual synthesis fit.
+On Windows (or simulation), the Advisor also shows a separate native
+Studio CPU candidate when an NVIDIA card is below the Light GPU tier, or
+Studio reports a CPU host. The candidate is **Light Q5_K_M**, with the
+processor explicitly selected, F16 KV cache, keep loaded off and a
+one-track limit. The pinned total RAM estimate is about 8.94 GiB: the
+2,622,936,832-byte backbone and 530,497,344-byte VAE, plus 4 GiB for the
+system and 2 GiB for compute buffers. This is an estimate from
+[upstream hardware selection](https://github.com/timoncool/YuE2-Studio/blob/bfd35a0e594cbd1268557833001d5675ebbdd2d3/crates/music-server/src/hardware.rs),
+using weights from the [pinned model catalog](https://github.com/timoncool/YuE2-Studio/blob/bfd35a0e594cbd1268557833001d5675ebbdd2d3/crates/music-server/src/model_manager.rs).
+The local catalog can exclude the candidate if Light is unsupported or
+its backbone and VAE sizes differ. `advice.cpu_candidate` reports whether
+the total RAM estimate is met, unavailable, or above the observed capacity.
+
+The pinned Windows engine selects an explicit backend directly. Auto can
+still start CUDA on a 4 GiB NVIDIA GPU even when the model catalog
+recommends Light as an in-memory fallback. The pinned launcher disables
+Q8 KV cache for the processor and maps keep-loaded `no` to eviction.
+These settings describe a candidate for a controlled native Studio test.
+The estimate covers neither full disk assets, runtime performance, nor
+synthesis peaks. The native Light set may still require its companion
+file to be present even when the request disables companion use. See the
+[pinned launcher and option handlers](https://github.com/timoncool/YuE2-Studio/blob/bfd35a0e594cbd1268557833001d5675ebbdd2d3/crates/music-server/src/lib.rs).
+Vulkan needs separate validation.
 
 ## Interpret the evidence
 
@@ -158,6 +179,30 @@ Dedicated VRAM was about 7.96 GiB total and 6.30 GiB free. The Advisor
 recommended keeping Balanced with no missing set files. This completed
 the targeted read-only check on the existing host. Provider, managed MOSS,
 actual model loading and synthesis fit have separate evidence requirements.
+
+## Alternate production contract audit
+
+The Director reference uses Balanced Q6_K, VAE F32 and no selected
+own-model override. The strict preflight checks configured CUDA/Q8,
+effective Q8 and flash attention, matching engine context fields,
+no custom binary or flags, and one track with adapters and companion use
+disabled. These constraints are also part of the controlled A/B baseline.
+
+| Existing boundary | Requirements for a separate opt-in profile |
+|---|---|
+| [Autonomous job identity](../src/yue2_music_director/autonomous.py) | Freeze the explicit profile before creating native work. Keep creative policy IDs separate. Legacy jobs keep their precise existing identity. |
+| [Planner preflight and journal](../src/yue2_music_director/artist_run.py) | Validate the exact stock assets, runtime and effective settings before the first plan submission. Retain the legacy reference configuration and request/receipt identity for existing jobs. |
+| [Synthesis preflight and journal](../src/yue2_music_director/native_draft.py) | Recheck the frozen effective configuration before the first song submission. Recover a submitted job only by its existing receipt or ID. An unavailable effective backend, timeout or ambiguous submission must never trigger fallback or another POST. |
+| [Continuation and retained outputs](../src/yue2_music_director/retained_source.py) | Verify stored plan, request, score and audio identities without inspecting today's settings for an already completed take. Preserve independent review and exact audio identity before export. |
+| [A/B experiments](../src/yue2_music_director/experiments.py) | Keep the stock reference gate and existing evidence. The first alternate profile must have its own compatibility and execution evidence. |
+
+The first candidate to evaluate on an actual low-VRAM host is the native
+CPU Light profile described above. Confirm the bundled build and its
+effective backend from a reliable running-engine indicator, resolve the
+stock asset versions and licenses, and record fresh idle/space readings
+before scheduling a separately authorized bounded test. Native status
+can describe a ready pair whose weights load on the first song. Keep
+the existing Director gate until both load and synthesis are verified.
 
 ## Remaining validation
 
