@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — live native collection follow-up
+
+- Cover native Ogg/OGA, AAC and AAC-in-M4A/MP4 imports, distinguish missing from unsupported source files, identify failing track, and retest only native collections within normal export limits. Prior live single/EP/manual album passes retained.
+
 ## Unreleased — final exporter acceptance hardening
 
 - Fit long Windows track filenames before staging, preserve short names, verify staged hashes and actual sample assets/order, and reject collection drift between acceptance selection and export. Report missing timing without fabricating it.

@@ -13,7 +13,10 @@ from .mcp import Client, configured_endpoint, unpack
 from .native_process import _source_file
 from .temporal_evidence import native_library_read, native_song_read, karaoke_metadata
 
-FORMATS={".flac":"flac",".wav":"wav",".mp3":"mp3"}
+FORMATS={".flac":"flac",".wav":"wav",".mp3":"mp3",".ogg":"ogg",".oga":"ogg",
+         ".aac":"aac",".m4a":"mov",".mp4":"mov"}
+CODECS={".flac":("flac",),".mp3":("mp3",),".ogg":("vorbis","opus","flac"),
+        ".oga":("vorbis","opus","flac"),".aac":("aac",),".m4a":("aac",),".mp4":("aac",)}
 
 
 def song_list(url):
@@ -60,11 +63,15 @@ def file_for(client,song_id):
     raw=files.get("audio",files.get("audio_path"))
     if isinstance(raw,dict):
         raw=raw.get("path")
-    if not isinstance(raw,str):
-        raise ValueError("Native audio missing")
+    if not isinstance(raw,str) or not raw.strip():
+        raise ValueError("Native song has no resolved audio file; check playback in Studio")
     path=Path(raw)
-    if not path.is_absolute() or path.suffix.lower() not in FORMATS or not path.is_file():
-        raise ValueError("Expected local FLAC, WAV or MP3 in native library")
+    if not path.is_absolute():
+        raise ValueError("Native audio path is not absolute; check Studio storage configuration")
+    if not path.is_file():
+        raise ValueError("Native audio file missing or inaccessible; check Studio storage and playback")
+    if path.suffix.lower() not in FORMATS:
+        raise ValueError("Unsupported native audio extension: "+repr(path.suffix.lower())+"; use Studio export to a supported format")
     path=path.resolve(strict=True)
     _source_file(files,path)
     return path
@@ -83,9 +90,9 @@ def duration(path):
     if len(streams)!=1:
         raise ValueError("Expected exactly one audio stream")
     codec=streams[0].get("codec_name","")
-    if (path.suffix.lower()==".flac" and codec!="flac" or
-            path.suffix.lower()==".mp3" and codec!="mp3" or
-            path.suffix.lower()==".wav" and not codec.startswith("pcm_")):
+    ext=path.suffix.lower()
+    if (ext==".wav" and not codec.startswith("pcm_") or
+            ext!=".wav" and codec not in CODECS.get(ext,())):
         raise ValueError("Native audio format differs from supported file extension")
     raw=streams[0].get("duration")
     if raw in (None,"","N/A"):

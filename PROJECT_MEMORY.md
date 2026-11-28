@@ -38,7 +38,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Verified main `6ac40f0b39f81f2e8813b2fb53fbccb4784d1ecf` after PR #145; both exact-head CI jobs passed 46095438953 (429 Windows tests). Exporter remains priority before creative improvements. Seven historical works, 853 candidate IDs and 147 slots open.
+- Verified main `4fb916bfd0329d128485045cbf0225e5ef4d8b3e` after PR #146; two green exact-head CI jobs 46101680309 (431 Windows tests). Live native Exporter partial; see latest evidence below.
 - P0 recovery follow-up (R01/R08/R09): a local interruption between saving the Studio acknowledgment and updating the journal can now recover the existing plan or song ID. Regression coverage injects that interruption and checks that planning and synthesis are each submitted once. Windows Studio recovery and independent live artistic acceptance remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
@@ -361,3 +361,16 @@ assets/order/status and rejects native collection drift between selection
 and export. Tests and documentation updated; exact-head CI pending.
 Installed library unavailable via restricted bridge; one local acceptance
 run remains essential. No new inference or Studio mutations authorized.
+
+2026-11-28 live operator report at PR #146 baseline: native reads returned
+255 playable songs and 15 collections. Single/video, EP/distribution and
+manual album/production completed with semantic asset checks passed. Native
+playlist blocked by generic source-file/format error; actual extension or
+missing path not established. No eligible native album under old eight-track
+sample limit; not proof no albums exist. No inference or Studio mutation.
+Do not repeat successful samples. Pinned upstream audio_pcm::plays_in_window
+and library import handler confirm native Ogg/OGA, AAC, AAC M4A/MP4 alongside
+FLAC/MP3/PCM WAV. Extend byte-preserving format validation, source-specific
+track diagnostics and collection-only acceptance using normal size limits.
+Exact-head CI pending. Native collection retest and human playback review
+still required; no forced karaoke or conversion.
