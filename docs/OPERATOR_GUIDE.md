@@ -204,3 +204,8 @@ snapshot with the same preset. See [video preset](RELEASE_EXPORT.md#video-preset
 Use `--song-name "My Song"` or `--collection-name "My Album"` for an
 unambiguous native draft selection. See [name selection](RELEASE_EXPORT.md#select-by-song-title-or-collection-name).
 For consolidated native export acceptance use `music.cmd --export --check-library --confirm-run` after updating to the verified main. See [acceptance](RELEASE_EXPORT.md#consolidated-local-acceptance).
+
+The consolidated exporter acceptance report checks actual assets/order in
+addition to hashes. Long track names are shortened only when necessary for
+portable Windows paths. The report is not a listening or subtitle playback
+review.

@@ -169,7 +169,7 @@ def verify_export(root,contract):
     return manifest
 
 
-def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=ri.DEFAULT_SNAPSHOT,confirm=False,timing_reader=None,preset="production",native_collection=None,native_songs=None,library_only=False):
+def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=ri.DEFAULT_SNAPSHOT,confirm=False,timing_reader=None,preset="production",native_collection=None,native_songs=None,library_only=False,expected_collection=None):
     if preset not in PRESETS:
         raise ValueError("Unknown export preset")
     cc.validate_job(release,"placeholder","en",195)
@@ -185,6 +185,8 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
         if jobs or kind!="single" or title is not None:
             raise ValueError("Native collection supplies its own type, title and order; do not override them")
         selection=nc.collection(url,native_collection)
+        if expected_collection is not None and selection!=expected_collection:
+            raise ValueError("Native collection changed after acceptance selection")
         kind,title=selection["kind"],selection["name"]
         if library_only:
             native_songs=selection["song_ids"]
@@ -222,6 +224,11 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
     print("Tracks:",len(tracks),flush=True)
     for i,track in enumerate(tracks,1):
         print(f"  {i:02d}. "+json.dumps(track["brief"]["title"],ensure_ascii=True),flush=True)
+    extensions=[t["audio"].suffix.lower() if library_only else ".flac" for t in tracks]
+    names=None if root.exists() else ri.track_names(root,[t["brief"]["title"] for t in tracks],kind,extensions,video=preset=="video")
+    if names is not None:
+        for name,ext in zip(names,extensions):
+            print("  File:",json.dumps(name+ext,ensure_ascii=True),flush=True)
     if not confirm:
         print("Plan only; no package writes or inference." if selection is not None or library_only else "Plan only; no writes or Studio calls.",flush=True)
         return 0
@@ -232,10 +239,7 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
             manifest=verify_export(root,contract)
             print("Existing export verified:",root,flush=True)
             return 0 if manifest["status"]=="complete" else 2
-        width=max(2,len(str(len(tracks))))
-        names=[f"{i:0{width}d} - {safe_title(t['brief']['title'])}" if kind!="single" else safe_title(t["brief"]["title"])
-               for i,t in enumerate(tracks,1)]
-        extensions=[t["audio"].suffix.lower() if library_only else ".flac" for t in tracks]
+        names=ri.track_names(root,[t["brief"]["title"] for t in tracks],kind,extensions,video=preset=="video")
         def paths(base):
             return [base/"release.json",*([base/"playlist.m3u8"] if kind=="playlist" else []),*[(base/name if kind!="single" else base)/(name+suffix)
                     for name,ext in zip(names,extensions) for suffix in (ext,".txt",".clean.txt",".lrc",".srt")+((".line.lrc",) if preset=="video" else ())]]
@@ -300,6 +304,7 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
                     raise ValueError("Source audio changed during timing export")
                 details.append({"track":i,"job":t["job"],"title":t["brief"]["title"],"audio_sha256":t["result"]["audio_sha256"],
                                 "source_status":t["result"]["status"],"timing":timing})
+                details[-1]["audio_file"]=target.relative_to(stage).as_posix()
                 if library_only:
                     details[-1].update(song_id=t["result"]["song_id"],audio_extension=extensions[i-1],clean_lyrics_available=bool(clean))
                 print("Track",i,":",timing["status"],flush=True)
@@ -316,6 +321,7 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
                       "status":"complete" if all(t["timing"]["status"] in ("exported_unverified_display_anchors","not_requested","not_applicable") for t in details) else "partial_missing_timing",
                       "release_approved":False,"studio_mutations":0,"inference_calls":0}
             nd.atomic_write(stage/"release.json",manifest)
+            verify_export(stage,contract)
             if root.exists():
                 raise ValueError("Export destination appeared; preserve existing folder")
             stage.rename(root)
