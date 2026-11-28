@@ -205,21 +205,19 @@ native compatibility must be verified separately.
 
 ## Explicit retained audio identity recovery
 
-If a completed duration continuation stops at acoustic identity, retain the
-original journal and acoustic.json. The file may have changed after import;
-a byte mismatch does not prove metadata-only changes or waveform equivalence.
-With operator approval of the full current SHA-256 (matching the existing
-acoustic evidence), use the same continuation command with
-`--approve-audio-sha SHA256` alongside the exact approved tempo and
-`--confirm-run`. This is only for an existing completed reviewed-native
-duration continuation before any ASR attempt. The job, song, original
-submission acknowledgment, saved native score/lyrics and original acoustic
-evidence are checked; an immutable sidecar binds old and approved identities.
-Original journal stays unchanged. A second change stops. The recovered
-report is explicitly marked technical_review_required. No new song or score
-job, no additional creative stages; the original outstanding QA budget
-remains. No claim of original waveform equivalence or metadata-only change.
-Do not edit hashes or delete evidence. Live recovery remains unverified.
+Keep the original journal and `acoustic.json` if a completed duration or
+instrumental intro continuation stops at acoustic identity. A change after
+import can affect the hash. The hash comparison measures file identity.
+
+Before any ASR attempt, approve the current full SHA-256 from the existing
+acoustic evidence and add `--approve-audio-sha SHA256` to the original
+confirmed continuation command. Include the original `--approve-tempo BPM`
+or `--approve-intro` flag. The launcher matches the current file against the
+approved hash and checks the completed job, song, submission acknowledgment,
+saved score and lyrics. An immutable sidecar binds the two hashes. The
+journal is retained as evidence and a second change stops recovery. The
+recovered report requires technical review. Remaining QA runs on the existing
+take.
 
 
 Live checkpoint 2026-11-28: the approved 77 BPM continuation and subsequent
@@ -230,6 +228,12 @@ Use the completed-source commands (ending audit, finishing, feedback) next;
 no production resume is necessary. Human listening, headroom and original
 waveform equivalence remain unverified. No automatic acceptance.
 
+
+Live checkpoint 2026-11-28: a Windows instrumental intro continuation also
+completed explicit audio identity recovery with exit 0 and `review_required`.
+One rendered take measures 182.198667 seconds against its 190-second cap.
+The original plan and creative stages were reused. Audible lyric delivery,
+vocal layering and the ending remain open for human review.
 
 ### Lyric language default and quality
 
