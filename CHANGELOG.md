@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — First-line comparison
+
+- Preview or run a separately approved same-score comparison that replaces only the first sung line of Verse 1 with two phrases.
+
 ## Unreleased — Approved instrumental intro continuation
 
 - Continue a retained, previewed instrumental-intro edit with explicit approval. Preserve source receipts and use the approved candidate for native MIDI review, synthesis and retained take verification.

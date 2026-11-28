@@ -238,6 +238,31 @@ at the clause boundary and omitted its final words. Review complete
 first-line delivery separately from opening time. Score and MIDI checks
 establish section-level evidence. The cause of the missing words is open.
 
+## Compare the first line of Verse 1
+
+Use a completed reviewed-native job. Preview two replacement phrases before
+authorizing one native rendition.
+
+```powershell
+.\music.cmd --compare-first-line JOB "Phrase one" "Phrase two"
+.\music.cmd --compare-first-line JOB "Phrase one" "Phrase two" --confirm-run
+```
+
+The command verifies the source, substitutes the first sung line of Verse 1
+locally, and checks the same complete score again. It copies the original
+seed, configuration and all other native request fields. The candidate
+receipts and draft live under `first-line-comparison/` in the retained
+result directory. Confirmation includes native MIDI review, one song and
+one local ASR pass. Repeat the same command to resume those receipts. For
+an existing completed comparison with an observed FLAC hash change, add
+`--approve-audio-sha SHA256` after verifying the measured hash in that
+candidate's `draft/acoustic.json`.
+
+Compare the candidate with the original audio at the first phrase break.
+Listen for both phrases in full, hear how the intro and outro render, and
+check the measured duration. Shared score and seed define the comparison
+inputs. The resulting performance can vary.
+
 ### Lyric language default and quality
 
 New jobs default to English, even when the idea is written in Indonesian.
