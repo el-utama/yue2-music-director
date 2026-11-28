@@ -225,3 +225,13 @@ review_required, exit 0. No replay of completed creative or synthesis work.
 Use the completed-source commands (ending audit, finishing, feedback) next;
 no production resume is necessary. Human listening, headroom and original
 waveform equivalence remain unverified. No automatic acceptance.
+
+
+### Lyric language default and quality
+
+New jobs default to English, even when the idea is written in Indonesian.
+Select Indonesian explicitly with `--language id`. Existing jobs always
+retain their saved language unless a conflicting override is rejected.
+Operator feedback on the completed Indonesian take rejected its lyrics on
+artistic grounds; pipeline completion and ASR agreement do not establish
+lyric quality. English-first craft evaluation remains required.

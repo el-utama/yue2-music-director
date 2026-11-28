@@ -38,7 +38,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Verified main `5d0fd91f8cec2e2dd6885be440b31903af9375c0` after [PR #138](https://github.com/el-utama/yue2-music-director/pull/138); both exact-head Python 3.11 jobs passed [CI 46088068656](https://github.com/el-utama/yue2-music-director/actions/runs/46088068656). Operator-reported live duration and audio-identity recovery completed one Indonesian natural-language song through Director, with review_required and exit 0. No new planning, synthesis or repeated recognition in recovery; see latest checkpoint below. Seven historical works, 853 candidate IDs and 147 slots open.
+- Verified main `7b41d7428a2f3c434fa62bd6cf59b75d38baf439` after [PR #139](https://github.com/el-utama/yue2-music-director/pull/139); both exact-head Python 3.11 jobs passed [CI 46089129650](https://github.com/el-utama/yue2-music-director/actions/runs/46089129650). Live supervised recovery and fixed-gain finishing succeeded technically; operator rejected the Indonesian lyrics. English remains the default. Seven historical works, 853 candidate IDs and 147 slots open.
 - P0 recovery follow-up (R01/R08/R09): a local interruption between saving the Studio acknowledgment and updating the journal can now recover the existing plan or song ID. Regression coverage injects that interruption and checks that planning and synthesis are each submitted once. Windows Studio recovery and independent live artistic acceptance remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
@@ -51,7 +51,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 | ID | Requirement / deliverable | Current verified state | Remaining acceptance work |
 |---|---|---|---|
-| R01 | Original song from natural-language brief; distinct Composer, Lyricist, reviewer, Director; native YuE2 first | Local alpha; previous reference and a second Indonesian natural-language song completed through Director with explicit duration/audio-identity recovery; review_required | Independent one-command generalization without manual intervention, human musical acceptance and usability; do not repeat successful reference or new song |
+| R01 | Original song from natural-language brief; distinct Composer, Lyricist, reviewer, Director; native YuE2 first | Local alpha; previous reference and a second Indonesian natural-language song completed through Director with explicit duration/audio-identity recovery; review_required; operator rejected Indonesian lyric quality | Independent one-command generalization, English-first lyric craft and human musical acceptance; do not repeat this take |
 | R02 | Deep Lyricist knowledge base: many songs, multilingual structure, prosody, rhyme, narrative, imagery, genre and emotional arc | **OPEN; seven historical works indexed by merged PR #120, including two English works; optional text-only role context CI passed.** Explicit historical autonomous context merged/CI (#130); deeper craft metrics merged/CI (#131); corpus expansion and artistic evaluation open | Rights/source audit, actual ingestion, deduplication, searchable structured analysis, counts by language/genre and rights, integration with versioned creative policy, held-out editorial evaluation |
 | R03 | Composer knowledge: melody, harmony, arrangement, instruments, vocal phrasing, music theory and production | Native contracts/research docs and symbolic score review available; pilot MusicXML descriptors and automatic harmony search CI passed; melodic descriptors CI passed; opt-in historical text-only context CI passed; explicit original style selection in autonomous Composer merged/CI (#126), no live validation | Source-backed knowledge entries and retrieval, versioned policy integration and meaningful artistic evaluation |
 | R04 | Native controls, actual installed capability and limitations | Source-pinned audit and live velocity fixture; velocity not retained in ABC, schedule coverage advisory only | Complete remaining melody/harmony/arrangement/replay/cover/adapter audit; installed binary identity not verified; no fake controls |
@@ -253,3 +253,19 @@ another synthesis or critic replay. No automatic artistic/release approval.
 Add offline historical-source regression for the recovery sidecar, including
 mutation rejection. All other requirements remain open as applicable. No
 private song IDs, hashes, lyrics, audio or operator filesystem paths committed.
+
+
+2026-11-28: PR #139 merged at 7b41d74 after two exact-head green jobs
+(46089129650). Operator reported live fixed-gain finishing candidate_verified,
+-1.05 dB attenuation, exit 0; original preserved. No new inference. Operator
+explicitly rejected the Indonesian lyrics as unnatural, embarrassing and
+artistically unusable. This is a negative lyric-quality result (R01/R02),
+not an artistic success. Keep English as the default even for Indonesian
+briefs; Indonesian only by explicit selection. Preserve frozen languages
+on resume. Do not regenerate this take automatically or silently remove
+multilingual support. Prioritize English lyric craft: coherent narrative,
+natural idiom, singable phrasing, concrete imagery, non-forced rhyme and
+editorial evaluation before expensive native generation. These are quality
+targets, not implemented acceptance guarantees. No new private lyrics,
+local IDs or paths committed. Existing English CLI default verified in code;
+regression tests guard it. CI pending for this checkpoint.

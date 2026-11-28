@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — English-first lyric acceptance
+
+- Record the negative human Indonesian lyric verdict and successful technical finishing. Preserve English default independently of brief language and add CLI regression tests. No prompt, production or historical job changes.
+
 ## Unreleased — live supervised recovery checkpoint
 
 - Record operator-reported successful duration and audio-identity recovery through final Director judgment, with review required. Add historical-source regression for the retained audio recovery receipt; no new inference or automatic acceptance.
