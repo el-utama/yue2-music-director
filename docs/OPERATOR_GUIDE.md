@@ -1,5 +1,7 @@
 # Operator guide — start here
 
+For a different GPU or model, consult the [Hardware Advisor plan](HARDWARE_ADVISOR.md). No advisor command is shipped yet; current --ready is a strict production reference check, not universal hardware advice.
+
 For the Windows machine running YuE2 Studio. Mac and other devices can
 read documentation and develop offline, but the installed Studio production
 host is Windows. This is an experimental alpha. The private audit bridge

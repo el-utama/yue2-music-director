@@ -1,5 +1,7 @@
 # Native control contract audit — 2026-11-27
 
+Model/runtime portability follow-up is tracked in [Hardware Advisor](../HARDWARE_ADVISOR.md). Keep installed/effective distinctions and historical reference policies; alternative production profiles are not validated.
+
 ## Scope and evidence levels
 
 Target: timoncool/YuE2-Studio v5.0 Portable, not generic ABC, original YuE

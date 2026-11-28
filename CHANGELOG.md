@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Hardware advisor audit checkpoint — 2026-11-28
+
+- Document audited native resource/model/runtime discovery, hardware tiers and strict stock gate, proposed deterministic advisor and goal-specific compatibility, implementation stages and fixture/live acceptance. Advisor remains unimplemented; no production guard weakened or model switched.
+
 ## Fresh-host onboarding — 2026-11-28
 
 - Add zero-history Windows installation runbook, workflow-specific prerequisites, local Studio discovery, provider/production gates, first preview/export/song, troubleshooting and agent handover. Align current and historical documentation; fresh-host live validation remains open.

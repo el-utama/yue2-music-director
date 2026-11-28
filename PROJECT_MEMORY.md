@@ -38,7 +38,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Verified main `6549392cdaf925b2cc4539d2ff73f439a068eb23` after documentation PR #149; both exact-head CI jobs passed 46103853783. Agreed draft Exporter sample acceptance recorded. Next priority creative quality, following fresh-host onboarding documentation request.
+- Verified main `72ea94143ca49af0bc3783453c2801633280a954` after PR #150; exact-head Windows/Linux CI 46104180672 passed. Fresh-host guide merged, actual fresh-host validation open. New operator hardware portability question: Advisor audit and plan precede creative improvements; no production gate change yet.
 - P0 recovery follow-up (R01/R08/R09): a local interruption between saving the Studio acknowledgment and updating the journal can now recover the existing plan or song ID. Regression coverage injects that interruption and checks that planning and synthesis are each submitted once. Windows Studio recovery and independent live artistic acceptance remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
@@ -54,7 +54,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 | R01 | Original song from natural-language brief; distinct Composer, Lyricist, reviewer, Director; native YuE2 first | Local alpha; previous reference and a second Indonesian natural-language song completed through Director with explicit duration/audio-identity recovery; review_required; operator rejected Indonesian lyric quality | Independent one-command generalization, English-first lyric craft and human musical acceptance; do not repeat this take |
 | R02 | Deep Lyricist knowledge base: many songs, multilingual structure, prosody, rhyme, narrative, imagery, genre and emotional arc | **OPEN; seven historical works indexed by merged PR #120, including two English works; optional text-only role context CI passed.** Explicit historical autonomous context merged/CI (#130); deeper craft metrics merged/CI (#131); corpus expansion and artistic evaluation open | Rights/source audit, actual ingestion, deduplication, searchable structured analysis, counts by language/genre and rights, integration with versioned creative policy, held-out editorial evaluation |
 | R03 | Composer knowledge: melody, harmony, arrangement, instruments, vocal phrasing, music theory and production | Native contracts/research docs and symbolic score review available; pilot MusicXML descriptors and automatic harmony search CI passed; melodic descriptors CI passed; opt-in historical text-only context CI passed; explicit original style selection in autonomous Composer merged/CI (#126), no live validation | Source-backed knowledge entries and retrieval, versioned policy integration and meaningful artistic evaluation |
-| R04 | Native controls, actual installed capability and limitations | Source-pinned audit and live velocity fixture; velocity not retained in ABC, schedule coverage advisory only | Complete remaining melody/harmony/arrangement/replay/cover/adapter audit; installed binary identity not verified; no fake controls |
+| R04 | Native controls, actual installed capability and limitations; hardware/model/runtime portability | Source-pinned audit, existing 13-read native inventory, strict stock reference; [Hardware Advisor plan](docs/HARDWARE_ADVISOR.md) audited, not implemented | Read-only discovery, deterministic goal-specific recommendations, source and installed/effective validation, versioned alternate production compatibility and actual target-host acceptance; preserve reference and remaining native control audit |
 | R05 | Human feedback, persistent artist profiles, confirmed vs inferred preference | Local immutable feedback and opt-in Artist Memory implemented/CI; explicit typed job selection | Live hosted typed-schema validation; usable profile management, no inferred preferences silently applied; artist naming PR115 merged; live usage pending |
 | R06 | Audio finishing, original preserved, separate variant | Gain-only finishing passed live technical check on retained reference | General mastering, repair and artistic comparison are not established; no automatic acceptance |
 | R07 | Cover art direction, draft export and complete release package | Draft packaging sample acceptance **PASS** across #146–148 live Windows reports: Single, EP, manual/native Album, native Playlist, three presets, clean/original lyrics, LRC/SRT, fallback with native archive, numbered filenames and asset verification. Cover prompt live. | Human player/subtitle review, phonetic alignment, broader library coverage, native conversion outside Exporter, separate approved assembly/delivery and rights/approval remain open; no publication |
@@ -436,3 +436,16 @@ empty library, optional indexes, recovery and new-agent handover. No
 assumed old host artifacts or remote bridge. Cross-linked current entry
 points and historical checkpoints. Fresh-host actual live validation not
 performed; documentation/CI gate pending. No generation or model change.
+
+
+2026-11-28: Operator asks how to make Hardware Advisor work well on different
+PCs (example RTX 4 GB VRAM / 16 GB RAM) and requests documentation audit
+before a new session. [Hardware Advisor](docs/HARDWARE_ADVISOR.md) records
+source/guide audit, current hard-coded gate, native read candidates, tier
+thresholds, discovery/recommendation/report contracts, test matrix, and
+staged implementation with no historical receipt changes. Advisor NOT
+implemented; no supported 4 GB generation claim. First implement read-only
+A/B and fixtures; then separate alternative execution contracts and actual
+host validation. Keep draft export accepted, R02/R03 creative improvements
+and all other open requirements. Documentation PR CI pending. No inference,
+model download, settings change or additional local test authorized.

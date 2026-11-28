@@ -214,3 +214,8 @@ Next priority: English-first Lyricist, Composer and Reviewer quality.
 Begin with source/prompt and editorial-gate audit; maintain the full
 knowledge-bank, rights and artistic evaluation requirements. Do not
 automatically submit a new synthesis job.
+
+
+### Hardware portability checkpoint — 2026-11-28
+
+Operator requires configuration advice for different PCs, including RTX 4 GB / RAM 16 GB. See [audited Hardware Advisor plan](HARDWARE_ADVISOR.md). Next bounded infrastructure work: read-only discovery and deterministic advice with offline fixtures. Alternate production profiles require separate compatibility/receipt work and local validation. Current reference remains intact. Creative quality and corpus requirements are retained; no new synthesis or export retest.

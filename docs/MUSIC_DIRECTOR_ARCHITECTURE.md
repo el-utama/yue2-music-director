@@ -1,5 +1,7 @@
 # Generation-first Music Director architecture and implementation roadmap
 
+The [Hardware Advisor plan](HARDWARE_ADVISOR.md) is the portability design checkpoint. Add goal-specific read-only discovery and deterministic recommendation before any versioned alternate production contract.
+
 > Product sequencing update (2026-11-26): [Autonomous Music Director roadmap](AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md) governs the next product milestones and records live validation since this document was written. This document remains authoritative for native execution, safety, evidence and historical research gates; its original implementation status and phase ordering are historical.
 
 **Decision date:** 2026-11-26. **Status:** approved direction; implementation and validation pending. This is the authoritative sequencing for new-song development; it supersedes the earlier alignment/repair-first sequence and the universal strict section-order premise of Study 1. Existing commands and historical experiment gates are unchanged until implemented and tested. See [research evidence](GENERATION_CONTROL_STUDY.md), [handbook](RESEARCH_HANDBOOK.md), [native capability audit](knowledge/STUDIO_CAPABILITIES.md) and [native draft contract](NATIVE_DRAFT.md).
