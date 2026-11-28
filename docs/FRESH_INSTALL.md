@@ -1,6 +1,6 @@
 # First run on a fresh Windows PC
 
-Hardware-dependent configuration advice is planned in [Hardware Advisor](HARDWARE_ADVISOR.md), not yet available. Until implementation and target validation, the existing strict production gate remains in effect; no requirement to use that profile for export/offline.
+Use `music.cmd --advisor` for [hardware-dependent configuration advice](HARDWARE_ADVISOR.md). It works before model installation or agent setup. Its recommendations are resource estimates. The existing production gate and independent export/offline paths still apply.
 
 This is the current installation runbook for a PC with a newly installed
 YuE2 Studio and **no previous Music Director run, agent, provider settings,
@@ -158,6 +158,10 @@ The original operator's live results are regression evidence, not proof
 this new PC's data is valid.
 
 ## 5. Prepare full autonomous production only if wanted
+
+Run `.\music.cmd --advisor` before choosing a model on an unfamiliar PC.
+A successful report gives observations and next steps. Use `--ready`
+separately when checking the current stock production configuration.
 
 Skip this section for offline work or exporting. A newly installed Studio
 may have no installed models or active engine. Use Studio's own UI and

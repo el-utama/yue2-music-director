@@ -1,6 +1,6 @@
 # Development and validation
 
-Hardware/model/runtime changes must follow the [Advisor implementation and acceptance plan](docs/HARDWARE_ADVISOR.md). Advisory discovery precedes any new production compatibility contract; preserve historical reference tests.
+The [Hardware Advisor](docs/HARDWARE_ADVISOR.md) combines bounded discovery and deterministic policy. Run `python -m unittest discover -s tests -p test_hardware_advisor.py -v` for the offline fixtures. Preserve historical reference tests before designing a new production compatibility contract.
 
 **Current policy:** follow the [active autonomous product roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md) and [generation-first architecture](docs/MUSIC_DIRECTOR_ARCHITECTURE.md) for new-song development and retain the [native-first audit and gates](docs/knowledge/DEVELOPMENT_AUDIT.md), [Studio capabilities](docs/knowledge/STUDIO_CAPABILITIES.md), and [community prior art](docs/knowledge/COMMUNITY_AND_EVALUATION.md). No new implementation without an identified gap and acceptance criteria. All technical documentation in English; README also includes Indonesian overview. The foundation and historical milestones below are not an active implementation backlog.
 

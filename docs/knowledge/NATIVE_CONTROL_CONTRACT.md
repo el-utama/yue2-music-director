@@ -1,6 +1,6 @@
 # Native control contract audit — 2026-11-27
 
-Model/runtime portability follow-up is tracked in [Hardware Advisor](../HARDWARE_ADVISOR.md). Keep installed/effective distinctions and historical reference policies; alternative production profiles are not validated.
+The [Hardware Advisor](../HARDWARE_ADVISOR.md) separates configured, installed and effective evidence. Alternate production profiles still require separate validation of the exact native path and compatibility contract.
 
 ## Scope and evidence levels
 

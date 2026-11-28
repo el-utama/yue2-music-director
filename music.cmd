@@ -1,9 +1,10 @@
 @echo off
 setlocal
 set "ROOT=%~dp0"
-if not exist "%ROOT%results" mkdir "%ROOT%results"
 if not defined YUE2_MCP_URL set "YUE2_MCP_URL=http://127.0.0.1:8791/mcp"
 set "PYTHONPATH=%ROOT%src"
+if /I "%~1"=="--advisor" goto advisor
+if not exist "%ROOT%results" mkdir "%ROOT%results"
 if /I "%~1"=="--references" goto references
 if /I "%~1"=="--styles" goto styles
 if /I "%~1"=="--knowledge" goto knowledge
@@ -44,6 +45,10 @@ exit /b %ERRORLEVEL%
 
 :artistmemoryhelp
 py -3 -u -m yue2_music_director.artist_memory --help
+exit /b %ERRORLEVEL%
+
+:advisor
+py -3 -u -m yue2_music_director.hardware_advisor --repo "%ROOT%." %*
 exit /b %ERRORLEVEL%
 
 :ready

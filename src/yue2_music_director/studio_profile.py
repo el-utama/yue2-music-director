@@ -27,12 +27,7 @@ READS = (
 )
 
 
-def capture_profile(out, url=None):
-    out = Path(out).resolve()
-    if out.exists():
-        raise ValueError("Fresh private Studio profile report required")
-    client = Client(configured_endpoint(url), timeout=10).connect()
-    advertised = client.tools()
+def advertised_schemas(advertised):
     schemas = {}
     for item in advertised:
         if (not isinstance(item, dict) or not isinstance(item.get("name"), str)
@@ -40,6 +35,15 @@ def capture_profile(out, url=None):
                 or not isinstance(item.get("inputSchema"), dict)):
             raise ValueError("Unrecognized or duplicate advertised tool schema")
         schemas[item["name"]] = item["inputSchema"]
+    return schemas
+
+
+def capture_profile(out, url=None):
+    out = Path(out).resolve()
+    if out.exists():
+        raise ValueError("Fresh private Studio profile report required")
+    client = Client(configured_endpoint(url), timeout=10).connect()
+    schemas = advertised_schemas(client.tools())
     if "studio_status" not in schemas:
         raise ValueError("Connected MCP server does not advertise studio_status")
     observations, errors, missing = {}, {}, []
