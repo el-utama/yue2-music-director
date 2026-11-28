@@ -248,3 +248,7 @@ Current draft export presets: production, distribution and video. Native
 song, album and playlist draft sources preserve original audio bytes. See
 [Release Export](docs/RELEASE_EXPORT.md); no aggregator metadata or actual
 cover required for draft exports. Live acceptance of the new routes pending.
+
+Select an existing native song with `--song-name` or a collection with
+`--collection-name`. The local `--export --check-library --confirm-run`
+acceptance command uses existing recordings only; see the [export guide](docs/RELEASE_EXPORT.md#consolidated-local-acceptance).

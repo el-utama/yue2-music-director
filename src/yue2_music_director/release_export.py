@@ -17,6 +17,7 @@ from .temporal_evidence import parse_lrc, LINE
 from .export_timing import read_timing
 from .prosody import parse_lyrics
 from . import native_collection as nc, native_library_export as nl
+from .export_selection import by_name
 
 
 def retained(repo,job):
@@ -218,6 +219,9 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
     root,contract,index,record=destination()
     print("Export folder:",root,flush=True)
     print("Export preset:",preset,flush=True)
+    print("Tracks:",len(tracks),flush=True)
+    for i,track in enumerate(tracks,1):
+        print(f"  {i:02d}. "+json.dumps(track["brief"]["title"],ensure_ascii=True),flush=True)
     if not confirm:
         print("Plan only; no package writes or inference." if selection is not None or library_only else "Plan only; no writes or Studio calls.",flush=True)
         return 0
@@ -332,6 +336,9 @@ def main():
     p.add_argument("--native-collection",metavar="ID",help="Export exact native playlist or album in its current track order")
     p.add_argument("--list-songs",action="store_true",help="List playable native song IDs and titles")
     p.add_argument("--native-song",action="append",help="Select current native song ID, repeat for ordered tracks")
+    p.add_argument("--song-name",action="append",help="Select an unambiguous exact native title, repeat for ordered tracks")
+    p.add_argument("--collection-name",help="Select an unambiguous exact native album or playlist name (draft source)")
+    p.add_argument("--check-library",action="store_true",help="Consolidated native library acceptance; preview or confirmed bounded sample exports")
     p.add_argument("--library-only",action="store_true",help="Export current native collection as draft, without Director receipts")
     p.add_argument("--song",action="append")
     p.add_argument("--type",choices=tuple(ri.FOLDERS),default="single")
@@ -342,13 +349,30 @@ def main():
     p.add_argument("--confirm-run",action="store_true")
     a=p.parse_args()
     try:
+        if a.check_library:
+            if (a.export or a.list_collections or a.list_songs or a.song or a.native_collection or a.native_song
+                    or a.song_name or a.collection_name or a.library_only or a.title or a.artist
+                    or a.type!="single" or a.snapshot!=ri.DEFAULT_SNAPSHOT or a.preset!="production"):
+                raise ValueError("Use --export --check-library [--confirm-run] alone")
+            from .export_acceptance import run
+            return run(a.repo.resolve(),a.url,confirm=a.confirm_run,launch=launch)
         if a.list_collections or a.list_songs:
-            if (a.list_collections and a.list_songs or a.export or a.song or a.native_collection or a.native_song or a.library_only or a.confirm_run or a.title or a.artist or a.type!="single" or a.snapshot!=ri.DEFAULT_SNAPSHOT or a.preset!="production"):
+            if (a.list_collections and a.list_songs or a.export or a.song or a.native_collection or a.native_song or a.song_name or a.collection_name or a.library_only or a.confirm_run or a.title or a.artist or a.type!="single" or a.snapshot!=ri.DEFAULT_SNAPSHOT or a.preset!="production"):
                 raise ValueError("Use --export with exactly one list option alone")
             print(json.dumps(nc.collections(a.url) if a.list_collections else nl.song_list(a.url),ensure_ascii=False,indent=2))
             return 0
         if not a.export:
             raise ValueError("Export release ID required")
+        if a.song_name:
+            if a.song or a.native_song or a.native_collection or a.collection_name is not None:
+                raise ValueError("Choose one native song/collection selection method")
+            rows=nl.song_list(a.url)
+            a.native_song=[by_name(rows,name,"title") for name in a.song_name]
+        if a.collection_name is not None:
+            if a.song or a.native_song or a.native_collection:
+                raise ValueError("Choose one native song/collection selection method")
+            a.native_collection=by_name(nc.collections(a.url),a.collection_name,"name")
+            a.library_only=True
         return launch(a.repo.resolve(),a.export,a.song or ([] if a.native_collection or a.native_song else [a.export]),a.url,kind=a.type,title=a.title,artist=a.artist,snapshot=a.snapshot,confirm=a.confirm_run,preset=a.preset,native_collection=a.native_collection,native_songs=a.native_song,library_only=a.library_only)
     except (OSError,ValueError,KeyError,TypeError,MCPError) as exc:
         print("ERROR:",exc,file=sys.stderr)

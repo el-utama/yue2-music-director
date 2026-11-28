@@ -168,3 +168,7 @@ CI and live acceptance pending; no new inference.
 Video preset adds line-only LRC and SRT from existing native anchors; native
 karaoke correction/import remains in Studio, export captures new immutable
 snapshots. No separate timestamp editor or inference. CI/live pending.
+
+Exporter usability increment: exact native title/collection-name selection,
+ordered preview, consolidated local acceptance. CI and installed native
+acceptance pending. No new generation or collection writes.

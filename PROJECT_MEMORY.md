@@ -38,7 +38,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Verified main `fbf95765d56429a55f76274dcbf8250710e69319` after PR #143; both exact-head Python 3.11 CI jobs passed 46092440615. Draft Exporter remains operator priority; English default guarded and negative Indonesian lyric feedback retained. Seven historical works, 853 candidate IDs and 147 slots open.
+- Verified main `68ad3775bba0ecebfde3d8a930a19b9c6722fe4f` after PR #144; both exact-head Python 3.11 CI jobs passed 46094915707 after syntax fix. Draft Exporter remains operator priority; English default guarded and negative Indonesian lyric feedback retained. Seven historical works, 853 candidate IDs and 147 slots open.
 - P0 recovery follow-up (R01/R08/R09): a local interruption between saving the Studio acknowledgment and updating the journal can now recover the existing plan or song ID. Regression coverage injects that interruption and checks that planning and synthesis are each submitted once. Windows Studio recovery and independent live artistic acceptance remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
@@ -334,3 +334,19 @@ byte-preserving export. No operator commands required yet.
 PR #144 initial CI 46093609468 failed on both OSes: invalid escaped quotes
 in the new line-LRC f-string caused 10 module import errors. Corrected
 format construction, no test relaxation. Exact corrected-head CI required.
+
+
+2026-11-28: PR #144 merged at 68ad377 after corrected exact-head green
+Windows/Linux CI 46094915707. R07/R08 usability increment provides exact
+Unicode name selection (ambiguous matches explicitly rejected), ordered
+track preview and one-command native export acceptance, preserving prior
+packages. Source-only audit: native format conversion available but not
+invoked; existing byte formats copied; timing correction remains Studio
+UI; complete credits and cover image not required for draft. No duplication
+of native collections or karaoke. Restricted audit bridge does not expose
+library reads; installed acceptance must run locally on Windows. Samples
+cover three presets and four export types; absent native collection or
+missing timing is incomplete, not a fabricated pass. Synthetic tests and
+docs added; exact-head CI pending. No inference. Human player/subtitle
+inspection remains separate. Return to creative improvements after
+exporter acceptance; R01–R14 retained.
