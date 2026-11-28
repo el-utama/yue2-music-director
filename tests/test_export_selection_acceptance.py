@@ -76,3 +76,12 @@ class ExportSelectionAcceptanceTests(unittest.TestCase):
                 nd.atomic_write(package/"release.json",manifest)
                 with self.assertRaisesRegex(ValueError,"playlist order"):
                     ea.verify_sample(package,manifest,case,["b","a"])
+
+    def test_collections_only_includes_albums_above_old_eight_track_limit(self):
+        collections=[{"id":"a","name":"Long Album","kind":"album","tracks":12},
+                     {"id":"p","name":"Playlist","kind":"playlist","tracks":3}]
+        with patch.object(nl,"song_list",return_value=[]),patch.object(nc,"collections",return_value=collections):
+            plan=ea.plan(URL,collections_only=True)
+            self.assertEqual([c["id"] for c in plan["cases"]],["album-native","playlist-native"])
+            self.assertEqual(plan["native_album_count"],1)
+            self.assertTrue(plan["collections_only"])

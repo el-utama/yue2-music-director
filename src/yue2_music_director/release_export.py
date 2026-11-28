@@ -200,7 +200,14 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
     if (title is not None and (not isinstance(title,str) or not title.strip() or len(title)>150)
             or not isinstance(artist,str) or len(artist)>150 or (kind!="single" and not title)):
         raise ValueError("Album/EP requires title; invalid release metadata")
-    tracks=[nl.track(url,j) if library_only else retained(repo,j) for j in jobs]
+    tracks=[]
+    for number,j in enumerate(jobs,1):
+        try:
+            tracks.append(nl.track(url,j) if library_only else retained(repo,j))
+        except (ValueError,MCPError,OSError,TypeError,KeyError) as exc:
+            if not library_only:
+                raise
+            raise ValueError(f"Native track {number} (ID {j}): {exc}") from exc
     if selection is not None and [t["result"].get("song_id") for t in tracks]!=selection["song_ids"]:
         raise ValueError("Retained result does not match native collection order")
     title=title or tracks[0]["brief"]["title"]
@@ -344,7 +351,8 @@ def main():
     p.add_argument("--native-song",action="append",help="Select current native song ID, repeat for ordered tracks")
     p.add_argument("--song-name",action="append",help="Select an unambiguous exact native title, repeat for ordered tracks")
     p.add_argument("--collection-name",help="Select an unambiguous exact native album or playlist name (draft source)")
-    p.add_argument("--check-library",action="store_true",help="Consolidated native library acceptance; preview or confirmed bounded sample exports")
+    p.add_argument("--check-library",action="store_true",help="Consolidated native library acceptance; preview or confirmed sample exports")
+    p.add_argument("--collections-only",action="store_true",help="With --check-library, retest native album and playlist only")
     p.add_argument("--library-only",action="store_true",help="Export current native collection as draft, without Director receipts")
     p.add_argument("--song",action="append")
     p.add_argument("--type",choices=tuple(ri.FOLDERS),default="single")
@@ -361,7 +369,9 @@ def main():
                     or a.type!="single" or a.snapshot!=ri.DEFAULT_SNAPSHOT or a.preset!="production"):
                 raise ValueError("Use --export --check-library [--confirm-run] alone")
             from .export_acceptance import run
-            return run(a.repo.resolve(),a.url,confirm=a.confirm_run,launch=launch)
+            return run(a.repo.resolve(),a.url,confirm=a.confirm_run,launch=launch,collections_only=a.collections_only)
+        if a.collections_only:
+            raise ValueError("--collections-only requires --check-library")
         if a.list_collections or a.list_songs:
             if (a.list_collections and a.list_songs or a.export or a.song or a.native_collection or a.native_song or a.song_name or a.collection_name or a.library_only or a.confirm_run or a.title or a.artist or a.type!="single" or a.snapshot!=ri.DEFAULT_SNAPSHOT or a.preset!="production"):
                 raise ValueError("Use --export with exactly one list option alone")

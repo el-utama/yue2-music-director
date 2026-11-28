@@ -209,3 +209,5 @@ The consolidated exporter acceptance report checks actual assets/order in
 addition to hashes. Long track names are shortened only when necessary for
 portable Windows paths. The report is not a listening or subtitle playback
 review.
+
+After a partial live acceptance, use `--export --check-library --collections-only --confirm-run` to retest only native album/playlist. See the export guide for source-specific diagnostics. Preserve successful earlier reports.

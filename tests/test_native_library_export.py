@@ -64,8 +64,28 @@ class NativeLibraryExportTests(unittest.TestCase):
                 self.fail("Required FFmpeg unavailable")
             self.skipTest("FFmpeg required")
         with tempfile.TemporaryDirectory() as tmp:
-            for suffix,codec in (("flac","flac"),("wav","pcm_s16le"),("mp3","libmp3lame")):
+            for suffix,codec in (("flac","flac"),("wav","pcm_s16le"),("mp3","libmp3lame"),("ogg","libvorbis"),("oga","libvorbis"),("aac","aac"),("m4a","aac"),("mp4","aac")):
                 with self.subTest(suffix=suffix):
                     path=Path(tmp)/("test."+suffix)
                     _run([ffmpeg,"-nostdin","-v","error","-f","lavfi","-i","sine=frequency=440:sample_rate=44100:duration=1","-c:a",codec,"-n",str(path)])
                     self.assertAlmostEqual(nl.duration(path),1.0,delta=0.1)
+
+    def test_file_for_distinguishes_missing_and_unsupported(self):
+        from unittest.mock import Mock
+        client=Mock()
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            path=root/"song.m4a"
+            client.call.return_value={"audio":str(path)}
+            with self.assertRaisesRegex(ValueError,"missing or inaccessible"):
+                nl.file_for(client,"s")
+            path.write_bytes(b"audio")
+            self.assertEqual(nl.file_for(client,"s"),path.resolve())
+            other=root/"song.xyz"
+            other.write_bytes(b"audio")
+            client.call.return_value={"audio":str(other)}
+            with self.assertRaisesRegex(ValueError,"Unsupported native audio extension"):
+                nl.file_for(client,"s")
+            client.call.return_value={"audio":None}
+            with self.assertRaisesRegex(ValueError,"no resolved audio"):
+                nl.file_for(client,"s")

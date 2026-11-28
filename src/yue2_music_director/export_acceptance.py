@@ -8,23 +8,27 @@ from . import native_draft as nd, release_identity as ri
 from .mcp import MCPError, configured_endpoint
 
 
-def plan(url):
+def plan(url,*,collections_only=False):
     songs=nl.song_list(url)
     collections=nc.collections(url)
     ids=[row["id"] for row in songs[:2]]
     cases=[]
-    if ids:
+    if ids and not collections_only:
         cases.append({"id":"single-video","kind":"single","preset":"video","native_songs":ids[:1]})
-    if len(ids)==2:
+    if len(ids)==2 and not collections_only:
         cases.append({"id":"ep-distribution","kind":"ep","title":"Acceptance EP","preset":"distribution","native_songs":ids})
     for kind,preset in (("album","production"),("playlist","video")):
-        eligible=[row for row in collections if row["kind"]==kind and 1<=row["tracks"]<=8]
+        cap=24 if kind=="album" else 100
+        eligible=[row for row in collections if row["kind"]==kind and 1<=row["tracks"]<=cap]
         if eligible:
             selected=min(eligible,key=lambda row:(row["tracks"],row["id"]))
             cases.append({"id":kind+"-native","kind":kind,"preset":preset,"native_collection":selected["id"]})
-        elif ids:
+        elif ids and not collections_only:
             cases.append({"id":kind+"-manual","kind":kind,"title":"Acceptance "+kind,"preset":preset,"native_songs":ids})
     return {"playable_count":len(songs),"collection_count":len(collections),"cases":cases,
+            "native_album_count":sum(row["kind"]=="album" for row in collections),
+            "native_playlist_count":sum(row["kind"]=="playlist" for row in collections),
+            "collections_only":collections_only,
             "native_album_available":any(c["id"]=="album-native" for c in cases),
             "native_playlist_available":any(c["id"]=="playlist-native" for c in cases)}
 
@@ -111,12 +115,12 @@ def verify_sample(package,manifest,case,expected):
         raise ValueError("Acceptance status differs from actual assets")
 
 
-def run(repo,url,*,confirm,launch):
+def run(repo,url,*,confirm,launch,collections_only=False):
     url=configured_endpoint(url)
-    selected=plan(url)
+    selected=plan(url,collections_only=collections_only)
     print(json.dumps(selected,ensure_ascii=True,indent=2))
     if not selected["cases"]:
-        print("No playable native library songs; acceptance blocked")
+        print("No eligible native collection or playable sample; acceptance blocked")
         return 2
     if not confirm:
         print("Plan only; no exports or inference.")
@@ -134,8 +138,9 @@ def run(repo,url,*,confirm,launch):
                 # Recheck bounded collection immediately before export; the
                 # ordinary exporter also checks its own membership snapshot.
                 current=nc.collection(url,args["native_collection"])
-                if current["kind"]!=case["kind"] or len(current["song_ids"])>8:
-                    raise ValueError("Native acceptance collection changed or exceeds eight tracks")
+                cap=24 if case["kind"]=="album" else 100
+                if current["kind"]!=case["kind"] or len(current["song_ids"])>cap:
+                    raise ValueError("Native acceptance collection changed or exceeds export track limit")
                 args["library_only"]=True
                 args["expected_collection"]=current
                 expected=current["song_ids"]
@@ -159,10 +164,11 @@ def run(repo,url,*,confirm,launch):
         except (OSError,ValueError,KeyError,TypeError,MCPError) as exc:
             outcomes.append({"case":case["id"],"exit_code":2,"status":"blocked","error":str(exc)})
     kinds={case["kind"] for case in selected["cases"]}
-    full=(kinds=={"single","ep","album","playlist"} and selected["native_album_available"]
+    required_kinds={"album","playlist"} if collections_only else {"single","ep","album","playlist"}
+    full=(kinds==required_kinds and selected["native_album_available"]
           and selected["native_playlist_available"] and all(row["exit_code"]==0 for row in outcomes)
           and any("exported_unverified_display_anchors" in row.get("timing",[]) for row in outcomes))
-    report={"schema":"native-export-acceptance-v1","status":"sample_checks_passed" if full else "incomplete",
+    report={"schema":"native-export-acceptance-v1","status":("collection_checks_passed" if collections_only else "sample_checks_passed") if full else "incomplete",
             "plan":selected,"outcomes":outcomes,"native_mutations":0,"inference_calls":0,
             "human_player_review":False,"acoustic_alignment_verified":False}
     nd.atomic_write(root/"report.json",report)

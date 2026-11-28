@@ -199,3 +199,12 @@ checks source audio hashes, original and clean lyrics, timing asset policy,
 SRT and line-LRC derivation, exact M3U8 relative paths/order, and the complete
 asset set. Collection identity is frozen between acceptance selection and
 export. Report lists timing issues; no automatic fix or phonetic claim.
+
+### Live collection follow-up
+
+Studio's pinned import implementation also preserves Ogg/OGA, AAC and
+AAC in M4A/MP4. Export these original bytes with codec validation, not a
+conversion or extension rename. Missing/unsupported media errors identify
+the native track number and ID. Do not skip a track silently. The acceptance
+selection uses the smallest collection within normal export limits (24 album,
+100 playlist), not the old eight-track cutoff. `music.cmd --export --check-library --collections-only --confirm-run` tests only native collections after the previously successful single/EP/manual album checks. A collection-only pass is not a fresh full-suite pass.
