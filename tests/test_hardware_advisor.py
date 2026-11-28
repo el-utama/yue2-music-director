@@ -209,6 +209,30 @@ class AdvisorTests(unittest.TestCase):
         native["studio_status"]["song_jobs"] = [{"id": PRIVATE}]
         self.assertEqual(self.inspect_fixture(native)["advice"]["status"], "blocked")
 
+    def test_vram_warning_tracks_preserved_tier_and_unknown_comparisons(self):
+        native = observations()
+        # 7.5 GiB free is below the highest candidate but above installed Balanced.
+        report = self.inspect_fixture(native)
+        tier = next(c for c in report["advice"]["stock_tiers"] if c["profile"] == "Balanced Q6_K")
+        self.assertIsNone(tier["ram_below_estimate"])
+        self.assertIsNone(tier["model_disk_below_estimate"])
+        self.assertTrue(report["advice"]["preserve_current_stock"])
+        self.assertFalse(any("free VRAM" in check for check in report["advice"]["checks"]))
+
+        # Match the operator case: below 8 GiB total, about 6.3 GiB free
+        # while the selected stock configuration is already idle.
+        native["system_gpus"]["cards"][0]["memory_gb"] = 8151 / 1024
+        native["studio_system"]["resources"]["gpus"] = [
+            {"name": PRIVATE, "vram_total_mb": 8151, "vram_used_mb": 1703}]
+        report = self.inspect_fixture(native)
+        self.assertEqual(report["studio"]["activity"], "idle")
+        self.assertEqual(report["advice"]["status"], "candidate_unverified")
+        self.assertTrue(report["advice"]["preserve_current_stock"])
+        self.assertEqual(report["advice"]["stock_tiers"][0]["profile"], "Balanced Q6_K")
+        warning = next(check for check in report["advice"]["checks"] if "free VRAM" in check)
+        self.assertIn("Balanced Q6_K", warning)
+        self.assertNotIn("while Studio is idle", warning)
+
     def test_saved_or_stale_cache_is_not_effective_observation(self):
         native = observations()
         native["engine_options_get"]["in_effect"] = None
@@ -260,6 +284,8 @@ class AdvisorTests(unittest.TestCase):
         self.assertEqual(first["estimated_remaining_download_bytes"], 3 * GIB)
         self.assertEqual(first["missing_full_set_file_bytes"], 4 * GIB)
         self.assertEqual(second["missing_full_set_file_bytes"], 0)
+        self.assertIs(second["ram_below_estimate"], False)
+        self.assertIs(second["model_disk_below_estimate"], False)
         self.assertTrue(second["free_vram_below_tier"])
         self.assertIn("Reported free RAM", " ".join(report["advice"]["checks"]))
         self.assertIn("Balanced Q6_K", report["advice"]["action"])

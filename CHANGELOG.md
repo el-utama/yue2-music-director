@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — Hardware Advisor live Windows follow-up
+
+- Record the operator-reported Advisor pass on the existing Windows Studio host. Use the preserved stock tier for VRAM guidance and report unknown RAM/disk comparisons explicitly. Fresh low-VRAM acceptance and synthesis fit remain open.
+
 ## Unreleased — Hardware and Configuration Advisor
 
 - Add `music.cmd --advisor` for read-only hardware and Studio evidence, goal-specific recommendations, hypothetical hardware, shareable output and optional private snapshots. Keep the existing production gate and retained receipts. Target-host Advisor and alternate production validation remain open.

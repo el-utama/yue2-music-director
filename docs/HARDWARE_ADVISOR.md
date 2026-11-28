@@ -96,8 +96,11 @@ are pinned source evidence. Studio's source uses GiB units for these tiers.
 The ranking follows the pinned chooser's preference for Q8_0 over BF16.
 It retains a matching installed stock configuration first. Display and
 runtime allocations affect free VRAM, and a free VRAM reading is neither a
-reservation nor proof of fit. The per-host RAM estimate comes from the live
-catalog only when its hardware summary matches the selected NVIDIA card.
+reservation nor proof of fit. A free VRAM warning uses the stock tier the
+Advisor recommends keeping or inspecting. The JSON RAM and disk comparisons
+are `null` when a required input is unavailable. The live catalog provides a
+per-host RAM estimate only when its hardware summary matches the selected
+NVIDIA card.
 The catalog exposes component sizes, partial bytes and installability. It
 does not provide generic per-profile VRAM fields at this pin. Recommended
 model IDs may be a CPU fallback, so the Advisor uses the pinned dedicated
@@ -143,14 +146,25 @@ to a separate supported-profile audit. See [local configuration](LOCAL_STUDIO_CO
 [the native control contract](knowledge/NATIVE_CONTROL_CONTRACT.md), and
 [the architecture](MUSIC_DIRECTOR_ARCHITECTURE.md) for the execution gates.
 
+## Live Windows Advisor check
+
+On 2026-11-28 the operator ran `music.cmd --advisor --json` on the existing
+Windows Studio host after updating to the Advisor release. The shareable
+report confirmed the launcher, loopback connection, all ten production
+reads, host resources, idle Studio and the selected stock Balanced Q6_K
+model matching the engine. It reported CUDA configured, Q8 cache configured
+and effective, flash attention on, and an unknown effective backend.
+Dedicated VRAM was about 7.96 GiB total and 6.30 GiB free. The Advisor
+recommended keeping Balanced with no missing set files. This completed
+the targeted read-only check on the existing host. Provider, managed MOSS,
+actual model loading and synthesis fit have separate evidence requirements.
+
 ## Remaining validation
 
-1. **Read-only Windows acceptance.** Run `music.cmd --advisor --json` on the
-   original Studio host and, when available, a genuinely fresh low-VRAM
-   Windows machine. Compare the shareable summary with Studio's resource
-   monitor and Local engine screen. Private reports, paths, logs, songs
-   and credentials stay local. Preserve the prior exporter and synthesis
-   evidence.
+1. **Fresh low-VRAM Windows host.** When available, run
+   `music.cmd --advisor --json` once on a genuinely fresh low-VRAM PC.
+   Compare the shareable summary with Studio's resource monitor and Local
+   engine screen. Preserve the prior exporter and synthesis evidence.
 2. **Versioned alternate production policy.** Retain
    `stock-balanced-cuda-q8-v1` and the existing default. Verify exact
    model/decoder/runtime/adapter identities, execution request fields and
