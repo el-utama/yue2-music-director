@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — two-job routine CI
+
+- Run the unchanged offline suite and platform smoke checks on Windows and Linux Python 3.11 per PR; remove duplicate push-triggered runs, cancel superseded PR runs, retain manually triggered four-job compatibility checks for releases/runtime changes.
+
 ## Unreleased — approved duration-only continuation
 
 - Preserve rejected native plan and creative receipts; propose a bounded tempo-only candidate and synchronize simple consistent BPM advice in a separate child. Require exact operator BPM approval, full score re-review, native MIDI and frozen configuration checks; no new creative or planning calls. Ambiguous and explicit tempo requirements remain blocked. Live validation pending.

@@ -1,14 +1,22 @@
 name: Python tests
 on:
-  push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      full_matrix:
+        description: Run the full Python 3.11/3.13 release compatibility matrix
+        type: boolean
+        default: true
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   test:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ['3.11', '3.13']
+        python-version: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.full_matrix && '["3.11","3.13"]' || '["3.11"]') }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
