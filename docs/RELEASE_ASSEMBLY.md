@@ -31,3 +31,6 @@ verifies it against the retained source and copies both texts. Historical
 exports without the clean asset policy remain valid. Distribution-preset
 exports deliberately contain no timed pair; they are complete for that
 selected preset, not timing-validated or publication-approved.
+
+Playlist exports are listening collections, not release assemblies. Select
+Single, EP or Album for the approved release workflow.

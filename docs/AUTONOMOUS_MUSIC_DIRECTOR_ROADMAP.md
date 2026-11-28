@@ -155,3 +155,7 @@ Production and distribution presets are the first bounded increment;
 additional video preset and timing/naming/live acceptance remain open.
 After exporter acceptance return to English-first Composer/Lyricist/Reviewer
 quality, without dropping other requirements or artistic rejection evidence.
+
+Operator added native Playlist export. Reuse native album/playlist membership
+and order, add relative M3U8. Initial adapter matches completed autonomous
+jobs; general Studio-only library export and live acceptance remain open.

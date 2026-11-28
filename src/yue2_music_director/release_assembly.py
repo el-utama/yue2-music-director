@@ -45,6 +45,8 @@ def prepare(repo,release,snapshot,variants):
             or base_contract.get("audio_variant")!="original"
             or base_contract.get("type") not in ri.FOLDERS):
         raise ValueError("Original release identity differs")
+    if base_contract["type"]=="playlist":
+        raise ValueError("Playlist export is a listening collection, not an approved release; export Single, EP or Album for assembly")
     ex.verify_export(root,base_contract)
     root,contract=ri.revision(exports,base_contract,root,snapshot)
     manifest=ex.verify_export(root,contract)

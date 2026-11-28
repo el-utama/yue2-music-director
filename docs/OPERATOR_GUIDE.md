@@ -185,3 +185,9 @@ Draft export does not require full credits, artwork or audio release approval.
 Use the default production preset for FLAC, tagged and clean lyric text and
 existing native timing, or `--preset distribution` for audio and lyric texts
 without timing reads. See [export presets](RELEASE_EXPORT.md#production-and-distribution-presets).
+
+Native collection discovery: `music.cmd --export --list-collections`.
+Use `music.cmd --export RELEASE --native-collection ID --confirm-run` to
+package an existing playlist or album of completed autonomous results.
+See [native playlists and albums](RELEASE_EXPORT.md#native-playlists-and-albums).
+Studio-only library songs remain unsupported in this increment.

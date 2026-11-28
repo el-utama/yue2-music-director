@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — native collection exports
+
+- Add read-only native playlist/album discovery and ordered retained-song selection, playlist folder and relative M3U8. No native collection writes or inference; Studio-only song source remains open.
+
 ## Unreleased — draft export priority
 
 - Add clean stanza lyric TXT alongside preserved tagged lyrics, production and distribution presets, and downstream clean-asset verification. Preserve historical packages, optional metadata and existing native timing policy. Operator prioritizes exporter before creative improvements; no new audio encoding or inference.
