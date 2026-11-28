@@ -57,3 +57,38 @@ class RetainedSourceTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 rs.load(repo,"one")
 
+
+
+    def test_approved_audio_recovery_remains_a_valid_historical_source(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            parent=make_song(repo,"recovered",True)
+            root=parent/"continuation-1"
+            draft=root/"production/draft"
+            journal=nd.read(draft/"journal_song.json")
+            report=nd.read(draft/"report.json")
+            approved=journal["audio_sha256"]
+            journal["audio_sha256"]="a"*64
+            nd.atomic_write(draft/"journal_song.json",journal)
+            nd.atomic_write(draft/"acoustic.json",report["acoustic"])
+            nd.atomic_write(draft/"submission-response.json",{"job_id":journal["job_id"]})
+            # Construct a synthetic pre-ASR recovery sidecar and its final report.
+            (draft/"report.json").unlink()
+            record=nd.audio_recovery_record(draft,journal,approved,create=True)
+            report["audio_identity_recovery"]=record
+            report["status"]="technical_review_required"
+            nd.atomic_write(draft/"report.json",report)
+            result=nd.read(root/"result.json")
+            result["native_report_sha256"]=nd._sha(draft/"report.json")
+            nd.atomic_write(root/"result.json",result)
+            before={p:nd._sha(p) for p in parent.rglob("*") if p.is_file()}
+            source=rs.load(repo,"recovered")
+            self.assertEqual(source["row"]["audio_sha256"],approved)
+            self.assertEqual(source["report"]["audio_identity_recovery"],record)
+            self.assertEqual(ex.retained(repo,"recovered")["evidence"],source["evidence"])
+            self.assertEqual(before,{p:nd._sha(p) for p in before})
+            self.assertEqual(nd.read(draft/"journal_song.json")["audio_sha256"],"a"*64)
+            changed={**record,"original_waveform_equivalence_verified":True}
+            nd.atomic_write(draft/"audio-identity-recovery.json",changed)
+            with self.assertRaises(ValueError):
+                rs.load(repo,"recovered")

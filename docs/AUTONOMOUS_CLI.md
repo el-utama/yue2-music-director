@@ -216,3 +216,12 @@ report is explicitly marked technical_review_required. No new song or score
 job, no additional creative stages; the original outstanding QA budget
 remains. No claim of original waveform equivalence or metadata-only change.
 Do not edit hashes or delete evidence. Live recovery remains unverified.
+
+
+Live checkpoint 2026-11-28: the approved 77 BPM continuation and subsequent
+explicit audio-identity recovery completed on the operator's Windows host.
+One retained song, one explicit ASR, two CPU excerpts and one Director,
+review_required, exit 0. No replay of completed creative or synthesis work.
+Use the completed-source commands (ending audit, finishing, feedback) next;
+no production resume is necessary. Human listening, headroom and original
+waveform equivalence remain unverified. No automatic acceptance.

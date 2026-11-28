@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — live supervised recovery checkpoint
+
+- Record operator-reported successful duration and audio-identity recovery through final Director judgment, with review required. Add historical-source regression for the retained audio recovery receipt; no new inference or automatic acceptance.
+
 ## Unreleased — retained audio identity recovery
 
 - Add explicitly approved, one-time current audio identity binding for completed duration continuations before ASR. Preserve the original journal and acoustic evidence; verify native song and score lineage. No original-waveform equivalence claim or new generation. Force technical review.
