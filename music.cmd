@@ -17,6 +17,7 @@ if /I "%~1"=="--review-plan" goto reviewplan
 if /I "%~1"=="--cover" goto cover
 if /I "%~1"=="--export" goto exportrelease
 if /I "%~1"=="--feedback" goto feedback
+if /I "%~1"=="--compare-first-line" goto comparefirstline
 if /I "%~1"=="--inspect-lock" goto lockstatus
 if /I "%~1"=="--recover-lock" goto lockstatus
 if /I "%~1"=="--release" goto releaseworkflow
@@ -81,6 +82,11 @@ exit /b %ERRORLEVEL%
 :exportrelease
 if /I "%~2"=="--help" goto exportreleasehelp
 py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\export-output.txt" -- py -3 -u -m yue2_music_director.release_export --repo "%ROOT%." --url "%YUE2_MCP_URL%" %*
+exit /b %ERRORLEVEL%
+
+:comparefirstline
+if /I "%~2"=="--help" goto comparefirstlinehelp
+py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\first-line-output.txt" -- py -3 -u -m yue2_music_director.first_line_comparison --repo "%ROOT%." --url "%YUE2_MCP_URL%" %*
 exit /b %ERRORLEVEL%
 
 :feedback
@@ -151,4 +157,8 @@ exit /b %ERRORLEVEL%
 
 :releaseworkflowhelp
 py -3 -u -m yue2_music_director.release_workflow --help
+exit /b %ERRORLEVEL%
+
+:comparefirstlinehelp
+py -3 -u -m yue2_music_director.first_line_comparison --help
 exit /b %ERRORLEVEL%

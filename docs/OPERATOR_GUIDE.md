@@ -75,6 +75,7 @@ The preferred sequence is **Intro → Verse 1 → Pre-Chorus → Chorus → Vers
 | Review a stopped plan | `music.cmd --review-plan JOB` | Retained local evidence; no new score |
 | Inspect lock | `music.cmd --inspect-lock autonomous` | Read-only journal summary |
 | Preview finishing | `music.cmd --finish JOB` | Existing source, no new song |
+| Preview Verse 1 comparison | `music.cmd --compare-first-line JOB "Phrase one" "Phrase two"` | Verify a completed score and preview new lyric phrasing offline |
 | Read feedback | `music.cmd --feedback JOB` | Local feedback/approval state |
 | Preview cover direction | `music.cmd --cover JOB` | No image generation |
 | Preview export | `music.cmd --export JOB` | Existing source only |
@@ -178,6 +179,7 @@ Read each module guide for precise confirmation semantics. `--setup` and
 | `--review-plan` | [AUTONOMOUS CLI](AUTONOMOUS_CLI.md) |
 | `--cover` | [COVER ART](COVER_ART.md) |
 | `--export` | [RELEASE EXPORT](RELEASE_EXPORT.md) |
+| `--compare-first-line` | [AUTONOMOUS CLI](AUTONOMOUS_CLI.md) |
 | `--feedback` | [HUMAN FEEDBACK](HUMAN_FEEDBACK.md) |
 | `--inspect-lock` | [LOCAL LOCK RECOVERY](LOCAL_LOCK_RECOVERY.md) |
 | `--recover-lock` | [LOCAL LOCK RECOVERY](LOCAL_LOCK_RECOVERY.md) |
