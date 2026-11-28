@@ -53,3 +53,19 @@ class NativeLibraryExportTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,"changed during export"):
                     ex.launch(repo,"changed",[],URL,native_songs=["s"],confirm=True,preset="distribution")
             self.assertFalse((repo/"results/exports/songs/Song--changed").exists())
+
+    def test_real_native_audio_formats_duration(self):
+        import os
+        import shutil
+        from yue2_music_director.acoustic import _run
+        ffmpeg=shutil.which("ffmpeg")
+        if not ffmpeg or not shutil.which("ffprobe"):
+            if os.environ.get("REQUIRE_REAL_AUDIO_TESTS")=="1":
+                self.fail("Required FFmpeg unavailable")
+            self.skipTest("FFmpeg required")
+        with tempfile.TemporaryDirectory() as tmp:
+            for suffix,codec in (("flac","flac"),("wav","pcm_s16le"),("mp3","libmp3lame")):
+                with self.subTest(suffix=suffix):
+                    path=Path(tmp)/("test."+suffix)
+                    _run([ffmpeg,"-nostdin","-v","error","-f","lavfi","-i","sine=frequency=440:sample_rate=44100:duration=1","-c:a",codec,"-n",str(path)])
+                    self.assertAlmostEqual(nl.duration(path),1.0,delta=0.1)

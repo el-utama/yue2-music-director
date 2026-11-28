@@ -35,7 +35,8 @@ def lyric_bytes(track):
 
 
 CLEAN_LYRIC_POLICY="section-stripped-stanzas-v1"
-PRESETS={"production":"studio-display-anchors-v2","distribution":"not-requested-v1"}
+PRESETS={"production":"studio-display-anchors-v2","distribution":"not-requested-v1",
+         "video":"studio-display-video-v1"}
 
 
 def lyric_stanzas(lyrics,*,library_only=False):
@@ -83,7 +84,7 @@ def stamp(ms,*,srt=False):
     return f"{minutes:02}:{second:02}.{milli:03}"
 
 
-def timed_text(lrc,lyrics,duration,*,library_only=False):
+def timing_rows(lrc,lyrics,duration,*,library_only=False,video=False):
     # Match the pinned Studio UI's subtitle display policy, independently
     # implemented from app/services/lrc-parser.ts (bfd35a0).
     # Section labels are not sung cues; preserve them in the original LRC.
@@ -91,6 +92,14 @@ def timed_text(lrc,lyrics,duration,*,library_only=False):
         raise ValueError("Invalid native LRC")
     sung=[]
     for raw in lrc.splitlines():
+        if video:
+            # Only known non-timing headers are ignored in derived assets.
+            # An offset changes the clock; require corrected native timing.
+            raw=raw.lstrip("\ufeff") if not sung else raw
+            if re.fullmatch(r"\[(?:ar|al|ti|au|by|re|ve|length):[^\]]*\]",raw.strip(),re.I):
+                continue
+            if re.fullmatch(r"\[offset:[+-]?0+\]",raw.strip(),re.I):
+                continue
         match=LINE.fullmatch(raw.strip())
         if match and re.fullmatch(r"\[.*\]",match.group(4).strip()):
             continue
@@ -99,6 +108,11 @@ def timed_text(lrc,lyrics,duration,*,library_only=False):
     expected=[line for group in lyric_stanzas(lyrics,library_only=library_only) for line in group]
     if [" ".join(r["text"].split()) for r in rows]!=[" ".join(x.split()) for x in expected]:
         raise ValueError("Native LRC does not cover the exact lyric lines in order")
+    return rows
+
+
+def timed_text(lrc,lyrics,duration,*,library_only=False,video=False):
+    rows=timing_rows(lrc,lyrics,duration,library_only=library_only,video=video)
     cues=[]
     for i,row in enumerate(rows):
         start=row["start_seconds"]
@@ -120,6 +134,18 @@ def timed_text(lrc,lyrics,duration,*,library_only=False):
     return lrc,"\n".join(cues)
 
 
+def video_line_bytes(lrc,lyrics,duration,*,library_only=False):
+    rows=timing_rows(lrc,lyrics,duration,library_only=library_only,video=True)
+    lines=[]
+    for row in rows:
+        ms=math.floor(row["start_seconds"]*1000+0.5)
+        time=stamp(ms)
+        if ms%10==0:
+            time=time[:-1]
+        lines.append(f"[{time}]{row[\'text\']}")
+    return ("\n".join(lines)+"\n").encode("utf-8")
+
+
 def playlist_bytes(names,extensions=None):
     """Portable relative paths only, in exact exported track order."""
     extensions=extensions or [".flac"]*len(names)
@@ -127,6 +153,8 @@ def playlist_bytes(names,extensions=None):
 
 
 def verify_export(root,contract):
+    if root.is_symlink() or any(p.is_symlink() for p in root.rglob("*")):
+        raise ValueError("Unexpected symlink in export package")
     manifest=nd.read(root/"release.json")
     if manifest.get("contract")!=contract:
         raise ValueError("Existing export differs; choose a new release ID")
@@ -206,7 +234,7 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
         extensions=[t["audio"].suffix.lower() if library_only else ".flac" for t in tracks]
         def paths(base):
             return [base/"release.json",*([base/"playlist.m3u8"] if kind=="playlist" else []),*[(base/name if kind!="single" else base)/(name+suffix)
-                    for name,ext in zip(names,extensions) for suffix in (ext,".txt",".clean.txt",".lrc",".srt")]]
+                    for name,ext in zip(names,extensions) for suffix in (ext,".txt",".clean.txt",".lrc",".srt")+((".line.lrc",) if preset=="video" else ())]]
         ri.ensure_paths([index,*paths(root)])
         ri.reserve(index,record)
         base=root.parent
@@ -240,7 +268,10 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
                         lrc=t["native_snapshot"]["lrc"] if library_only else (timing_reader or read_timing)(t,url)
                         if not lrc:
                             raise ValueError("No retained native karaoke LRC")
-                        lrc_out,srt_out=timed_text(lrc,lyrics,t["report"]["acoustic"]["duration_seconds"],library_only=library_only)
+                        duration=t["report"]["acoustic"]["duration_seconds"]
+                        lrc_out,srt_out=timed_text(lrc,lyrics,duration,library_only=library_only,video=preset=="video")
+                        if preset=="video":
+                            line_lrc=video_line_bytes(lrc,lyrics,duration,library_only=library_only)
                     except (ValueError,MCPError,TypeError,KeyError,OSError) as exc:
                         timing["reason"]=str(exc)
                     else:
@@ -252,6 +283,12 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
                                 "source_lrc_sha256":nd.digest(lrc.encode("utf-8")),
                                 "srt_end_policy":"Studio UI word-tail/plain-line heuristic; capped at next onset, final 3 seconds and measured duration",
                                 "lrc_preserved":True}
+                        if preset=="video":
+                            (dest/(name+".line.lrc")).write_bytes(line_lrc)
+                            rows=timing_rows(lrc,lyrics,duration,library_only=library_only,video=True)
+                            timing.update(line_lrc_policy="native-line-onset-only-v1",
+                                          lyric_line_count=len(rows),
+                                          enhanced_line_count=sum(bool(row["word_anchors"]) for row in rows))
                         if timing_reader is None:
                             timing["source_identity_screen"]="native_library_current_snapshot_v1" if library_only else "matched_retained_audio_and_stable_library_snapshot_v1"
                             timing["karaoke_provenance_verified"]=False
@@ -300,7 +337,7 @@ def main():
     p.add_argument("--type",choices=tuple(ri.FOLDERS),default="single")
     p.add_argument("--title")
     p.add_argument("--artist",default="")
-    p.add_argument("--preset",choices=sorted(PRESETS),default="production",help="production: audio, both lyric texts and native LRC/SRT; distribution: audio and both lyric texts only")
+    p.add_argument("--preset",choices=sorted(PRESETS),default="production",help="production: all existing timed assets; distribution: audio and lyric texts; video: production plus simple line LRC")
     p.add_argument("--snapshot",default=ri.DEFAULT_SNAPSHOT,help="Explicit immutable revision of existing v1 release")
     p.add_argument("--confirm-run",action="store_true")
     a=p.parse_args()

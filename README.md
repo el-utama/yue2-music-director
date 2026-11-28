@@ -243,3 +243,8 @@ For the 8 GB CUDA tier, the recommended development reference is stock YuE2 Bala
 **Baseline pengembangan 8 GB:** YuE2 original Balanced Q6_K, VAE original, LoRA tambahan nonaktif dan companion off. Fine-tune dan LoRA hanyalah pilihan untuk kebutuhan spesifik, bukan kewajiban. Jangan menghapus file model atau menjalankan training untuk menyiapkan baseline.
 
 Optional independent audio evaluation: see [Quality Evaluation](docs/QUALITY_EVALUATION.md) for the official AudioBox model integration, local checkpoint requirement and research-only alternatives. No required new dependencies or automatic model downloads.
+
+Current draft export presets: production, distribution and video. Native
+song, album and playlist draft sources preserve original audio bytes. See
+[Release Export](docs/RELEASE_EXPORT.md); no aggregator metadata or actual
+cover required for draft exports. Live acceptance of the new routes pending.

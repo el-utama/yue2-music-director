@@ -101,3 +101,25 @@ class ExportTests(unittest.TestCase):
                                  timing_reader=lambda *a:self.fail("repeat read")),0)
                 with self.assertRaises(ValueError):
                     ex.launch(*args,preset="production",confirm=True)
+
+    def test_video_preset_preserves_native_lrc_and_derives_line_onsets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            t=fixture(repo,"one")
+            raw="\ufeff[ti:One]\r\n[ar:Artist]\r\n[offset:0]\r\n"+LRC.replace("\n","\r\n")
+            with patch.object(ex,"retained",return_value=t):
+                self.assertEqual(ex.launch(repo,"video",["one"],URL,preset="video",confirm=True,timing_reader=lambda *a:raw),0)
+                root=repo/"results/exports/songs/one--video"
+                self.assertEqual((root/"one.lrc").read_bytes(),raw.encode("utf-8"))
+                self.assertEqual((root/"one.line.lrc").read_bytes(),b"[00:01.00]One two\n[00:03.25]Three four\n")
+                timing=nd.read(root/"release.json")["tracks"][0]["timing"]
+                self.assertEqual((timing["lyric_line_count"],timing["enhanced_line_count"]),(2,1))
+                self.assertFalse(timing["acoustic_timing_verified"])
+                before={p:nd._sha(p) for p in root.rglob("*") if p.is_file()}
+                updated=raw.replace("[00:03.25]","[00:03.40]")
+                self.assertEqual(ex.launch(repo,"video",["one"],URL,preset="video",snapshot="v2",confirm=True,timing_reader=lambda *a:updated),0)
+                revision=repo/"results/exports/revisions/video/v2"
+                self.assertIn(b"[00:03.40]",(revision/"one.line.lrc").read_bytes())
+                self.assertEqual(before,{p:nd._sha(p) for p in root.rglob("*") if p.is_file()})
+                self.assertEqual(ex.launch(repo,"offset",["one"],URL,preset="video",confirm=True,timing_reader=lambda *a:raw.replace("[offset:0]","[offset:500]")),2)
+                self.assertFalse((repo/"results/exports/songs/one--offset/one.srt").exists())

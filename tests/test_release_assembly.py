@@ -129,3 +129,9 @@ class ReleaseAssemblyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             ra.launch(self.repo,"release",confirm=True)
         self.assertFalse(self.root.exists())
+
+    def test_video_assets_preserved_in_approved_assembly(self):
+        self.assertEqual(ex.launch(self.repo,"release",["one"],URL,preset="video",confirm=True,timing_reader=lambda *a:LRC),0)
+        self.approve(self.source)
+        self.assertEqual(ra.launch(self.repo,"release",confirm=True),0)
+        self.assertEqual((self.root/"one.line.lrc").read_bytes(),(self.export/"one.line.lrc").read_bytes())
