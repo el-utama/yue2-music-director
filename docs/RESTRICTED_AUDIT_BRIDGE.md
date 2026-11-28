@@ -1,5 +1,7 @@
 # Restricted remote audit bridge — operator recovery
 
+Optional historical operator-specific bridge only. A new Windows PC does not need this bridge or Mac, Tailscale or tunnel setup for the local CLI. Use [fresh local setup](FRESH_INSTALL.md#3-connect-to-the-newly-installed-studio) instead; no shipped remote production service.
+
 This is an audit-only path, separate from Music Director's local generation
 CLI. It is not a production remote Studio service or permission to expose
 the entire native MCP server.

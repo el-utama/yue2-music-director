@@ -1,6 +1,8 @@
 # Autonomous CLI (active alpha)
 
-## Current status — 2026-11-27
+For first-ever use, follow [fresh-host setup](FRESH_INSTALL.md#5-prepare-full-autonomous-production-only-if-wanted) before confirming production. The old host's DPAPI provider record, model files and job receipts are not installation prerequisites or transferable evidence. Export-only workflows need neither a hosted provider nor this gate.
+
+## Historical live status — 2026-11-27
 
 Hosted text and full autonomous generation ran successfully on the operator host; the subsequent reviewed-native retained continuation completed without repeating synthesis or ASR. Human listening, cover prompt and original single-song export were favorable/successful for that retained example. Opening policy v3, source provenance, export timing hardening, human feedback and audio finishing are separate implementation/CI milestones, not additional live validations. The current [native audit checkpoint](NATIVE_AUDIT_CHECKPOINT.md) records subsequent completion/lyric verification fixes and saved lyric schedule evidence. See [active roadmap](AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md), [feedback](HUMAN_FEEDBACK.md) and [finishing](AUDIO_FINISHING.md). Use the completed-source commands for retained jobs rather than production resume. Historical development reports below describe their earlier state; they are not requests to repeat tests.
 

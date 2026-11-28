@@ -4,13 +4,15 @@
 
 ## Agent onboarding and current evidence
 
+For a fresh machine, start with [first-run onboarding](docs/FRESH_INSTALL.md). Develop/test offline without assuming any Studio or provider configuration. On a new Studio host, verify local prerequisites and actual schemas; prior live evidence does not transfer.
+
 1. Read [AGENTS.md](AGENTS.md), [PROJECT_MEMORY.md](PROJECT_MEMORY.md), the active roadmap, [native audit](docs/NATIVE_AUDIT_CHECKPOINT.md) and [local release checkpoint](docs/LOCAL_RELEASE_CHECKPOINT.md).
 2. Verify main, exact pending PR head, CI evidence, source code, and actual data inventory. Choose an open requirement, not an old historical milestone.
 3. Read [operator guide](docs/OPERATOR_GUIDE.md) and the specific module contract. Keep supported confirmation semantics, private files, retained jobs and one short launcher intact.
 4. Make a coherent bounded change, with tests for normal, failure and resume paths. Use Windows/Linux Python 3.11 PR CI (two jobs); local mock tests are not live Studio/provider validation. Run the full Python 3.11/3.13 matrix manually before releases and when changing dependencies or Python compatibility. No extra inference unless explicitly authorized.
 5. Update the relevant user guide, README entry points when needed, changelog and PROJECT_MEMORY.md. Distinguish candidate metadata from approved references, implemented from tested, and technical from artistic acceptance.
 
-Current evidence after PR #127: three offline SQLite/FTS5 indexes, explicit authored-style selection in autonomous Composer, local artist profiles and bounded release specialists are implemented and CI-tested. Historical knowledge production integration, approved corpus, live typed/preset generalization, process supervision and private production service are open. The current register is authoritative. See [offline workflow](docs/OFFLINE_KNOWLEDGE_WORKFLOW.md) and [active roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md).
+Current evidence: see [PROJECT_MEMORY.md](PROJECT_MEMORY.md). Draft Exporter sample acceptance passed live across PRs #146–148; next priority is creative quality. Fresh-host onboarding remains independently unverified. All deferred corpus, artistic evaluation, service and compatibility requirements remain tracked.
 
 The offline documentation regression gate (`tests/test_documentation.py`) checks tracked Markdown inline relative file/directory links, heading fragments and the operator guide's primary launcher route table. Run from a Git checkout. It deliberately does not fetch external URLs, validate arbitrary Markdown syntax, or execute historical examples. Windows CI additionally builds/browses all three bundled indexes and previews a selected-style job with no provider or Studio calls.
 

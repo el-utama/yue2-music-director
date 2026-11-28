@@ -1,5 +1,7 @@
 # Offline knowledge workflow — user and maintainer guide
 
+For a fresh checkout follow [first-run prerequisites](FRESH_INSTALL.md#2-install-prerequisites-and-clone). The derived SQLite files are created on demand; no Studio, provider, GPU or prior agent history is needed for offline indexing.
+
 Current evidence: PR #126 merged, main `44c49599c13d30472e1f36136f12d0266a5dfe75`;
 [exact-head Windows/Linux CI](https://github.com/el-utama/yue2-music-director/actions/runs/45962926812) passed (Python 3.11 and 3.13).
 This is an alpha feature set, not full artistic or rights acceptance.

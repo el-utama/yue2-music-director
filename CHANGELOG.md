@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Fresh-host onboarding — 2026-11-28
+
+- Add zero-history Windows installation runbook, workflow-specific prerequisites, local Studio discovery, provider/production gates, first preview/export/song, troubleshooting and agent handover. Align current and historical documentation; fresh-host live validation remains open.
+
 ## Draft exporter live acceptance — 2026-11-28
 
 - Operator-reported Windows checks passed across Single, EP, manual/native Album and native Playlist, all three presets; final 11-track album complete with four explicit line-only timing fallbacks. No native mutation/inference. Human playback and acoustic alignment unverified. Return to creative quality; preserve final release/approval requirements.
