@@ -1,5 +1,9 @@
 # Local music production and release checkpoint — 2026-11-27
 
+Historical host evidence only. For a new machine without prior agent runs,
+use [fresh-host onboarding](FRESH_INSTALL.md); do not reproduce these jobs
+or assume the same hardware/configuration/receipts.
+
 Scope: high-impact autonomous handover findings, the non-destructive
 Audio Finishing Specialist, and bounded local release preparation. Existing
 reference music, provider configuration, native jobs and earlier experiments

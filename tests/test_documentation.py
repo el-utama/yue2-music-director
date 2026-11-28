@@ -84,3 +84,14 @@ class DocumentationTests(unittest.TestCase):
             self.assertIn(label, labels, flag)
         for flag, target in docs:
             self.assertTrue((ROOT / "docs" / target).is_file(), flag)
+
+    def test_fresh_host_runbook_linked_and_workflow_boundaries(self):
+        for name in ("README.md","AGENTS.md","DEVELOPMENT.md","docs/OPERATOR_GUIDE.md",
+                     "docs/AUTONOMOUS_CLI.md","docs/LOCAL_STUDIO_CONFIGURATION.md",
+                     "docs/RELEASE_EXPORT.md","docs/RESTRICTED_AUDIT_BRIDGE.md"):
+            self.assertIn("FRESH_INSTALL.md",(ROOT/name).read_text(encoding="utf-8"),name)
+        guide=(ROOT/"docs/FRESH_INSTALL.md").read_text(encoding="utf-8")
+        for token in ("--list-songs","--list-collections","--setup","--check-provider",
+                      "--ready --media-dir","--confirm-run","DPAPI","CrisperWhisper Turbo",
+                      "No prior chat","not yet","empty Studio library"):
+            self.assertIn(token,guide,token)

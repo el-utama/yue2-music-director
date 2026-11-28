@@ -38,7 +38,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Verified main `b7cb968b04d6f060e436f1b526524ca3a9fe1d14` after PR #148; both exact-head CI jobs passed 46103441059. Agreed draft Exporter sample acceptance passed across targeted Windows runs; next priority creative quality (R02/R03 and Reviewer), not another exporter rewrite. Seven historical works, 853 candidate IDs and 147 slots open.
+- Verified main `6549392cdaf925b2cc4539d2ff73f439a068eb23` after documentation PR #149; both exact-head CI jobs passed 46103853783. Agreed draft Exporter sample acceptance recorded. Next priority creative quality, following fresh-host onboarding documentation request.
 - P0 recovery follow-up (R01/R08/R09): a local interruption between saving the Studio acknowledgment and updating the journal can now recover the existing plan or song ID. Regression coverage injects that interruption and checks that planning and synthesis are each submitted once. Windows Studio recovery and independent live artistic acceptance remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
@@ -425,3 +425,14 @@ natural idiom, imagery, emotional progression, singability, and musical
 intent, and add editorial evaluation fixtures. Technical QA is not artistic
 approval. No new live inference without authorization; preserve historical
 contracts and all deferred requirements.
+
+
+2026-11-28: Operator explicitly requires all current documentation to cover
+new PC with newly installed YuE2 and zero previous Director/agent runs.
+R08/R12 fresh-host runbook separates offline, existing-native export and
+full production; local MCP discovery, exact actual paths, prerequisites,
+provider/DPAPI, stock CUDA/Q8/Whisper/MOSS gate, preview and confirmation,
+empty library, optional indexes, recovery and new-agent handover. No
+assumed old host artifacts or remote bridge. Cross-linked current entry
+points and historical checkpoints. Fresh-host actual live validation not
+performed; documentation/CI gate pending. No generation or model change.

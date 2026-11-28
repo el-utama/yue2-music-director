@@ -6,6 +6,8 @@ Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, developing a ge
 
 ## Start here
 
+- [Fresh Windows PC / first-run guide](docs/FRESH_INSTALL.md): install from zero, connect Studio, choose export-only or autonomous production, configure provider and recover safely.
+
 - [Operator guide](docs/OPERATOR_GUIDE.md): new/existing checkout, readiness, short commands, safe recovery, private bridge and release workflow.
 - [Offline knowledge workflow](docs/OFFLINE_KNOWLEDGE_WORKFLOW.md): local databases, styles and current inventory.
 - [Development and validation](DEVELOPMENT.md): agent onboarding, tests and evidence requirements.
@@ -16,7 +18,7 @@ Read [PROJECT_MEMORY.md](PROJECT_MEMORY.md) before resuming development. It trac
 
 ## Active product roadmap
 
-**Current milestone: autonomous score-first Windows CLI and independent release specialists.** The hosted Composer/Lyricist/reviewer, native plan and synthesis, ASR, neutral MOSS and advisory Director pipeline has completed live; a recovered score-first take received favorable human feedback. Cover prompt and original single-song export also completed live. Historical-source hardening, [human feedback](docs/HUMAN_FEEDBACK.md), and [non-destructive audio finishing](docs/AUDIO_FINISHING.md) extend the retained workflow. Gain-only finishing passed the authorized retained-reference Windows technical check; this is not a mastering or release-quality claim. See the [active roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md), [autonomous CLI](docs/AUTONOMOUS_CLI.md) and [repository agent instructions](AGENTS.md).
+**Current milestone: creative-quality improvements after live draft Exporter sample acceptance.** Single, EP, manual/native Album and native Playlist packaging passed across the targeted Windows runs; playback/phonetic review and final release approval remain separate. Fresh-host onboarding is documented but not yet independently live-tested. The hosted Composer/Lyricist/reviewer, native plan and synthesis, ASR, neutral MOSS and advisory Director pipeline has completed live; a recovered score-first take received favorable human feedback. Cover prompt and original single-song export also completed live. Historical-source hardening, [human feedback](docs/HUMAN_FEEDBACK.md), and [non-destructive audio finishing](docs/AUDIO_FINISHING.md) extend the retained workflow. Gain-only finishing passed the authorized retained-reference Windows technical check; this is not a mastering or release-quality claim. See the [active roadmap](docs/AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md), [autonomous CLI](docs/AUTONOMOUS_CLI.md) and [repository agent instructions](AGENTS.md).
 
 ## Native-first development policy
 
@@ -77,6 +79,8 @@ rights and live validation.
 Run `music.cmd --ready` for a read-only preflight before new production. It verifies local configuration and the existing native reference gate without spending a provider completion or running music inference. See [readiness check](docs/AUTONOMOUS_CLI.md#read-only-readiness-check) for limits and optional MOSS file check.
 
 ## Setup
+
+For a new PC, follow the [first-run guide](docs/FRESH_INSTALL.md) instead of reproducing the historical reference host. Native export does not require hosted provider setup or a generation-ready model.
 
 Requires Python 3.10+; no mandatory third-party Python runtime dependencies. Audio commands require installed FFmpeg/ffprobe, Studio commands require local Studio, and optional MIDI render QA requires FluidSynth and a SoundFont. Optional alignment discovery does not install a backend.
 

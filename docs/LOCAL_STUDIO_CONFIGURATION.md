@@ -1,5 +1,7 @@
 # Local Studio configuration and compatibility
 
+For a newly installed Studio, follow [first-run onboarding](FRESH_INSTALL.md). Discover actual hardware, installed assets and local MCP URL before any change. The stock reference below is the current strict autonomous production gate, not a requirement for export or offline work. No automatic download or forced switch.
+
 ## Reference configuration for the 8 GB GPU tier (2026-11-25)
 
 This decision supersedes the earlier preference for retaining the currently selected fine-tune as the development baseline. For an 8 GB NVIDIA CUDA machine, use the stock YuE2-3B Balanced Q6_K profile, no optional adapters, and the stock VAE as the initial reproducible reference. Quality Q8_0 is a separate candidate if memory headroom permits; Light Q5_K_M is a fallback. Full BF16 is documented for 12 GB or more. These are upstream recommended inference tiers, not guarantees for every song duration or concurrency. Preserve effective cache and settings when comparing. The pinned [Studio models guide](https://github.com/timoncool/YuE2-Studio/blob/ca37d2d3ea96f3c7073167de0e5e1eb3b4ec2f25/guides/en/models-and-runtimes.md) documents at least 11 GB VRAM for native YuE2 LoRA training; installed training assets do not override this requirement. Do not make training on this tier a dependency or attempt an undocumented offload fallback. Use sequential native GPU jobs. Neither the stock model nor a fine-tune has been established as a musical-quality winner by a controlled comparison.
@@ -19,7 +21,7 @@ Use YuE2 Studio's native local YuE2 engine as the primary integration target. Or
 ## One-time local inventory (Windows PowerShell)
 
 1. Keep existing Studio settings unchanged. Start YuE2 Studio normally, and verify that its Agent (MCP) setting displays a local MCP URL. Do not enable remote access.
-2. Open PowerShell in your existing Music Director checkout. Ensure the worktree is clean with `git status --short`; preserve local changes instead of resetting them. Once this feature is merged, update your main checkout with `git pull --ff-only` and `py -3 -m pip install -e .`. Do not replace old experiment directories.
+2. Open PowerShell in your Music Director checkout (clone first using the [fresh guide](FRESH_INSTALL.md#2-install-prerequisites-and-clone) if absent). Ensure the worktree is clean with `git status --short`; preserve local changes instead of resetting them. Once this feature is merged, update your main checkout with `git pull --ff-only` and `py -3 -m pip install -e .`. Do not replace old experiment directories.
 3. Copy the exact URL from Studio (do not guess the port). Run:
 
 ```powershell

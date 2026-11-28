@@ -7,6 +7,8 @@ is not a remote production service. Current evidence and open requirements:
 [PROJECT_MEMORY.md](../PROJECT_MEMORY.md). The live retained reference is
 already complete; do not repeat it merely to check installation.
 
+For a machine where Studio has just been installed and Music Director has never run, use the step-by-step [fresh Windows PC guide](FRESH_INSTALL.md). Existing-host evidence and private paths are not prerequisites.
+
 ## 1. Install or adopt an existing checkout
 
 Requirements: Python 3.10+ (CI 3.11/3.13), Git, FFmpeg/ffprobe for audio
@@ -75,7 +77,7 @@ and disposable; no reason to build all three for every song.
 
 ## 3. Produce a new original song only when requested
 
-First `music.cmd --ready` if readiness is uncertain. This does not reserve
+For a new host, complete [fresh production setup](FRESH_INSTALL.md#5-prepare-full-autonomous-production-only-if-wanted) first. `--ready` is a production-only gate, not an export or offline prerequisite. First `music.cmd --ready` if readiness is uncertain. This does not reserve
 the host or authenticate the text provider. A blocked readiness report
 requires resolving the reported issue, not blind retry. If provider setup
 already works, do not redo it. For the first setup or a changed provider,

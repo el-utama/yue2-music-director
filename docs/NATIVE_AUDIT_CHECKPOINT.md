@@ -1,5 +1,9 @@
 # Native audit and development checkpoint — 2026-11-27
 
+Historical host evidence only. For a new machine without prior agent runs,
+use [fresh-host onboarding](FRESH_INSTALL.md); do not reproduce these jobs
+or assume the same hardware/configuration/receipts.
+
 Read with the [active roadmap](AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md), [native control contract](knowledge/NATIVE_CONTROL_CONTRACT.md), and [local release checkpoint](LOCAL_RELEASE_CHECKPOINT.md). This is a handover for subsequent sessions, not authorization for further inference.
 
 ## Historical verified repository baseline (PR #109)
