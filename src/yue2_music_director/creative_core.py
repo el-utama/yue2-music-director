@@ -89,9 +89,16 @@ def prepare(root, provider, request, language, duration, *, retry_role=None, dur
     if duration_guidance:
         # Advisory target only; the actual native score clock is screened before rendering.
         reserve=min(15,max(3,round(duration*0.08)))
+        if song_form == lyricist.COMPACT_FORM and duration == lyricist.DEFAULT_DURATION:
+            reserve = lyricist.ENDING_ALLOWANCE
         data["duration_plan"]={"hard_cap_seconds":duration,"target_score_seconds":duration-reserve,
               "ending_reserve_seconds":reserve,
               "guidance":"Plan a compact complete song, with a resolved final sung phrase and short instrumental tail inside the target. Allow room for introductions, instrumental breaks, breathing and sustained notes. Avoid redundant verses, long repeated choruses or extended outros. Lyricist should adapt line and section count to pacing; reviewer should stop implausibly long plans. Do not treat duration as an exact target or omit necessary closure."}
+        if song_form == lyricist.COMPACT_FORM and duration == lyricist.DEFAULT_DURATION:
+            data["duration_plan"]["ending_guidance"] = (
+                "Aim to finish within 180 seconds. Up to ten extra seconds are available for a "
+                "natural cadence, breath or ringing last chord. Do not plan extra lyrics to fill them."
+            )
     if typed_spec is not None:
         from . import typed_creative as tc, composer_typed
         if direction_guidance or timing_guidance or structured_direction:

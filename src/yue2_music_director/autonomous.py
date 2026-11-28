@@ -393,7 +393,7 @@ def main():
     p.add_argument("--artist-profile",help="Explicit local artist display name or ID for a new typed job; --creative-spec supplies overrides")
     p.add_argument("--profile-revision",type=int,help="Pin an artist profile revision (default: latest)")
     p.add_argument("--language",choices=sorted(cc.SUPPORTED))
-    p.add_argument("--duration", type=int, help="Duration cap in seconds (new song default: 180)")
+    p.add_argument("--duration", type=int, help="Hard duration cap in seconds (default: aim for 180, allow up to 190)")
     p.add_argument("--confirm-run",action="store_true",
                    help="Authorize up to four external text stages, one native score plan, one local song, ASR and two CPU excerpts")
     p.add_argument("--retry-text",choices=ROLES,help="One explicitly authorized retry of the named unresolved text stage")
@@ -445,6 +445,8 @@ def main():
                 request=a.request
             language=a.language or "en"
             duration=a.duration if a.duration is not None else DEFAULT_DURATION
+            if a.duration is None:
+                print("Song target: 3:00, with up to 10 seconds for a natural ending.", flush=True)
         return launch(repo,job,request,language,duration,a.url,confirm=a.confirm_run,retry_role=a.retry_text,typed_spec=typed_spec,artist_profile=artist_profile,style_id=a.style_id,
                       knowledge_query=a.knowledge_query,confirm_knowledge_context=a.confirm_knowledge_context,knowledge_auto=a.knowledge_auto)
     except (OSError,ValueError,KeyError,TypeError,MCPError,subprocess.SubprocessError,EOFError,sqlite3.Error) as e:

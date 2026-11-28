@@ -2,7 +2,7 @@
 
 ## Unreleased — Compact song form and ending review
 
-- Default new autonomous songs to a 180-second cap. Add flexible section guidance, lyric craft review and final-chorus line comparisons in the outro. Job manifests freeze the new guidance for resume.
+- Default new autonomous songs to a 180-second target with up to ten extra seconds for a natural ending. Add flexible section guidance, lyric craft review and final-chorus line comparisons in the outro. Job manifests freeze the new guidance for resume.
 
 ## Unreleased — Native replay memory troubleshooting
 

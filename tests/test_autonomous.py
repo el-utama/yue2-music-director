@@ -46,25 +46,33 @@ class AutonomousTests(unittest.TestCase):
                                  ["[Intro]", "[Verse 1]", "[Pre-Chorus]", "[Chorus]", "[Verse 2]",
                                   "[Bridge]", "[Instrumental Break]", "[Outro]"])
                 self.assertIn(role, data["song_form_guidance"])
-                self.assertEqual(data["duration_plan"]["hard_cap_seconds"], 180)
-                self.assertLess(data["duration_plan"]["target_score_seconds"], 180)
+                self.assertEqual(data["duration_plan"]["hard_cap_seconds"], 190)
+                self.assertEqual(data["duration_plan"]["target_score_seconds"], 180)
             self.assertEqual(nd.read(root / "job.json")["song_form"], lyricist.COMPACT_FORM)
 
-    def test_overlong_audio_stops_before_listening_or_director(self):
+    def test_audio_boundary_preserves_natural_ending_allowance(self):
+        for seconds, expected in ((180.01, 0), (190.0, 0), (190.01, 2)):
+            with self.subTest(seconds=seconds):
+                self._check_audio_boundary(seconds, expected)
+
+    def _check_audio_boundary(self, seconds, expected):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)
             provider = Provider()
-            def overlong(brief, intent, root, url):
+            def measured_take(brief, intent, root, url):
                 return {"status": "provisional_draft", "artistic_intent": intent,
-                        "acoustic": {"duration_seconds": 180.01}, "duration_cap_screen_pass": True}
-            with patch.object(au.artist_run, "run", side_effect=overlong), \
-                 patch.object(au.ld, "verify_take", return_value={}), \
-                 patch.object(au.ld, "listen", side_effect=AssertionError("overlong take")):
-                result = au.launch(repo, "overlong", "A quiet goodbye", "en", 180,
+                        "acoustic": {"duration_seconds": seconds}, "duration_cap_screen_pass": True}
+            with patch.object(au.artist_run, "run", side_effect=measured_take), \
+                 patch.object(au.ld, "verify_take", return_value={"audio": "fixture"}), \
+                 patch.object(au.ld, "listen", return_value={}) as listen, \
+                 patch.object(au.dd, "context", return_value={}), \
+                 patch.object(au, "finalize_result", return_value=0):
+                result = au.launch(repo, "boundary", "A quiet goodbye", "en", 190,
                                    "http://127.0.0.1:8791/mcp", confirm=True,
                                    provider_factory=lambda: provider)
-            self.assertEqual(result, 2)
-            self.assertEqual(provider.calls, ["composer", "lyricist", "reviewer"])
+            self.assertEqual(result, expected)
+            self.assertEqual(listen.called, expected == 0)
+            self.assertEqual("director" in provider.calls, expected == 0)
 
     def test_outro_compares_lines_with_only_the_last_chorus(self):
         from yue2_music_director.lyricist import diagnostics

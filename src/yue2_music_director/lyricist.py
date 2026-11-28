@@ -26,7 +26,9 @@ def validate(value):
 
 
 COMPACT_FORM = "compact-form-v1"
-DEFAULT_DURATION = 180
+TARGET_DURATION = 180
+ENDING_ALLOWANCE = 10
+DEFAULT_DURATION = TARGET_DURATION + ENDING_ALLOWANCE
 FORM_GUIDANCE = {
     "preferred_sections": ["[Intro]", "[Verse 1]", "[Pre-Chorus]", "[Chorus]",
                            "[Verse 2]", "[Bridge]", "[Instrumental Break]", "[Outro]"],
