@@ -232,8 +232,11 @@ waveform equivalence remain unverified. No automatic acceptance.
 Live checkpoint 2026-11-28: a Windows instrumental intro continuation also
 completed explicit audio identity recovery with exit 0 and `review_required`.
 One rendered take measures 182.198667 seconds against its 190-second cap.
-The original plan and creative stages were reused. Audible lyric delivery,
-vocal layering and the ending remain open for human review.
+The original plan and creative stages were reused. The operator accepted the
+vocal-free intro and the outro, and heard the start of Verse 1 cut off. Review
+the first intended lyric phrase and saved section schedule against the
+existing ASR and listening evidence. Section-level score and MIDI passes
+leave first-phrase delivery open. The cause of the cutoff is unverified.
 
 ### Lyric language default and quality
 
