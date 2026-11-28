@@ -219,9 +219,9 @@ def _recommend(report, native):
         required_ram = row["ram_bytes"] if row and catalog_matches_gpu else None
         disk_bytes, remaining = _estimate(row, models["installed_components"])
         model_free = host["model_volume"]["available_bytes"]
-        insufficient_ram = (required_ram is not None and ram["total_bytes"] is not None
-                            and ram["total_bytes"] < required_ram)
-        insufficient_disk = disk_bytes is not None and model_free is not None and model_free < disk_bytes
+        insufficient_ram = (ram["total_bytes"] < required_ram
+                            if required_ram is not None and ram["total_bytes"] is not None else None)
+        insufficient_disk = model_free < disk_bytes if disk_bytes is not None and model_free is not None else None
         candidates.append({"profile": label, "tier_bytes": tier,
                            "studio_ram_estimate_bytes": required_ram,
                            "missing_full_set_file_bytes": disk_bytes,
@@ -238,17 +238,19 @@ def _recommend(report, native):
                        and models["pair_stage"] in ("idle", "ready")
                        and models["download_idle"] is True and models["owns_model_download"] == "idle"
                        and studio["activity"] == "idle" and gpu["state"] != "ambiguous")
-    existing_stock = (running_matches and models["backbone"] == "stock"
-                      and models["custom_components"] is False and models["preset"] is False
-                      and any(c["profile"] == TIERS.get(models["profile"], (None,))[0]
-                              and c["status"] == "supported_by_source" for c in candidates))
+    preserved = None
+    if (running_matches and models["backbone"] == "stock"
+            and models["custom_components"] is False and models["preset"] is False):
+        selected_label = TIERS.get(models["profile"], (None,))[0]
+        preserved = next((c for c in candidates if c["profile"] == selected_label
+                          and c["status"] == "supported_by_source"), None)
     if studio["activity"] == "busy" or models["pair_stage"] in (
             "waiting_for_generation", "checking_files", "unloading", "starting_engine", "loading_model"
     ) or engine["starting"] is True or models["download_idle"] is False or models["owns_model_download"] == "active":
         state, action = "blocked", "Let current Studio activity finish, then rerun the Advisor."
     elif gpu["state"] == "ambiguous" or engine["configuration_drift"] or models["backbone"] == "conflicting" or models["selection_matches_engine"] is False:
         state, action = "unknown", "Compare the configured and running GPU, model and engine options in Studio, then rerun the Advisor."
-    elif existing_stock:
+    elif preserved:
         state, action = "candidate_unverified", "Keep the current stock configuration for inspection. Use --ready for the existing Director production gate."
     elif models["backbone"] == "own_selected":
         state, action = "candidate_unverified", "Keep the selected model while you verify its base, decoder, adapter slots and rights. The Director reference gate requires the stock backbone."
@@ -279,8 +281,10 @@ def _recommend(report, native):
         checks.append("The selected model has a noncommercial license in the native catalog. Review its terms before use.")
     if models["installed_adapter_count"]:
         checks.append("Installed adapters do not establish usage or compatibility. Verify the exact base and AR/NAR slots before selecting an adapter.")
-    if candidate and candidate["free_vram_below_tier"]:
-        checks.append("Current free VRAM is below the suggested total-capacity tier. Recheck while Studio is idle.")
+    suggested = preserved or candidate
+    if suggested and suggested["free_vram_below_tier"]:
+        checks.append(f"Current free VRAM is below the published total-capacity tier for {suggested['profile']}. "
+                      "Recheck available VRAM before an approved load or synthesis test.")
     if ram["available_bytes"] is not None and ram["available_bytes"] < 2 * GIB:
         checks.append("Reported free RAM is below the pinned Studio loading reserve of 2 GiB. Recheck before any load.")
     if catalog_matches_gpu and hardware.get("cuda") is None:
@@ -289,7 +293,7 @@ def _recommend(report, native):
         checks.append("Studio has not reported the required enabled and installed local CrisperWhisper Turbo setup.")
     checks.append("Use a single track for any separately approved evaluation. Provider, managed MOSS and actual synthesis fit require separate checks.")
     return {"status": state, "action": action, "catalog_source": catalog_source, "stock_tiers": candidates,
-            "preserve_current_stock": existing_stock, "checks": checks}
+            "preserve_current_stock": preserved is not None, "checks": checks}
 
 
 def _goal_advice(report, native):
