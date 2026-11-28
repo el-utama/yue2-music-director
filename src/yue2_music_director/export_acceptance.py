@@ -8,7 +8,7 @@ from . import native_draft as nd, release_identity as ri
 from .mcp import MCPError, configured_endpoint
 
 
-def plan(url,*,collections_only=False):
+def plan(url,*,collections_only=False,collection_kind=None):
     songs=nl.song_list(url)
     collections=nc.collections(url)
     ids=[row["id"] for row in songs[:2]]
@@ -18,6 +18,8 @@ def plan(url,*,collections_only=False):
     if len(ids)==2 and not collections_only:
         cases.append({"id":"ep-distribution","kind":"ep","title":"Acceptance EP","preset":"distribution","native_songs":ids})
     for kind,preset in (("album","production"),("playlist","video")):
+        if collection_kind and kind!=collection_kind:
+            continue
         cap=24 if kind=="album" else 100
         eligible=[row for row in collections if row["kind"]==kind and 1<=row["tracks"]<=cap]
         if eligible:
@@ -28,7 +30,7 @@ def plan(url,*,collections_only=False):
     return {"playable_count":len(songs),"collection_count":len(collections),"cases":cases,
             "native_album_count":sum(row["kind"]=="album" for row in collections),
             "native_playlist_count":sum(row["kind"]=="playlist" for row in collections),
-            "collections_only":collections_only,
+            "collections_only":collections_only,"collection_kind":collection_kind,
             "native_album_available":any(c["id"]=="album-native" for c in cases),
             "native_playlist_available":any(c["id"]=="playlist-native" for c in cases)}
 
@@ -91,10 +93,22 @@ def verify_sample(package,manifest,case,expected):
             if lrc_name not in files or srt_name not in files:
                 raise ValueError("Acceptance timed lyric assets missing")
             raw=(package/lrc_name).read_bytes()
-            if nd.digest(raw)!=track["timing"]["source_lrc_sha256"]:
-                raise ValueError("Acceptance LRC source hash differs")
-            _,srt=ex.timed_text(raw.decode("utf-8"),lyrics,source["duration_seconds"],
-                                library_only=True,video=case["preset"]=="video")
+            evidence=track["timing"]
+            if evidence.get("word_timing_status")=="discarded_invalid_word_anchors":
+                native_name=stem+".native.lrc"
+                if native_name not in files:
+                    raise ValueError("Missing preserved native LRC")
+                original=(package/native_name).read_bytes()
+                derived,srt,issue=ex.native_timing_assets(original.decode("utf-8"),lyrics,source["duration_seconds"],video=case["preset"]=="video")
+                if (not issue or issue!=evidence.get("word_timing_issue") or nd.digest(original)!=evidence["source_lrc_sha256"]
+                        or raw!=derived.encode("utf-8") or nd.digest(raw)!=evidence.get("derived_lrc_sha256")):
+                    raise ValueError("Acceptance line fallback differs from native source")
+                required.add(native_name)
+            else:
+                if nd.digest(raw)!=evidence["source_lrc_sha256"]:
+                    raise ValueError("Acceptance LRC source hash differs")
+                _,srt=ex.timed_text(raw.decode("utf-8"),lyrics,source["duration_seconds"],
+                                    library_only=True,video=case["preset"]=="video")
             if (package/srt_name).read_bytes()!=srt.encode("utf-8"):
                 raise ValueError("Acceptance SRT differs from native timing")
             required.update((lrc_name,srt_name))
@@ -115,9 +129,9 @@ def verify_sample(package,manifest,case,expected):
         raise ValueError("Acceptance status differs from actual assets")
 
 
-def run(repo,url,*,confirm,launch,collections_only=False):
+def run(repo,url,*,confirm,launch,collections_only=False,collection_kind=None):
     url=configured_endpoint(url)
-    selected=plan(url,collections_only=collections_only)
+    selected=plan(url,collections_only=collections_only,collection_kind=collection_kind)
     print(json.dumps(selected,ensure_ascii=True,indent=2))
     if not selected["cases"]:
         print("No eligible native collection or playable sample; acceptance blocked")
@@ -160,15 +174,16 @@ def run(repo,url,*,confirm,launch,collections_only=False):
                              "tracks":len(manifest["tracks"]),
                              "timing":[track["timing"]["status"] for track in manifest["tracks"]],
                              "timing_issues":[track["timing"].get("reason","unavailable") for track in manifest["tracks"] if track["timing"]["status"]=="unavailable"],
+                             "word_timing_fallbacks":[t["track"] for t in manifest["tracks"] if t["timing"].get("word_timing_status")=="discarded_invalid_word_anchors"],
                              "asset_checks":"passed"})
         except (OSError,ValueError,KeyError,TypeError,MCPError) as exc:
             outcomes.append({"case":case["id"],"exit_code":2,"status":"blocked","error":str(exc)})
     kinds={case["kind"] for case in selected["cases"]}
-    required_kinds={"album","playlist"} if collections_only else {"single","ep","album","playlist"}
-    full=(kinds==required_kinds and selected["native_album_available"]
-          and selected["native_playlist_available"] and all(row["exit_code"]==0 for row in outcomes)
+    required_kinds={collection_kind} if collection_kind else ({"album","playlist"} if collections_only else {"single","ep","album","playlist"})
+    full=(kinds==required_kinds and ("album" not in required_kinds or selected["native_album_available"])
+          and ("playlist" not in required_kinds or selected["native_playlist_available"]) and all(row["exit_code"]==0 for row in outcomes)
           and any("exported_unverified_display_anchors" in row.get("timing",[]) for row in outcomes))
-    report={"schema":"native-export-acceptance-v1","status":("collection_checks_passed" if collections_only else "sample_checks_passed") if full else "incomplete",
+    report={"schema":"native-export-acceptance-v1","status":((collection_kind+"_checks_passed" if collection_kind else "collection_checks_passed") if collections_only else "sample_checks_passed") if full else "incomplete",
             "plan":selected,"outcomes":outcomes,"native_mutations":0,"inference_calls":0,
             "human_player_review":False,"acoustic_alignment_verified":False}
     nd.atomic_write(root/"report.json",report)

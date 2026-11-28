@@ -211,3 +211,8 @@ portable Windows paths. The report is not a listening or subtitle playback
 review.
 
 After a partial live acceptance, use `--export --check-library --collections-only --confirm-run` to retest only native album/playlist. See the export guide for source-specific diagnostics. Preserve successful earlier reports.
+
+If native word clocks are invalid but line onsets and text are valid, native
+draft export preserves the original `.native.lrc` separately and writes
+line-only LRC/SRT, with explicit diagnostics. For album-only follow-up use
+`--export --check-library --collections-only --collection-kind album --confirm-run`.

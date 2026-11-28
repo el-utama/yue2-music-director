@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — native album timing recovery
+
+- Recover validated line-onset timing when enhanced word clocks fail, preserving native LRC separately. Clean redundant ordered title numbering and target only the remaining album acceptance case.
+
 ## Unreleased — live native collection follow-up
 
 - Cover native Ogg/OGA, AAC and AAC-in-M4A/MP4 imports, distinguish missing from unsupported source files, identify failing track, and retest only native collections within normal export limits. Prior live single/EP/manual album passes retained.

@@ -139,3 +139,9 @@ class ReleaseIdentityTests(unittest.TestCase):
             for name in names:
                 ri.ensure_paths([root/name/(name+".line.lrc")],windows=True)
             self.assertNotEqual(names[1],names[2])
+
+    def test_native_numbering_only_removed_for_complete_matching_sequence(self):
+        root=Path("album")
+        self.assertEqual(ri.track_names(root,["1. One","2. Two"],"album",[".flac"]*2,native=True,windows=False),["01 - One","02 - Two"])
+        self.assertEqual(ri.track_names(root,["2. Two","1. One"],"album",[".flac"]*2,native=True,windows=False),["01 - 2. Two","02 - 1. One"])
+        self.assertEqual(ri.track_names(root,["1. One"],"single",[".flac"],native=True,windows=False),["1. One"])
