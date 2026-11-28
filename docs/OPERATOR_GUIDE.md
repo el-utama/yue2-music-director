@@ -70,6 +70,7 @@ The preferred sequence is **Intro → Verse 1 → Pre-Chorus → Chorus → Vers
 | Diagnose retained ending | `music.cmd --inspect-ending JOB` | Read-only retained evidence/loopback lookup |
 | Instrumental intro preview | `music.cmd --review-plan JOB --preview-intro` | Offline check of replacing intro vocal notes with rests |
 | Duration-only fit preview | `music.cmd --review-plan JOB --fit-duration` | Advisory local tempo candidate; no inference or repair |
+| Approved instrumental intro continuation | `music.cmd --continue-plan JOB --approve-intro --confirm-run` | One song from the reviewed intro candidate |
 | Approved duration continuation | `music.cmd --continue-plan JOB --approve-tempo BPM --confirm-run` | Exact previewed BPM, one song; original unchanged |
 | Review a stopped plan | `music.cmd --review-plan JOB` | Retained local evidence; no new score |
 | Inspect lock | `music.cmd --inspect-lock autonomous` | Read-only journal summary |
@@ -119,7 +120,7 @@ song or unresolved external attempt automatically.
 
 ## 4. Failures and safe recovery
 
-If a planned instrumental intro is rejected because the score has vocal notes there, `--preview-intro` checks a candidate in memory. It requires existing instrumental notation and leaves the timing, remaining melody, instruments and original receipts intact. The candidate must pass the full score review, including prompt vocal entry after the intro. A vocal tie crossing the section boundary needs musical revision. This preview leaves no candidate file and does not authorize synthesis.
+If a planned instrumental intro is rejected because the score has vocal notes there, `--preview-intro` checks a candidate in memory. It requires existing instrumental notation and leaves the timing, remaining melody, instruments and original receipts intact. The candidate must pass the full score review, including prompt vocal entry after the intro. A vocal tie crossing the section boundary needs musical revision. After a preview reports `candidate_available`, use `music.cmd --continue-plan JOB --approve-intro --confirm-run` to authorize one synthesis in the existing continuation workflow. The approved candidate, review and source hashes are saved separately. Composer, Lyricist, editorial Reviewer and the Studio planner reuse their saved work. Native MIDI verification and the normal listening and audio checks still apply. The same command resumes interrupted work from the saved receipts.
 
 | Symptom | Safe next action |
 |---|---|
@@ -127,7 +128,7 @@ If a planned instrumental intro is rejected because the score has vocal notes th
 | Studio unavailable, not idle, or schema mismatch | Check installed Studio and local loopback MCP; use readiness, then the configuration guide. No remote-public endpoint. |
 | 401/403, quota or provider JSON error | Use the provider troubleshooting guide; check exact configured provider/model and account. No automatic fallback, no key in logs/chat. |
 | Unresolved text attempt | Consult the original receipt and [Autonomous CLI](AUTONOMOUS_CLI.md); one explicit `--retry-text ROLE` only for a matching unresolved stage. |
-| Plan stopped before synthesis | Use `--review-plan JOB`; `--continue-plan JOB --confirm-run` is only for the documented formerly parser-blocked retained plan; duration-only stops require the separately documented exact tempo approval. |
+| Plan stopped before synthesis | Use `--review-plan JOB`; `--continue-plan JOB --confirm-run` resumes a rechecked parser-blocked plan. A vocal-free intro or duration edit requires its matching preview and explicit approval flag. |
 | Native, ASR or listening interrupted | Preserve the original job and follow same-job recovery. A saved Studio acknowledgment with a valid plan or song ID lets the agent continue the known job. If the acknowledgment is missing or ambiguous, inspect Studio before proceeding. |
 | Stale lock or concurrent writer | Inspect the exact lock; use [lock recovery](LOCAL_LOCK_RECOVERY.md) only for verified stale owner and matching marker hash. |
 | OOM or missing model | Stop and inspect native status/configuration, preserve journals. No unapproved changes, downloads or automatic retry. |

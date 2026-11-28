@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — Approved instrumental intro continuation
+
+- Continue a retained, previewed instrumental-intro edit with explicit approval. Preserve source receipts and use the approved candidate for native MIDI review, synthesis and retained take verification.
+
 ## Unreleased — Preview a vocal-free intro
 
 - Locally assess a stopped instrumental intro by replacing only its vocal notes with equal-length rests in a candidate score. Require documented instrumental activity and rerun full score review.

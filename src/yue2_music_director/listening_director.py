@@ -111,6 +111,15 @@ def verify_take(draft, brief, report, *, historical=False):
             if b!=brief:
                 raise ValueError("Duration fit brief differs")
             score_sha=nd.digest(abc.encode("utf-8"))
+        from .retained_plan_review import INTRO_SCORE
+        if (draft.parent/INTRO_SCORE).exists():
+            from .retained_plan_review import verify_frozen_intro
+            if fit_path.exists():
+                raise ValueError("Conflicting retained score edits")
+            child=draft.parent.parent
+            contract=nd.read(child/"continuation.json")
+            abc=verify_frozen_intro(child.parent,child,contract)
+            score_sha=nd.digest(abc.encode("utf-8"))
         if decision.get("decision")!="retain" or decision.get("score_review",{}).get("score_sha256")!=score_sha:
             raise ValueError("Retained reviewed score identity mismatch: plan decision")
         pre=nd.read(draft/"score-review.json")
