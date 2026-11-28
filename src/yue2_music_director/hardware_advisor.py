@@ -26,6 +26,10 @@ TIERS = {
 PREFERENCE = ("quality-q8", "balanced", "light", "native")
 BACKENDS = ("auto", "cuda", "vulkan", "cpu", "hip", "metal")
 MODEL_ENGINE = "yue2-cpp"
+# Upstream bfd35a0 model_manager.rs and hardware.rs: the CPU estimate counts
+# the stock backbone and VAE plus 4 GiB system and 2 GiB work memory.
+LIGHT_CPU_WEIGHTS = {"backbone-q5": 2622936832, "vae-f32": 530497344}
+LIGHT_CPU_RAM_ESTIMATE = sum(LIGHT_CPU_WEIGHTS.values()) + 6 * GIB
 
 
 def _flag(value):
@@ -196,6 +200,36 @@ def _estimate(profile, installed):
     return sum(totals), sum(partials) if None not in partials else None
 
 
+def _light_cpu_candidate(host, catalog, catalog_source):
+    gpu = host["gpu"]
+    total = gpu["memory"]["total_bytes"]
+    below_light = gpu["kind"] == "nvidia" and total is not None and total < TIERS["light"][1]
+    if host["platform"] not in ("win32", "simulation") or not (below_light or gpu["kind"] == "cpu"):
+        return None
+    if catalog_source == "studio_catalog":
+        light = catalog.get("light")
+        if (not light or not light["installable"]
+                or any(light["components"].get(key, {}).get("bytes") != expected
+                       for key, expected in LIGHT_CPU_WEIGHTS.items())):
+            return None
+    ram = host["ram"]["total_bytes"]
+    if ram is None:
+        state = "unknown"
+        detail = "Measure total system RAM before evaluating this experimental native Studio configuration."
+    elif ram < LIGHT_CPU_RAM_ESTIMATE:
+        state = "blocked"
+        detail = "Total system RAM is below the pinned estimate for this configuration."
+    else:
+        state = "candidate_unverified"
+        detail = "Total system RAM reaches the pinned estimate. Confirm the bundled runtime, assets and available RAM on the target host."
+    return {
+        "profile": TIERS["light"][0], "status": state, "detail": detail,
+        "engine_options": {"backend": "cpu", "kv_cache": "f16", "keep_loaded": "no", "max_batch": 1},
+        "estimated_system_ram_bytes": LIGHT_CPU_RAM_ESTIMATE,
+        "estimate_source": "pinned_studio_bfd35a0",
+    }
+
+
 def _recommend(report, native):
     host, studio = report["host"], report["studio"]
     gpu, ram = host["gpu"], host["ram"]
@@ -292,8 +326,11 @@ def _recommend(report, native):
     if studio["whisper"] == "reference_requirements_missing":
         checks.append("Studio has not reported the required enabled and installed local CrisperWhisper Turbo setup.")
     checks.append("Use a single track for any separately approved evaluation. Provider, managed MOSS and actual synthesis fit require separate checks.")
-    return {"status": state, "action": action, "catalog_source": catalog_source, "stock_tiers": candidates,
-            "preserve_current_stock": preserved is not None, "checks": checks}
+    advice = {"status": state, "action": action, "catalog_source": catalog_source, "stock_tiers": candidates,
+              "preserve_current_stock": preserved is not None, "checks": checks}
+    if cpu_candidate := _light_cpu_candidate(host, catalog, catalog_source):
+        advice["cpu_candidate"] = cpu_candidate
+    return advice
 
 
 def _goal_advice(report, native):
@@ -413,6 +450,16 @@ def summary(report):
         ]
     elif report["goal"] == "listening":
         details = [f"Whisper: {studio['whisper']} | MOSS: {studio['moss']}"]
+    alternative = []
+    if cpu_candidate := advice.get("cpu_candidate"):
+        ram_gib = cpu_candidate["estimated_system_ram_bytes"] / GIB
+        options = cpu_candidate["engine_options"]
+        alternative = [
+            f"Experimental native Studio option: {cpu_candidate['profile']}, "
+            f"processor, {options['kv_cache'].upper()} cache, keep loaded off, single track "
+            f"(pinned estimate {ram_gib:.2f} GiB total RAM).",
+            cpu_candidate["detail"],
+        ]
     return "\n".join([
         f"Hardware Advisor | {report['goal']} | {report['input']}",
         f"Studio: {studio['connection']} | activity: {studio['activity']}",
@@ -421,6 +468,7 @@ def summary(report):
         *details,
         f"{advice['status'].replace('_', ' ').capitalize()}. {advice['action']}",
         *advice.get("checks", []),
+        *alternative,
         "Advice only. Actual load and synthesis fit have not been tested.",
     ])
 

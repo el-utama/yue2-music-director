@@ -38,8 +38,8 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Verified baseline main `e474ab97172e4695297323ff25835dacdaa47663` after PR #152. Implementation head `90705cb` passed [Windows/Linux 3.11 CI](https://github.com/el-utama/yue2-music-director/actions/runs/46108220604). Fresh-host live validation remains open.
-- R04/R08/R12: `--advisor` implements read-only discovery and goal-specific advice, with simulation and private opt-in reporting. Existing Windows host read-only check passed on 2026-11-28. Fresh low-VRAM acceptance remains open. Preserve the current production gate and receipts, then audit versioned alternate compatibility separately. Retain the parallel creative quality and corpus requirements.
+- Verified baseline main `0c20e7c2a60ffe24877d3726831764e5c3b63f7b` after PR #153. Head `a334db7` passed [Windows/Linux 3.11 CI](https://github.com/el-utama/yue2-music-director/actions/runs/46110159738). Fresh-host live validation remains open.
+- R04/R08/R12: `--advisor` implements read-only discovery and goal-specific advice, with simulation and private opt-in reporting. Existing Windows host read-only check passed on 2026-11-28. The Advisor now reports Light CPU as an experimental candidate for low-VRAM hardware. Fresh target-host evidence and production compatibility for the candidate remain open. Preserve the production gate and receipts. Retain the parallel creative quality and corpus requirements.
 - P0 recovery follow-up (R01/R08/R09): a local interruption between saving the Studio acknowledgment and updating the journal can now recover the existing plan or song ID. Regression coverage injects that interruption and checks that planning and synthesis are each submitted once. Windows Studio recovery and independent live artistic acceptance remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
@@ -476,3 +476,16 @@ tier. No provider, MOSS or new synthesis result was established by this run.
 Keep the current configuration. Do not repeat this host check for the same
 milestone. Fresh low-VRAM acceptance, the separate alternate profile
 decision, and actual synthesis fit remain open.
+
+2026-11-28: R04/R08/R12 follow-up audited alternate profile boundaries in
+the native launcher, model resolver, planned and synthesis receipts,
+continuation, and the retained-source reader. At Studio pin `bfd35a0`,
+Windows Auto may still prefer CUDA on a 4 GiB NVIDIA GPU. For that target
+the read-only Advisor can display Light Q5_K_M with explicit processor,
+F16 cache, keep loaded off and a one-track limit. The pinned estimate
+is about 8.94 GiB total system RAM, including model weights, system and
+work memory. This is a candidate for separately authorized target-host
+evaluation. No settings change, inference, new model installation or
+production profile was introduced. Existing Windows acceptance stands.
+Fresh low-VRAM inventory, actual load and synthesis data, exact installed
+backend evidence and the opt-in production contract remain open.

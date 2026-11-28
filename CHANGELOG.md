@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — Advisor for low-VRAM hardware
+
+- Report a separate experimental Light CPU configuration and a pinned system RAM estimate on eligible low-VRAM and CPU hosts. Record the native selection and receipt audit ahead of any alternate Director production profile.
+
 ## Unreleased — Hardware Advisor live Windows follow-up
 
 - Record the operator-reported Advisor pass on the existing Windows Studio host. Use the preserved stock tier for VRAM guidance and report unknown RAM/disk comparisons explicitly. Fresh low-VRAM acceptance and synthesis fit remain open.
