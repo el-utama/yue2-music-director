@@ -216,3 +216,7 @@ If native word clocks are invalid but line onsets and text are valid, native
 draft export preserves the original `.native.lrc` separately and writes
 line-only LRC/SRT, with explicit diagnostics. For album-only follow-up use
 `--export --check-library --collections-only --collection-kind album --confirm-run`.
+
+Draft export sample acceptance passed across the three targeted Windows
+runs at PRs #146–148. See [live evidence](RELEASE_EXPORT.md#live-draft-exporter-acceptance--2026-11-28).
+No routine retest is required before the next creative-quality increment.
