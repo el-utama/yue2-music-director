@@ -57,6 +57,7 @@ fixtures require FFmpeg). No live generation is required.
 | Preview a new song | `music.cmd --job new-song --request "A quiet goodbye"` | No provider or Studio calls |
 | Inspect existing job | `music.cmd --job JOB` | Plan-only; no new generation |
 | Diagnose retained ending | `music.cmd --inspect-ending JOB` | Read-only retained evidence/loopback lookup |
+| Duration-only fit preview | `music.cmd --review-plan JOB --fit-duration` | Advisory local tempo candidate; no inference or repair |
 | Review a stopped plan | `music.cmd --review-plan JOB` | Retained local evidence; no new score |
 | Inspect lock | `music.cmd --inspect-lock autonomous` | Read-only journal summary |
 | Preview finishing | `music.cmd --finish JOB` | Existing source, no new song |

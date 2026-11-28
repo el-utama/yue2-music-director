@@ -65,7 +65,7 @@ exit /b %ERRORLEVEL%
 
 :reviewplan
 if /I "%~2"=="--help" goto reviewplanhelp
-py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\plan-review-output.txt" -- py -3 -u -m yue2_music_director.retained_plan_review --repo "%ROOT%." --job "%~2"
+py -3 -u -m yue2_music_director.logged_command --log "%ROOT%results\plan-review-output.txt" -- py -3 -u -m yue2_music_director.retained_plan_review --repo "%ROOT%." --job "%~2" %3 %4 %5 %6 %7 %8 %9
 exit /b %ERRORLEVEL%
 
 :cover

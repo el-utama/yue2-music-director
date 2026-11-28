@@ -8,7 +8,7 @@ from .creative_core import validate_job
 from .generation_control import result_score
 
 
-def inspect(repo,job):
+def inspect(repo,job,*,fit_duration=False):
     validate_job(job,"placeholder","en",195)
     root=repo/"results/autonomous"/job
     brief=nd.load_brief(root/"brief.json")
@@ -29,6 +29,9 @@ def inspect(repo,job):
             or (production/"native-plan.abc").read_bytes()!=abc.encode("utf-8")):
         raise ValueError("Retained stopped plan identity mismatch")
     review=ar.evaluate_plan(abc,brief,intent)
+    if fit_duration:
+        from .duration_fit import preview
+        return preview(abc,brief,intent)
     return {"schema":"retained-plan-recheck-v1","job":job,"previous_status":old["score_review"]["status"],
             "current_decision":review,"song_jobs":0,"provider_calls":0,"inference_calls":0,
             "original_receipts_changed":False,"render_authorized":False}
@@ -38,9 +41,10 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--repo",type=Path,required=True)
     p.add_argument("--job",required=True)
+    p.add_argument("--fit-duration", action="store_true", help="Read-only bounded tempo candidate; never authorizes synthesis")
     a=p.parse_args()
     try:
-        print(json.dumps(inspect(a.repo.resolve(),a.job),indent=2,ensure_ascii=False))
+        print(json.dumps(inspect(a.repo.resolve(),a.job,fit_duration=a.fit_duration),indent=2,ensure_ascii=False))
         return 0
     except (OSError,ValueError,KeyError,TypeError) as exc:
         print("ERROR:",exc,file=sys.stderr)

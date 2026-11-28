@@ -104,3 +104,9 @@ old rejected job, its policy and all evidence. Require exact-head CI and
 fresh authorized end-to-end natural-language acceptance before declaring
 personal production ready. All corpus, artist memory, remote and album
 requirements remain open as recorded in project memory.
+
+
+2026-11-28 P0 live follow-up: structured creative stages passed; duration-only
+native plan stop (207.887 seconds vs 195 cap). Add advisory bounded local
+fit preview; actual recovery, native MIDI and live acceptance remain open.
+Preserve original evidence and approved budget; do not weaken the cap.
