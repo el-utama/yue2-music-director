@@ -141,7 +141,7 @@ def local_path(path, *, allow_missing=False):
     path = Path(path)
     if sys.platform != "win32":
         return path.resolve()
-    return _fixed_windows_path(path, allow_missing)
+    return _fixed_windows_path(Path(str(path).removeprefix("\\\\?\\")), allow_missing)
 
 
 def _fixed_windows_path(path, allow_missing):
@@ -323,10 +323,10 @@ def gpu_evidence(native, local_cards):
                 "uuid": card["uuid"], "name": card["name"], "driver": (sample or {}).get("driver")}
     # Studio's general hardware estimate has no per-card ID and may include
     # unified/integrated memory. Keep it out of the dedicated NVIDIA tiers.
-    if hardware.get("vulkan") is True:
-        kind = "vulkan"
-    elif hardware.get("on_processor") is True:
+    if hardware.get("on_processor") is True:
         kind = "cpu"
+    elif hardware.get("vulkan") is True:
+        kind = "vulkan"
     else:
         kind = "unknown"
     return {"state": "reported" if kind != "unknown" else "unknown",

@@ -209,6 +209,20 @@ class AdvisorTests(unittest.TestCase):
         native["studio_status"]["song_jobs"] = [{"id": PRIVATE}]
         self.assertEqual(self.inspect_fixture(native)["advice"]["status"], "blocked")
 
+    def test_saved_or_stale_cache_is_not_effective_observation(self):
+        native = observations()
+        native["engine_options_get"]["in_effect"] = None
+        report = self.inspect_fixture(native)
+        engine = report["studio"]["engine"]
+        self.assertEqual(engine["configured"]["kv_cache"], "q8")
+        self.assertIsNone(engine["effective"]["kv_cache"])
+        self.assertIsNone(engine["configuration_drift"])
+        self.assertFalse(report["advice"]["preserve_current_stock"])
+        native["engine_options_get"]["in_effect"] = {"kv_q8": False}
+        engine = self.inspect_fixture(native)["studio"]["engine"]
+        self.assertIsNone(engine["effective"]["kv_cache"])
+        self.assertTrue(engine["configuration_drift"])
+
     def test_own_model_rights_and_adapters_without_private_values(self):
         native = observations()
         native["models_status"]["own_model"] = native["studio_status"]["own_model"] = PRIVATE

@@ -70,28 +70,32 @@ def _engine(native):
         "kv_cache": discovery.selected_value(options.get("kv_cache"), ("auto", "f16", "q8")),
         "keep_loaded": discovery.selected_value(options.get("keep_loaded"), ("auto", "yes", "no")),
     }
-    q8 = _flag(cache.get("q8"))
-    launched_q8 = _flag(effect.get("kv_q8"))
+    models = native.get("models_status", {})
+    running = models.get("engine_ready") is True and reply.get("engine_starting") is False and bool(effect)
+    q8 = _flag(cache.get("q8")) if running else None
+    launched_q8 = _flag(effect.get("kv_q8")) if running else None
+    conflicting_cache = q8 is not None and launched_q8 is not None and q8 != launched_q8
+    active_q8 = launched_q8 if launched_q8 is not None else q8
     effective = {
-        "backend": "cpu" if native.get("models_status", {}).get("engine_on_processor") is True else None,
-        "kv_cache": ("q8" if q8 else "f16") if q8 is not None and (launched_q8 in (None, q8)) else None,
-        "flash_attention": _flag(effect.get("flash_attention")),
-        "keep_loaded": _flag(effect.get("keep_loaded")),
+        "backend": "cpu" if running and models.get("engine_on_processor") is True else None,
+        "kv_cache": ("q8" if active_q8 else "f16") if active_q8 is not None and not conflicting_cache else None,
+        "flash_attention": _flag(effect.get("flash_attention")) if running else None,
+        "keep_loaded": _flag(effect.get("keep_loaded")) if running else None,
     }
-    changes = [
-        configured["kv_cache"] in ("f16", "q8") and effective["kv_cache"] is not None
-        and configured["kv_cache"] != effective["kv_cache"],
-        configured["keep_loaded"] in ("yes", "no") and effective["keep_loaded"] is not None
-        and (configured["keep_loaded"] == "yes") != effective["keep_loaded"],
-        effective["backend"] == "cpu" and configured["backend"] not in (None, "auto", "cpu"),
-        q8 is not None and launched_q8 is not None and q8 != launched_q8,
+    comparisons = [
+        saved != active for key in ("kv_cache", "backend")
+        if (saved := configured[key]) not in (None, "auto") and (active := effective[key]) is not None
     ]
+    if configured["keep_loaded"] in ("yes", "no") and effective["keep_loaded"] is not None:
+        comparisons.append((configured["keep_loaded"] == "yes") != effective["keep_loaded"])
+    if q8 is not None and launched_q8 is not None:
+        comparisons.append(conflicting_cache)
     source = discovery.selected_value(reply.get("executable_source"), ("bundled", "environment", "settings", "managed_hip"))
     if source is None or "extra_args" not in options or "engine_bin" not in options:
         executable = "unknown"
     else:
         executable = "stock" if source == "bundled" and options["extra_args"] in ("", None, []) and options["engine_bin"] in ("", None) else "custom"
-    return {"configured": configured, "effective": effective, "configuration_drift": any(changes),
+    return {"configured": configured, "effective": effective, "configuration_drift": any(comparisons) if comparisons else None,
             "starting": _flag(reply.get("engine_starting")), "executable": executable,
             "batch_limit": discovery.size(reply.get("effective_max_batch"), positive=True)}
 
@@ -228,7 +232,8 @@ def _recommend(report, native):
     candidate = next((c for c in candidates if c["status"] == "supported_by_source"), None)
     running_matches = (models["models_ready"] is True and models["engine_ready"] is True
                        and models["selection_matches_engine"] is True and engine["executable"] == "stock"
-                       and engine["starting"] is False and not engine["configuration_drift"]
+                       and engine["starting"] is False and engine["configuration_drift"] is not True
+                       and engine["effective"]["kv_cache"] is not None
                        and models["pair_active_kind"] in (None, "local")
                        and models["pair_stage"] in ("idle", "ready")
                        and models["download_idle"] is True and models["owns_model_download"] == "idle"

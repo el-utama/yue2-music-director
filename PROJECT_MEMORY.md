@@ -444,20 +444,23 @@ PCs (example RTX 4 GB VRAM / 16 GB RAM) and requests documentation audit
 before a new session. [Hardware Advisor](docs/HARDWARE_ADVISOR.md) records
 source/guide audit, current hard-coded gate, native read candidates, tier
 thresholds, discovery/recommendation/report contracts, test matrix, and
-staged implementation with no historical receipt changes. The documentation used staged A/B discovery and advice before alternate
-execution contracts and real host validation. Keep draft export accepted, R02/R03 creative improvements
-and all other open requirements. No inference, model download or settings
-change was performed.
+staged implementation with no historical receipt changes. Discovery and
+advice preceded the separate work on alternate profiles and real host
+validation. Draft export acceptance, R02/R03 creative improvements and all
+other open requirements remained tracked.
 
 2026-11-28: PR #151 merged after both Python 3.11 jobs passed on the
-documentation head. The follow-up Advisor implementation audits MCP schemas
+documentation head. [PR #152](https://github.com/el-utama/yue2-music-director/pull/152)
+implements the read-only Advisor and audits MCP schemas
 and handlers against `bfd35a0`, uses the existing loopback transport and
 audited read list plus catalog, and checks bounded local volumes without
 calling the recursive storage tool. Offline cases cover tier and low-memory
 boundaries, partial observations, exact GPU identity, current settings
-drift, native catalog and rights evidence, private output and no external work.
+drift, stale effective cache, native catalog and rights evidence, and
+private output. Check the [PR CI](https://github.com/el-utama/yue2-music-director/pull/152/checks)
+for the exact implementation head and both Windows/Linux Python 3.11 jobs.
 A synthetic loopback MCP smoke confirmed the exact allowlist, reply size
 limit and disconnected fallback. No synthesis, settings change, model
-download, hosted provider call or repeat export was performed. The restricted audit bridge cannot execute
-this local command. Target Windows read-only acceptance and a separate
+download, hosted provider call or repeat export was performed. The
+restricted audit bridge cannot execute this local command. Target Windows read-only acceptance and a separate
 alternate profile decision remain open.
