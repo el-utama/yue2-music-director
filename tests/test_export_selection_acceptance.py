@@ -57,3 +57,22 @@ class ExportSelectionAcceptanceTests(unittest.TestCase):
             self.assertFalse(plan["native_album_available"])
             self.assertFalse(plan["native_playlist_available"])
             self.assertEqual([c["id"] for c in plan["cases"]],["single-video","album-manual","playlist-manual"])
+
+    def test_acceptance_rejects_semantically_wrong_playlist_even_with_matching_manifest_hash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            audio=repo/"source.flac"
+            audio.write_bytes(b"synthetic audio")
+            def song(url,ident):
+                return {"id":ident,"title":ident,"lyrics":"Hello","lrc":"[00:01.00]Hello"}
+            with patch.object(nl,"Client"),patch.object(nl,"duration",return_value=5.0),patch.object(nl,"read_song",side_effect=song),patch.object(nl,"file_for",return_value=audio):
+                self.assertEqual(ex.launch(repo,"playlist",[],URL,kind="playlist",title="Set",native_songs=["b","a"],preset="video",confirm=True),0)
+                package=repo/"results/exports/playlists/Set--playlist"
+                manifest=nd.read(package/"release.json")
+                case={"kind":"playlist","preset":"video"}
+                ea.verify_sample(package,manifest,case,["b","a"])
+                (package/"playlist.m3u8").write_bytes(b"#EXTM3U\nwrong.flac\n")
+                manifest["files"]["playlist.m3u8"]=nd._sha(package/"playlist.m3u8")
+                nd.atomic_write(package/"release.json",manifest)
+                with self.assertRaisesRegex(ValueError,"playlist order"):
+                    ea.verify_sample(package,manifest,case,["b","a"])

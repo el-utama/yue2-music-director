@@ -1,6 +1,6 @@
 """Bounded local native export acceptance using existing music only."""
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import tempfile
 
 from . import native_collection as nc, native_library_export as nl
@@ -29,6 +29,88 @@ def plan(url):
             "native_playlist_available":any(c["id"]=="playlist-native" for c in cases)}
 
 
+def verify_sample(package,manifest,case,expected):
+    """Verify promised assets and track order, not only self-reported hashes."""
+    from . import release_export as ex
+    contract=manifest["contract"]
+    ex.verify_export(package,contract)
+    if (contract["type"]!=case["kind"] or contract["timing_policy"]!=ex.PRESETS[case["preset"]]
+            or contract.get("source_policy")!="native-library-draft-v1"
+            or manifest.get("release_approved") is not False
+            or manifest.get("studio_mutations")!=0 or manifest.get("inference_calls")!=0):
+        raise ValueError("Acceptance package contract differs")
+    sources,tracks=contract["sources"],manifest["tracks"]
+    ids=[s["song_id"] for s in sources]
+    if ids!=expected or [t.get("song_id") for t in tracks]!=expected:
+        raise ValueError("Acceptance package track membership or order differs")
+    if len(tracks)!=len(sources):
+        raise ValueError("Acceptance package track count differs")
+    files=manifest["files"]
+    required=set()
+    audio_paths=[]
+    for number,(source,track) in enumerate(zip(sources,tracks),1):
+        if track["track"]!=number or track["audio_sha256"]!=source["audio_sha256"]:
+            raise ValueError("Acceptance track identity differs")
+        name=track["audio_file"]
+        path=PurePosixPath(name)
+        if path.is_absolute() or ".." in path.parts or name not in files or path.suffix!=source["audio_extension"]:
+            raise ValueError("Invalid acceptance audio path")
+        if files[name]!=source["audio_sha256"]:
+            raise ValueError("Acceptance audio does not preserve source bytes")
+        required.add(name)
+        audio_paths.append(name)
+        stem=name[:-len(path.suffix)]
+        tagged=stem+".txt"
+        text=(package/tagged).read_bytes() if tagged in files else b""
+        if nd.digest(text)!=source["lyrics_sha256"]:
+            raise ValueError("Acceptance production lyrics differ from source")
+        if text:
+            required.add(tagged)
+        lyrics=text.decode("utf-8")
+        clean=ex.clean_lyric_bytes({"brief":{"lyrics":lyrics},"native_snapshot":{}})
+        if clean:
+            clean_name=stem+".clean.txt"
+            if clean_name not in files or (package/clean_name).read_bytes()!=clean:
+                raise ValueError("Acceptance clean lyrics differ")
+            required.add(clean_name)
+        if track.get("clean_lyrics_available")!=bool(clean):
+            raise ValueError("Acceptance clean lyrics availability differs")
+        timing=track["timing"]["status"]
+        if not clean and timing!="not_applicable":
+            raise ValueError("Unexpected instrumental timing status")
+        if clean and case["preset"]=="distribution" and timing!="not_requested":
+            raise ValueError("Unexpected distribution timing status")
+        if clean and case["preset"]!="distribution" and timing not in ("unavailable","exported_unverified_display_anchors"):
+            raise ValueError("Unexpected vocal timing status")
+        if timing=="exported_unverified_display_anchors":
+            lrc_name,srt_name=stem+".lrc",stem+".srt"
+            if lrc_name not in files or srt_name not in files:
+                raise ValueError("Acceptance timed lyric assets missing")
+            raw=(package/lrc_name).read_bytes()
+            if nd.digest(raw)!=track["timing"]["source_lrc_sha256"]:
+                raise ValueError("Acceptance LRC source hash differs")
+            _,srt=ex.timed_text(raw.decode("utf-8"),lyrics,source["duration_seconds"],
+                                library_only=True,video=case["preset"]=="video")
+            if (package/srt_name).read_bytes()!=srt.encode("utf-8"):
+                raise ValueError("Acceptance SRT differs from native timing")
+            required.update((lrc_name,srt_name))
+            if case["preset"]=="video":
+                line_name=stem+".line.lrc"
+                if line_name not in files or (package/line_name).read_bytes()!=ex.video_line_bytes(raw.decode("utf-8"),lyrics,source["duration_seconds"],library_only=True):
+                    raise ValueError("Acceptance line LRC differs")
+                required.add(line_name)
+    if case["kind"]=="playlist":
+        expected_m3u=("#EXTM3U\n"+"\n".join(audio_paths)+"\n").encode("utf-8")
+        if "playlist.m3u8" not in files or (package/"playlist.m3u8").read_bytes()!=expected_m3u:
+            raise ValueError("Acceptance playlist order or relative paths differ")
+        required.add("playlist.m3u8")
+    if set(files)!=required:
+        raise ValueError("Acceptance package has missing or unexpected assets")
+    expected_status="partial_missing_timing" if any(t["timing"]["status"]=="unavailable" for t in tracks) else "complete"
+    if manifest["status"]!=expected_status:
+        raise ValueError("Acceptance status differs from actual assets")
+
+
 def run(repo,url,*,confirm,launch):
     url=configured_endpoint(url)
     selected=plan(url)
@@ -55,19 +137,25 @@ def run(repo,url,*,confirm,launch):
                 if current["kind"]!=case["kind"] or len(current["song_ids"])>8:
                     raise ValueError("Native acceptance collection changed or exceeds eight tracks")
                 args["library_only"]=True
+                args["expected_collection"]=current
+                expected=current["song_ids"]
             else:
                 args["kind"]=case["kind"]
+                expected=args["native_songs"]
             code=launch(root,case["id"],[],url,confirm=True,**args)
             package=ri._originals(root/"results/exports",case["id"])
             if package is None:
                 raise ValueError("Acceptance export produced no package")
             manifest=nd.read(package/"release.json")
-            from .release_export import verify_export
-            verify_export(package,manifest["contract"])
+            verify_sample(package,manifest,case,expected)
+            if code!=(0 if manifest["status"]=="complete" else 2):
+                raise ValueError("Acceptance command status differs from package")
             outcomes.append({"case":case["id"],"exit_code":code,"status":manifest["status"],
                              "package":package.relative_to(root).as_posix(),
                              "tracks":len(manifest["tracks"]),
-                             "timing":[track["timing"]["status"] for track in manifest["tracks"]]})
+                             "timing":[track["timing"]["status"] for track in manifest["tracks"]],
+                             "timing_issues":[track["timing"].get("reason","unavailable") for track in manifest["tracks"] if track["timing"]["status"]=="unavailable"],
+                             "asset_checks":"passed"})
         except (OSError,ValueError,KeyError,TypeError,MCPError) as exc:
             outcomes.append({"case":case["id"],"exit_code":2,"status":"blocked","error":str(exc)})
     kinds={case["kind"] for case in selected["cases"]}

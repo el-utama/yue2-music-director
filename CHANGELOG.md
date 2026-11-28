@@ -1,5 +1,9 @@
 # Changelog and research milestones
 
+## Unreleased — final exporter acceptance hardening
+
+- Fit long Windows track filenames before staging, preserve short names, verify staged hashes and actual sample assets/order, and reject collection drift between acceptance selection and export. Report missing timing without fabricating it.
+
 ## Unreleased — exporter usability and acceptance
 
 - Add exact native title/collection selection with ambiguity rejection, ordered preview and consolidated local native library sample acceptance across export types and presets. Preserve prior outputs and avoid inference or native mutation.

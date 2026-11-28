@@ -172,3 +172,7 @@ snapshots. No separate timestamp editor or inference. CI/live pending.
 Exporter usability increment: exact native title/collection-name selection,
 ordered preview, consolidated local acceptance. CI and installed native
 acceptance pending. No new generation or collection writes.
+
+Final export audit follow-up: long Windows track paths, staged package
+verification and semantic acceptance checks. Exact-head CI and installed
+native acceptance remain pending; no creative quality claim.

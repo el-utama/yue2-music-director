@@ -11,12 +11,12 @@ DEFAULT_SNAPSHOT="v1"
 RESERVED=re.compile(r"^(CON|PRN|AUX|NUL|CONIN\$|CONOUT\$|COM[1-9¹²³]|LPT[1-9¹²³])$",re.I)
 
 
-def safe_title(title):
+def safe_title(title,limit=56):
     stem=re.sub(r'[<>:"/\\|?*\x00-\x1f]',"_",unicodedata.normalize("NFC",title)).strip(" .")
     if RESERVED.fullmatch(stem.split(".")[0].rstrip(" ")):
         stem="_"+stem
     # Bound both byte-length (Unix) and UTF-16 code units (Windows).
-    while len(stem.encode("utf-8"))>56 or len(stem.encode("utf-16-le"))//2>56:
+    while len(stem.encode("utf-8"))>limit or len(stem.encode("utf-16-le"))//2>limit:
         stem=stem[:-1]
     stem=stem.rstrip(" .") or "Untitled"
     if RESERVED.fullmatch(stem.split(".")[0].rstrip(" ")):
@@ -33,6 +33,32 @@ def ensure_paths(paths,*,windows=None):
             raise ValueError("Release filename exceeds portable component length")
         if windows and len(str(path.absolute()).encode("utf-16-le"))//2>240:
             raise ValueError("Release path exceeds conservative Windows length; use shorter IDs or repo path")
+
+
+def track_names(root,titles,kind,extensions,*,video=False,windows=None):
+    """Keep existing short names; shorten new long paths before any writes.
+
+    Budget for both final and temporary staging paths. Track numbers keep
+    collection filenames distinct even after shortening.
+    """
+    width=max(2,len(str(len(titles))))
+    names=[]
+    for number,(title,ext) in enumerate(zip(titles,extensions),1):
+        prefix=f"{number:0{width}d} - " if kind!="single" else ""
+        suffixes=(ext,".txt",".clean.txt",".lrc",".srt")+((".line.lrc",) if video else ())
+        for limit in range(56,7,-1):
+            name=prefix+safe_title(title,limit)
+            candidates=[(base/name if kind!="single" else base)/(name+suffix)
+                        for base in (root,root.parent/".export-00000000") for suffix in suffixes]
+            try:
+                ensure_paths(candidates,windows=windows)
+            except ValueError:
+                continue
+            names.append(name)
+            break
+        else:
+            raise ValueError("Export path too long even with shortened title; use a shorter release ID or repo path")
+    return names
 
 
 def _originals(exports,release):

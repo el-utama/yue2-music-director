@@ -189,3 +189,13 @@ it lists a plan only. Missing timing or absent native collection yields
 incomplete (exit 2); missing timing is not an inference request. Inspect
 report and sample package files; human subtitle/player and acoustic timing
 review remain separate. Do not share private audio or lyrics in transcripts.
+
+### Final acceptance checks
+
+Preview also shows planned audio filenames. New track paths shorten long
+names when necessary for Windows, keeping track number and original title
+in the manifest; existing packages are not renamed. The acceptance command
+checks source audio hashes, original and clean lyrics, timing asset policy,
+SRT and line-LRC derivation, exact M3U8 relative paths/order, and the complete
+asset set. Collection identity is frozen between acceptance selection and
+export. Report lists timing issues; no automatic fix or phonetic claim.

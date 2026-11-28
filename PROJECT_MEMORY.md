@@ -38,7 +38,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Verified main `68ad3775bba0ecebfde3d8a930a19b9c6722fe4f` after PR #144; both exact-head Python 3.11 CI jobs passed 46094915707 after syntax fix. Draft Exporter remains operator priority; English default guarded and negative Indonesian lyric feedback retained. Seven historical works, 853 candidate IDs and 147 slots open.
+- Verified main `6ac40f0b39f81f2e8813b2fb53fbccb4784d1ecf` after PR #145; both exact-head CI jobs passed 46095438953 (429 Windows tests). Exporter remains priority before creative improvements. Seven historical works, 853 candidate IDs and 147 slots open.
 - P0 recovery follow-up (R01/R08/R09): a local interruption between saving the Studio acknowledgment and updating the journal can now recover the existing plan or song ID. Regression coverage injects that interruption and checks that planning and synthesis are each submitted once. Windows Studio recovery and independent live artistic acceptance remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
@@ -57,7 +57,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 | R04 | Native controls, actual installed capability and limitations | Source-pinned audit and live velocity fixture; velocity not retained in ABC, schedule coverage advisory only | Complete remaining melody/harmony/arrangement/replay/cover/adapter audit; installed binary identity not verified; no fake controls |
 | R05 | Human feedback, persistent artist profiles, confirmed vs inferred preference | Local immutable feedback and opt-in Artist Memory implemented/CI; explicit typed job selection | Live hosted typed-schema validation; usable profile management, no inferred preferences silently applied; artist naming PR115 merged; live usage pending |
 | R06 | Audio finishing, original preserved, separate variant | Gain-only finishing passed live technical check on retained reference | General mastering, repair and artistic comparison are not established; no automatic acceptance |
-| R07 | Cover art direction, release export and complete release package | Cover prompt/original single-song export live; approved variant assembly/delivery CI only | Draft export: clean and original lyric texts, native LRC/SRT, useful presets, portable naming and ordered Single/EP/Album; live acceptance pending. Full credits and actual cover optional at draft stage, cover prompt suffices. Separate final release rights/approval remains open; no publishing without approval |
+| R07 | Cover art direction, draft export and complete release package | Cover prompt/original single export live; PRs #141–145 merged/CI: original and clean lyrics, native LRC/SRT, video line LRC, three presets, Single/EP/Album/Playlist, native library and exact name selection, M3U8, immutable snapshots and acceptance launcher | Final audit hardening pending CI; live consolidated Windows sample acceptance and human player review pending. Native conversion and editing remain Studio features. Full credits and actual cover optional for draft. Final approved assembly/delivery rights and approval separate; no publication |
 | R08 | One short launcher, intuitive human-readable names and safe recovery | Readiness and multiple specialist launchers CI; previous launcher help failure fixed | Usability audit with real multiword/Unicode names, quoted paths, realistic input and minimal commands; actual Windows readiness not live checked |
 | R09 | Robust journals, failure isolation, no duplicate calls | Local locks, receipts, explicit recovery and CI | Supervised workers/process isolation, cross-client durable queue, startup/reconnect/ambiguous failures |
 | R10 | Private multi-device operation from Mac and Windows | Audit bridge only | Authenticated production service, queue, status, playback, approvals, reconnect, local host startup; no public exposure |
@@ -350,3 +350,14 @@ missing timing is incomplete, not a fabricated pass. Synthetic tests and
 docs added; exact-head CI pending. No inference. Human player/subtitle
 inspection remains separate. Return to creative improvements after
 exporter acceptance; R01–R14 retained.
+
+2026-11-28: PR #145 merged at 6ac40f0 after both green exact-head jobs
+46095438953 (429 Windows tests, new acceptance tests discovered). Final
+source audit found long nested Windows paths and an acceptance checker
+that only verified manifest hashes. This follow-up budgets actual track
+paths before staging, preserves existing names when short, verifies staged
+package hashes, records relative audio file paths, verifies semantic sample
+assets/order/status and rejects native collection drift between selection
+and export. Tests and documentation updated; exact-head CI pending.
+Installed library unavailable via restricted bridge; one local acceptance
+run remains essential. No new inference or Studio mutations authorized.

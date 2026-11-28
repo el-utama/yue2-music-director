@@ -127,3 +127,15 @@ class ReleaseIdentityTests(unittest.TestCase):
                     ex.launch(repo,"release",["one"],URL,confirm=True,timing_reader=lambda *a:self.fail("read"))
                 self.assertTrue((root/"release.json").exists())
                 self.assertTrue((duplicate/"release.json").exists())
+
+    def test_long_windows_track_paths_shorten_without_changing_short_names(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)/("x"*95)/("Collection"*5+"--album")
+            names=ri.track_names(root,["Short","A very long song name "*6,"A very long song name "*6],"album",[".flac"]*3,video=True,windows=True)
+            self.assertEqual(names[0],"01 - Short")
+            self.assertTrue(names[1].startswith("02 - "))
+            self.assertTrue(names[2].startswith("03 - "))
+            self.assertLess(len(names[1]),61)
+            for name in names:
+                ri.ensure_paths([root/name/(name+".line.lrc")],windows=True)
+            self.assertNotEqual(names[1],names[2])
