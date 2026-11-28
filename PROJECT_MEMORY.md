@@ -38,7 +38,8 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Verified main `72ea94143ca49af0bc3783453c2801633280a954` after PR #150; exact-head Windows/Linux CI 46104180672 passed. Fresh-host guide merged, actual fresh-host validation open. New operator hardware portability question: Advisor audit and plan precede creative improvements; no production gate change yet.
+- Verified baseline main `acbe7f1ddaced0f9568e960fdcf5880b8e05ab9d` after PR #151. Documentation head `d510088` passed [Windows/Linux 3.11 CI](https://github.com/el-utama/yue2-music-director/actions/runs/46104760678). Fresh-host live validation remains open.
+- R04/R08/R12: `--advisor` implements read-only discovery and goal-specific advice, with simulation and private opt-in reporting. Target Windows acceptance remains open. Preserve the current production gate and receipts, then audit versioned alternate compatibility separately. Retain the parallel creative quality and corpus requirements.
 - P0 recovery follow-up (R01/R08/R09): a local interruption between saving the Studio acknowledgment and updating the journal can now recover the existing plan or song ID. Regression coverage injects that interruption and checks that planning and synthesis are each submitted once. Windows Studio recovery and independent live artistic acceptance remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
@@ -54,15 +55,15 @@ unpublished lyrics, audio, private paths or personal preferences here.
 | R01 | Original song from natural-language brief; distinct Composer, Lyricist, reviewer, Director; native YuE2 first | Local alpha; previous reference and a second Indonesian natural-language song completed through Director with explicit duration/audio-identity recovery; review_required; operator rejected Indonesian lyric quality | Independent one-command generalization, English-first lyric craft and human musical acceptance; do not repeat this take |
 | R02 | Deep Lyricist knowledge base: many songs, multilingual structure, prosody, rhyme, narrative, imagery, genre and emotional arc | **OPEN; seven historical works indexed by merged PR #120, including two English works; optional text-only role context CI passed.** Explicit historical autonomous context merged/CI (#130); deeper craft metrics merged/CI (#131); corpus expansion and artistic evaluation open | Rights/source audit, actual ingestion, deduplication, searchable structured analysis, counts by language/genre and rights, integration with versioned creative policy, held-out editorial evaluation |
 | R03 | Composer knowledge: melody, harmony, arrangement, instruments, vocal phrasing, music theory and production | Native contracts/research docs and symbolic score review available; pilot MusicXML descriptors and automatic harmony search CI passed; melodic descriptors CI passed; opt-in historical text-only context CI passed; explicit original style selection in autonomous Composer merged/CI (#126), no live validation | Source-backed knowledge entries and retrieval, versioned policy integration and meaningful artistic evaluation |
-| R04 | Native controls, actual installed capability and limitations; hardware/model/runtime portability | Source-pinned audit, existing 13-read native inventory, strict stock reference; [Hardware Advisor plan](docs/HARDWARE_ADVISOR.md) audited, not implemented | Read-only discovery, deterministic goal-specific recommendations, source and installed/effective validation, versioned alternate production compatibility and actual target-host acceptance; preserve reference and remaining native control audit |
+| R04 | Native controls, actual installed capability and limitations; hardware/model/runtime portability | Source-pinned audit, capability inventory and stock reference; [Hardware Advisor](docs/HARDWARE_ADVISOR.md) adds read-only goal-specific discovery/advice and offline fixtures | Target Windows read-only acceptance, source and installed/effective validation, versioned alternate production profiles and separate actual synthesis fit evidence; remaining native control audit |
 | R05 | Human feedback, persistent artist profiles, confirmed vs inferred preference | Local immutable feedback and opt-in Artist Memory implemented/CI; explicit typed job selection | Live hosted typed-schema validation; usable profile management, no inferred preferences silently applied; artist naming PR115 merged; live usage pending |
 | R06 | Audio finishing, original preserved, separate variant | Gain-only finishing passed live technical check on retained reference | General mastering, repair and artistic comparison are not established; no automatic acceptance |
 | R07 | Cover art direction, draft export and complete release package | Draft packaging sample acceptance **PASS** across #146–148 live Windows reports: Single, EP, manual/native Album, native Playlist, three presets, clean/original lyrics, LRC/SRT, fallback with native archive, numbered filenames and asset verification. Cover prompt live. | Human player/subtitle review, phonetic alignment, broader library coverage, native conversion outside Exporter, separate approved assembly/delivery and rights/approval remain open; no publication |
-| R08 | One short launcher, intuitive human-readable names and safe recovery | Readiness and multiple specialist launchers CI; previous launcher help failure fixed | Usability audit with real multiword/Unicode names, quoted paths, realistic input and minimal commands; actual Windows readiness not live checked |
+| R08 | One short launcher, intuitive human-readable names and safe recovery | Readiness, Hardware Advisor and specialist launcher routes; prior launcher help fix retained | Usability audit with real multiword/Unicode names, quoted paths, realistic input and minimal commands; actual Windows readiness not live checked |
 | R09 | Robust journals, failure isolation, no duplicate calls | Local locks, receipts, explicit recovery and CI | Supervised workers/process isolation, cross-client durable queue, startup/reconnect/ambiguous failures |
 | R10 | Private multi-device operation from Mac and Windows | Audit bridge only | Authenticated production service, queue, status, playback, approvals, reconnect, local host startup; no public exposure |
 | R11 | Multi-track/album creative scheduling and consistent artist direction | Release snapshots/assembly; no creative scheduling | Explicit track-level plans/budgets, deterministic resume, independent evidence and approval |
-| R12 | Project documentation, continuity and complete requirement coverage | This register plus native/release docs | Maintain on every substantive change, verify all outstanding rows before readiness |
+| R12 | Project documentation, continuity and complete requirement coverage | This register plus native/release, first-run and Advisor docs | Maintain on every substantive change, verify all outstanding rows before readiness |
 | R13 | Privacy, licensing, safe external use | Local private storage and explicit provider boundary | Validate every reference corpus source/rights, permitted use and hosted transfer; preserve originals and no unsupported claims |
 | R14 | 100 music styles per specified category, lyrics if available | 1,000 authored presets merged/CI; 853 metadata candidates merged/CI; 147 metadata slots open; optional authored style selection merged/CI (#126). No approved quota. | Rights-reviewed 100 observed records per category; source and lyric availability, deduplication, creative evaluation |
 
@@ -443,9 +444,23 @@ PCs (example RTX 4 GB VRAM / 16 GB RAM) and requests documentation audit
 before a new session. [Hardware Advisor](docs/HARDWARE_ADVISOR.md) records
 source/guide audit, current hard-coded gate, native read candidates, tier
 thresholds, discovery/recommendation/report contracts, test matrix, and
-staged implementation with no historical receipt changes. Advisor NOT
-implemented; no supported 4 GB generation claim. First implement read-only
-A/B and fixtures; then separate alternative execution contracts and actual
-host validation. Keep draft export accepted, R02/R03 creative improvements
-and all other open requirements. Documentation PR CI pending. No inference,
-model download, settings change or additional local test authorized.
+staged implementation with no historical receipt changes. Discovery and
+advice preceded the separate work on alternate profiles and real host
+validation. Draft export acceptance, R02/R03 creative improvements and all
+other open requirements remained tracked.
+
+2026-11-28: PR #151 merged after both Python 3.11 jobs passed on the
+documentation head. [PR #152](https://github.com/el-utama/yue2-music-director/pull/152)
+implements the read-only Advisor and audits MCP schemas
+and handlers against `bfd35a0`, uses the existing loopback transport and
+audited read list plus catalog, and checks bounded local volumes without
+calling the recursive storage tool. Offline cases cover tier and low-memory
+boundaries, partial observations, exact GPU identity, current settings
+drift, stale effective cache, native catalog and rights evidence, and
+private output. Check the [PR CI](https://github.com/el-utama/yue2-music-director/pull/152/checks)
+for the exact implementation head and both Windows/Linux Python 3.11 jobs.
+A synthetic loopback MCP smoke confirmed the exact allowlist, reply size
+limit and disconnected fallback. No synthesis, settings change, model
+download, hosted provider call or repeat export was performed. The
+restricted audit bridge cannot execute this local command. Target Windows read-only acceptance and a separate
+alternate profile decision remain open.

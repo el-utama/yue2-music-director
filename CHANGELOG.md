@@ -1,8 +1,12 @@
 # Changelog and research milestones
 
+## Unreleased — Hardware and Configuration Advisor
+
+- Add `music.cmd --advisor` for read-only hardware and Studio evidence, goal-specific recommendations, hypothetical hardware, shareable output and optional private snapshots. Keep the existing production gate and retained receipts. Target-host Advisor and alternate production validation remain open.
+
 ## Hardware advisor audit checkpoint — 2026-11-28
 
-- Document audited native resource/model/runtime discovery, hardware tiers and strict stock gate, proposed deterministic advisor and goal-specific compatibility, implementation stages and fixture/live acceptance. Advisor remains unimplemented; no production guard weakened or model switched.
+- Document audited native resource/model/runtime discovery, hardware tiers and strict stock gate, proposed deterministic advisor and goal-specific compatibility, implementation stages and fixture/live acceptance. The audit preceded the read-only Advisor implementation.
 
 ## Fresh-host onboarding — 2026-11-28
 

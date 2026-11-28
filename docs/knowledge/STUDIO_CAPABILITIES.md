@@ -1,6 +1,6 @@
 # YuE2 Studio: native capabilities and operational knowledge
 
-See the [Hardware Advisor audit](../HARDWARE_ADVISOR.md) for proposed reuse of native resource/model/runtime/storage inventory and versioned evidence; an advisor is not yet implemented.
+The [Hardware Advisor](../HARDWARE_ADVISOR.md) uses a goal-specific subset of these audited reads and adds the native model catalog. Its shareable advice is independent of the private full capability inventory.
 
 Audit date: 2026-11-25. Target is timoncool/YuE2-Studio, not another similarly named UI or the original Python model. Source baseline [ca37d2d](https://github.com/timoncool/YuE2-Studio/tree/ca37d2d3ea96f3c7073167de0e5e1eb3b4ec2f25). The default branch MCP source had the same blob at audit time. This is a source-level knowledge base, not a live test of every feature or every installed version. [Complete static MCP index](MCP_TOOL_INDEX.md) covers 339 definitions; exact schemas are in the linked source. The official documentation and tool descriptions are authoritative for their version; installed tools/list and runtime state decide what is available. Never assume absence from an older README means the feature does not exist.
 

@@ -1,6 +1,6 @@
 # Generation-first Music Director architecture and implementation roadmap
 
-The [Hardware Advisor plan](HARDWARE_ADVISOR.md) is the portability design checkpoint. Add goal-specific read-only discovery and deterministic recommendation before any versioned alternate production contract.
+The [Hardware Advisor](HARDWARE_ADVISOR.md) provides goal-specific read-only discovery and deterministic recommendations outside the generation pipeline. Versioned alternate production contracts require separate profile and receipt validation.
 
 > Product sequencing update (2026-11-26): [Autonomous Music Director roadmap](AUTONOMOUS_MUSIC_DIRECTOR_ROADMAP.md) governs the next product milestones and records live validation since this document was written. This document remains authoritative for native execution, safety, evidence and historical research gates; its original implementation status and phase ordering are historical.
 

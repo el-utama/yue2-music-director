@@ -83,6 +83,9 @@ jobs:
           call music.cmd --artist-memory --help || exit /b 1
           call music.cmd --artist-memory "The Midnight Echo" --compile --help || exit /b 1
           call music.cmd --ready --help || exit /b 1
+          call music.cmd --advisor --help || exit /b 1
+          call music.cmd --advisor --goal offline || exit /b 1
+          call music.cmd --advisor --simulate nvidia --vram-gib 4 --ram-gib 16 --json || exit /b 1
           call music.cmd --feedback --help || exit /b 1
           call music.cmd --export --help || exit /b 1
           call music.cmd --cover --help || exit /b 1

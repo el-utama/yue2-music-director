@@ -1,6 +1,6 @@
 # Operator guide — start here
 
-For a different GPU or model, consult the [Hardware Advisor plan](HARDWARE_ADVISOR.md). No advisor command is shipped yet; current --ready is a strict production reference check, not universal hardware advice.
+Run `music.cmd --advisor` for read-only [hardware and model advice](HARDWARE_ADVISOR.md) on the local host. Use `music.cmd --ready` separately for the existing Director production reference check.
 
 For the Windows machine running YuE2 Studio. Mac and other devices can
 read documentation and develop offline, but the installed Studio production
@@ -55,6 +55,7 @@ fixtures require FFmpeg). No live generation is required.
 | Browse observed references | `music.cmd --references --build` | Offline candidate metadata, not approved tracks |
 | Browse historical lyrics/score descriptors | `music.cmd --knowledge --build` | Offline historical index |
 | Inspect named artist | `music.cmd --artist-memory "Artist Name"` | Read-only local profile |
+| Inspect hardware and get configuration advice | `music.cmd --advisor` | Read-only host and Studio observations |
 | Check production readiness | `music.cmd --ready` | Read-only local/Studio preflight; no provider completion |
 | Configure hosted text provider | `music.cmd --setup` | Local encrypted configuration, no network calls |
 | Diagnose provider authentication | `music.cmd --check-provider` | Explicitly authorizes synthetic external text checks; quota/charges may apply |
@@ -159,6 +160,7 @@ Read each module guide for precise confirmation semantics. `--setup` and
 | `--styles` | [STYLE LIBRARY](STYLE_LIBRARY.md) |
 | `--knowledge` | [KNOWLEDGE BANK](KNOWLEDGE_BANK.md) |
 | `--artist-memory` | [ARTIST MEMORY](ARTIST_MEMORY.md) |
+| `--advisor` | [HARDWARE ADVISOR](HARDWARE_ADVISOR.md) |
 | `--ready` | [AUTONOMOUS CLI](AUTONOMOUS_CLI.md) |
 | `--setup` | [AUTONOMOUS CLI](AUTONOMOUS_CLI.md) |
 | `--check-provider` | [AUTONOMOUS CLI](AUTONOMOUS_CLI.md) |
