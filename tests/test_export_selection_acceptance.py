@@ -85,3 +85,24 @@ class ExportSelectionAcceptanceTests(unittest.TestCase):
             self.assertEqual([c["id"] for c in plan["cases"]],["album-native","playlist-native"])
             self.assertEqual(plan["native_album_count"],1)
             self.assertTrue(plan["collections_only"])
+
+    def test_album_only_native_fallback_and_numbered_names(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            audio=repo/"source.flac"
+            audio.write_bytes(b"synthetic")
+            raw="[00:01.00]<00:01.50>Hello <00:01.20>world"
+            def song(url,ident):
+                return {"id":ident,"title":("1. One" if ident=="a" else "2. Two"),"lyrics":"Hello world","lrc":raw}
+            collections=[{"id":"album","name":"Album","kind":"album","tracks":2}]
+            selection={"id":"album","name":"Album","kind":"album","song_ids":["a","b"]}
+            with patch.object(nl,"song_list",return_value=[]),patch.object(nc,"collections",return_value=collections),patch.object(nc,"collection",return_value=selection),patch.object(nl,"Client"),patch.object(nl,"duration",return_value=5.0),patch.object(nl,"read_song",side_effect=song),patch.object(nl,"file_for",return_value=audio):
+                self.assertEqual(ea.run(repo,URL,confirm=True,launch=ex.launch,collections_only=True,collection_kind="album"),0)
+                root=next((repo/"results/export-check").iterdir())
+                report=nd.read(root/"report.json")
+                self.assertEqual(report["status"],"album_checks_passed")
+                self.assertEqual(report["outcomes"][0]["word_timing_fallbacks"],[1,2])
+                package=root/report["outcomes"][0]["package"]
+                self.assertEqual((package/"01 - One/01 - One.native.lrc").read_bytes(),raw.encode())
+                self.assertEqual((package/"01 - One/01 - One.lrc").read_bytes(),b"[00:01.00]Hello world\n")
+                self.assertEqual(nd.read(package/"release.json")["tracks"][0]["title"],"1. One")

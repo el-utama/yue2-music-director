@@ -123,3 +123,15 @@ class ExportTests(unittest.TestCase):
                 self.assertEqual(before,{p:nd._sha(p) for p in root.rglob("*") if p.is_file()})
                 self.assertEqual(ex.launch(repo,"offset",["one"],URL,preset="video",confirm=True,timing_reader=lambda *a:raw.replace("[offset:0]","[offset:500]")),2)
                 self.assertFalse((repo/"results/exports/songs/one--offset/one.srt").exists())
+
+    def test_native_line_fallback_does_not_invent_onsets(self):
+        raw="[00:01.00]<00:01.50>One <00:01.20>two\n[00:03.25]Three four"
+        lrc,srt,issue=ex.native_timing_assets(raw,LYRICS,5.5)
+        self.assertEqual(lrc,"[00:01.00]One two\n[00:03.25]Three four\n")
+        self.assertIn("Malformed or unordered",issue)
+        self.assertIn("00:00:01,000 --> 00:00:03,250",srt)
+        for bad in (raw.replace("Three four","Wrong"),raw.replace("[00:03.25]","[00:00.25]"),raw.replace("<00:01.20>","<bad>")):
+            with self.assertRaises(ValueError):
+                ex.native_timing_assets(bad,LYRICS,5.5)
+        with self.assertRaises(ValueError):
+            ex.timed_text(raw,LYRICS,5.5)

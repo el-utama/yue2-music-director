@@ -13,7 +13,7 @@ from .retained_source import load
 from . import release_identity as ri
 from .release_identity import safe_title
 from .mcp import MCPError, configured_endpoint
-from .temporal_evidence import parse_lrc, LINE
+from .temporal_evidence import parse_lrc, LINE, WORD
 from .export_timing import read_timing
 from .prosody import parse_lyrics
 from . import native_collection as nc, native_library_export as nl
@@ -147,6 +147,48 @@ def video_line_bytes(lrc,lyrics,duration,*,library_only=False):
     return ("\n".join(lines)+"\n").encode("utf-8")
 
 
+def native_line_fallback(lrc,lyrics,duration,*,video=False):
+    """Retain valid native line starts, not invalid word clocks."""
+    stripped=[]
+    for raw in lrc.splitlines():
+        match=LINE.fullmatch(raw.strip())
+        if not match:
+            stripped.append(raw)
+            continue
+        body=match.group(4)
+        tags=list(WORD.finditer(body))
+        if not tags:
+            stripped.append(raw)
+            continue
+        if body[:tags[0].start()].strip():
+            raise ValueError("Untagged text before enhanced LRC words")
+        words=[]
+        for index,tag in enumerate(tags):
+            word=body[tag.end():tags[index+1].start() if index+1<len(tags) else len(body)].strip()
+            if not word or "<" in word or ">" in word:
+                raise ValueError("Malformed enhanced LRC text")
+            words.append(word)
+        stripped.append(raw.strip()[:match.start(4)]+" ".join(words))
+    source="\n".join(stripped)
+    timing_rows(source,lyrics,duration,library_only=True,video=video)
+    return video_line_bytes(source,lyrics,duration,library_only=True).decode("utf-8")
+
+
+def native_timing_assets(lrc,lyrics,duration,*,video=False):
+    try:
+        native,srt=timed_text(lrc,lyrics,duration,library_only=True,video=video)
+    except ValueError as exc:
+        # An independent strict line-only parse must still succeed.
+        if str(exc) not in ("Malformed or unordered enhanced LRC word",
+                            "LRC line starts are not strictly ordered within source duration",
+                            "Invalid seconds in LRC timestamp"):
+            raise
+        native=native_line_fallback(lrc,lyrics,duration,video=video)
+        _,srt=timed_text(native,lyrics,duration,library_only=True,video=video)
+        return native,srt,str(exc)
+    return native,srt,None
+
+
 def playlist_bytes(names,extensions=None):
     """Portable relative paths only, in exact exported track order."""
     extensions=extensions or [".flac"]*len(names)
@@ -232,7 +274,7 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
     for i,track in enumerate(tracks,1):
         print(f"  {i:02d}. "+json.dumps(track["brief"]["title"],ensure_ascii=True),flush=True)
     extensions=[t["audio"].suffix.lower() if library_only else ".flac" for t in tracks]
-    names=None if root.exists() else ri.track_names(root,[t["brief"]["title"] for t in tracks],kind,extensions,video=preset=="video")
+    names=None if root.exists() else ri.track_names(root,[t["brief"]["title"] for t in tracks],kind,extensions,video=preset=="video",native=library_only)
     if names is not None:
         for name,ext in zip(names,extensions):
             print("  File:",json.dumps(name+ext,ensure_ascii=True),flush=True)
@@ -246,10 +288,10 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
             manifest=verify_export(root,contract)
             print("Existing export verified:",root,flush=True)
             return 0 if manifest["status"]=="complete" else 2
-        names=ri.track_names(root,[t["brief"]["title"] for t in tracks],kind,extensions,video=preset=="video")
+        names=ri.track_names(root,[t["brief"]["title"] for t in tracks],kind,extensions,video=preset=="video",native=library_only)
         def paths(base):
             return [base/"release.json",*([base/"playlist.m3u8"] if kind=="playlist" else []),*[(base/name if kind!="single" else base)/(name+suffix)
-                    for name,ext in zip(names,extensions) for suffix in (ext,".txt",".clean.txt",".lrc",".srt")+((".line.lrc",) if preset=="video" else ())]]
+                    for name,ext in zip(names,extensions) for suffix in (ext,".txt",".clean.txt",".lrc",".srt")+((".line.lrc",) if preset=="video" else ())+((".native.lrc",) if library_only else ())]]
         ri.ensure_paths([index,*paths(root)])
         ri.reserve(index,record)
         base=root.parent
@@ -284,9 +326,13 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
                         if not lrc:
                             raise ValueError("No retained native karaoke LRC")
                         duration=t["report"]["acoustic"]["duration_seconds"]
-                        lrc_out,srt_out=timed_text(lrc,lyrics,duration,library_only=library_only,video=preset=="video")
+                        fallback=None
+                        if library_only:
+                            lrc_out,srt_out,fallback=native_timing_assets(lrc,lyrics,duration,video=preset=="video")
+                        else:
+                            lrc_out,srt_out=timed_text(lrc,lyrics,duration,video=preset=="video")
                         if preset=="video":
-                            line_lrc=video_line_bytes(lrc,lyrics,duration,library_only=library_only)
+                            line_lrc=video_line_bytes(lrc_out,lyrics,duration,library_only=library_only)
                     except (ValueError,MCPError,TypeError,KeyError,OSError) as exc:
                         timing["reason"]=str(exc)
                     else:
@@ -297,10 +343,16 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
                         timing={"status":"exported_unverified_display_anchors","acoustic_timing_verified":False,
                                 "source_lrc_sha256":nd.digest(lrc.encode("utf-8")),
                                 "srt_end_policy":"Studio UI word-tail/plain-line heuristic; capped at next onset, final 3 seconds and measured duration",
-                                "lrc_preserved":True}
+                                "lrc_preserved":fallback is None}
+                        if fallback is not None:
+                            (dest/(name+".native.lrc")).write_bytes(lrc.encode("utf-8"))
+                            timing.update(word_timing_status="discarded_invalid_word_anchors",
+                                          word_timing_issue=fallback,
+                                          native_lrc_preserved_separately=True,
+                                          derived_lrc_sha256=nd.digest(lrc_out.encode("utf-8")))
                         if preset=="video":
                             (dest/(name+".line.lrc")).write_bytes(line_lrc)
-                            rows=timing_rows(lrc,lyrics,duration,library_only=library_only,video=True)
+                            rows=timing_rows(lrc_out,lyrics,duration,library_only=library_only,video=True)
                             timing.update(line_lrc_policy="native-line-onset-only-v1",
                                           lyric_line_count=len(rows),
                                           enhanced_line_count=sum(bool(row["word_anchors"]) for row in rows))
@@ -353,6 +405,7 @@ def main():
     p.add_argument("--collection-name",help="Select an unambiguous exact native album or playlist name (draft source)")
     p.add_argument("--check-library",action="store_true",help="Consolidated native library acceptance; preview or confirmed sample exports")
     p.add_argument("--collections-only",action="store_true",help="With --check-library, retest native album and playlist only")
+    p.add_argument("--collection-kind",choices=("album","playlist"),help="Limit collection-only check to one kind")
     p.add_argument("--library-only",action="store_true",help="Export current native collection as draft, without Director receipts")
     p.add_argument("--song",action="append")
     p.add_argument("--type",choices=tuple(ri.FOLDERS),default="single")
@@ -369,8 +422,10 @@ def main():
                     or a.type!="single" or a.snapshot!=ri.DEFAULT_SNAPSHOT or a.preset!="production"):
                 raise ValueError("Use --export --check-library [--confirm-run] alone")
             from .export_acceptance import run
-            return run(a.repo.resolve(),a.url,confirm=a.confirm_run,launch=launch,collections_only=a.collections_only)
-        if a.collections_only:
+            if a.collection_kind and not a.collections_only:
+                raise ValueError("--collection-kind requires --collections-only")
+            return run(a.repo.resolve(),a.url,confirm=a.confirm_run,launch=launch,collections_only=a.collections_only,collection_kind=a.collection_kind)
+        if a.collections_only or a.collection_kind:
             raise ValueError("--collections-only requires --check-library")
         if a.list_collections or a.list_songs:
             if (a.list_collections and a.list_songs or a.export or a.song or a.native_collection or a.native_song or a.song_name or a.collection_name or a.library_only or a.confirm_run or a.title or a.artist or a.type!="single" or a.snapshot!=ri.DEFAULT_SNAPSHOT or a.preset!="production"):

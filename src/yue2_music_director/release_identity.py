@@ -35,17 +35,21 @@ def ensure_paths(paths,*,windows=None):
             raise ValueError("Release path exceeds conservative Windows length; use shorter IDs or repo path")
 
 
-def track_names(root,titles,kind,extensions,*,video=False,windows=None):
+def track_names(root,titles,kind,extensions,*,video=False,native=False,windows=None):
     """Keep existing short names; shorten new long paths before any writes.
 
     Budget for both final and temporary staging paths. Track numbers keep
     collection filenames distinct even after shortening.
     """
     width=max(2,len(str(len(titles))))
+    if native and kind in ("album","ep") and len(titles)>1:
+        numbered=[re.fullmatch(r"\s*(\d{1,3})\.\s+(.+)",title) for title in titles]
+        if all(match and int(match.group(1))==number for number,match in enumerate(numbered,1)):
+            titles=[match.group(2) for match in numbered]
     names=[]
     for number,(title,ext) in enumerate(zip(titles,extensions),1):
         prefix=f"{number:0{width}d} - " if kind!="single" else ""
-        suffixes=(ext,".txt",".clean.txt",".lrc",".srt")+((".line.lrc",) if video else ())
+        suffixes=(ext,".txt",".clean.txt",".lrc",".srt")+((".line.lrc",) if video else ())+((".native.lrc",) if native else ())
         for limit in range(56,7,-1):
             name=prefix+safe_title(title,limit)
             candidates=[(base/name if kind!="single" else base)/(name+suffix)

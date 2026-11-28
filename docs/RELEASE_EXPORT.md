@@ -208,3 +208,18 @@ conversion or extension rename. Missing/unsupported media errors identify
 the native track number and ID. Do not skip a track silently. The acceptance
 selection uses the smallest collection within normal export limits (24 album,
 100 playlist), not the old eight-track cutoff. `music.cmd --export --check-library --collections-only --confirm-run` tests only native collections after the previously successful single/EP/manual album checks. A collection-only pass is not a fresh full-suite pass.
+
+### Native line-only recovery
+
+If native enhanced word timestamps fail ordering or bounds, validate the
+original line onsets and exact complete lyric text independently. Only
+recognizable word timestamp tags may be discarded; invalid line times or
+text mismatches still fail. The source is archived as TITLE.native.lrc,
+TITLE.lrc becomes validated plain line LRC, and SRT uses existing line
+onsets and the documented display-end heuristic. Manifest marks discarded
+word anchors, reason and both hashes; acceptance rederives assets. No
+acoustic alignment claim. Retained Director strict policy unchanged.
+Native EP/album filenames remove existing numeric dot prefixes only when
+all titles form the exact numbered track sequence; original titles remain
+in metadata. Previous exports immutable. Retest only album with
+`music.cmd --export --check-library --collections-only --collection-kind album --confirm-run`.

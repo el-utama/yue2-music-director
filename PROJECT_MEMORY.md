@@ -38,7 +38,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Verified main `4fb916bfd0329d128485045cbf0225e5ef4d8b3e` after PR #146; two green exact-head CI jobs 46101680309 (431 Windows tests). Live native Exporter partial; see latest evidence below.
+- Verified main `19f7357d736c7a7a8a76146b9b2c99cb6cf7af0a` after PR #147; both exact-head CI jobs passed 46102879921. Live native playlist passed, native album partial; see latest evidence.
 - P0 recovery follow-up (R01/R08/R09): a local interruption between saving the Studio acknowledgment and updating the journal can now recover the existing plan or song ID. Regression coverage injects that interruption and checks that planning and synthesis are each submitted once. Windows Studio recovery and independent live artistic acceptance remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
@@ -374,3 +374,16 @@ FLAC/MP3/PCM WAV. Extend byte-preserving format validation, source-specific
 track diagnostics and collection-only acceptance using normal size limits.
 Exact-head CI pending. Native collection retest and human playback review
 still required; no forced karaoke or conversion.
+
+2026-11-28: PR #147 merged at 19f7357, both exact-head CI jobs green.
+Operator collection retest: 255 songs, one album and 14 playlists.
+Native M4A instrumental playlist completed, all asset checks passed.
+11-track native album copied audio and lyric assets; 7 timing tracks passed,
+4 rejected with unordered/malformed enhanced word anchors. Asset checks
+passed, overall partial. Actual raw word clocks not inspected. Preserve
+prior live passes. R07 follow-up independently validates exact lyric text
+and native line onsets, archives raw LRC and derives line-only LRC/SRT only
+when safe; invalid lines/text remain partial, no fake word alignment.
+Remove duplicate filename numbering only for exact fully numbered native
+album/EP sequence, preserve full title. Album-only targeted acceptance.
+Exact-head CI pending; no new inference or native mutation.
