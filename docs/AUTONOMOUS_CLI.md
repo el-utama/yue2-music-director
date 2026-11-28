@@ -1,5 +1,7 @@
 # Autonomous CLI (active alpha)
 
+Alternate hardware/runtime production profiles are planned in [Hardware Advisor](HARDWARE_ADVISOR.md). The current reference gate remains unchanged; do not bypass it or assume a suggested model is validated.
+
 For first-ever use, follow [fresh-host setup](FRESH_INSTALL.md#5-prepare-full-autonomous-production-only-if-wanted) before confirming production. The old host's DPAPI provider record, model files and job receipts are not installation prerequisites or transferable evidence. Export-only workflows need neither a hosted provider nor this gate.
 
 ## Historical live status — 2026-11-27

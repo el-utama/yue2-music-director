@@ -1,5 +1,7 @@
 # YuE2 Music Director
 
+**Hardware portability:** [Hardware Advisor audit and plan](docs/HARDWARE_ADVISOR.md) describes the proposed read-only configuration advisor and supported-profile work. It is not implemented. Current autonomous production remains on the strict reference; export/offline are independent.
+
 Local-first Python toolkit for **YuE2-Studio timoncool v5.0.0**, developing a generation-first, native YuE2 music director for original songs, artistic guidance and evidence-based evaluation. Existing ABC, MIDI, lyric and audio experiment utilities remain available. **Development build: experimental alpha; package version 0.7.0a8.post3. Identify unreleased builds by Git commit, not the unchanged package version.**
 
 > The repository is public. Never commit private audio, unpublished lyrics, local job journals, model weights or credentials.

@@ -21,3 +21,5 @@ Use [Operator guide](docs/OPERATOR_GUIDE.md) for the actual supported workflow a
 ## Modular failure isolation
 
 Separate provider, Composer, Lyricist, editorial review, native adapter, audio critic, persistence and interfaces. Keep role contracts independently testable. Save immutable per-stage inputs and receipts; failure must not replay completed upstream stages or trigger downstream work. Resume only validated matching identities; ambiguous mutations require explicit recovery. Test stage failures, cache integrity and non-duplication. Modular code in one process is not process-level fault isolation; persistent worker supervision is a later requirement.
+
+- Hardware portability requirement (2026-11-28): read [Hardware Advisor](docs/HARDWARE_ADVISOR.md) before changing readiness, model selection or production compatibility. First implement read-only discovery/advice and offline fixtures; preserve historical reference policy and receipts. No model/runtime changes or inference without authorization. Do not claim 4 GB GPU support from weight size or a recommendation.

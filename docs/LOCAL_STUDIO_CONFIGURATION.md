@@ -1,5 +1,7 @@
 # Local Studio configuration and compatibility
 
+The [Hardware Advisor audit and plan](HARDWARE_ADVISOR.md) separates upstream recommended tiers, actual host inventory and production compatibility. Current strict stock reference is preserved until versioned alternatives are validated.
+
 For a newly installed Studio, follow [first-run onboarding](FRESH_INSTALL.md). Discover actual hardware, installed assets and local MCP URL before any change. The stock reference below is the current strict autonomous production gate, not a requirement for export or offline work. No automatic download or forced switch.
 
 ## Reference configuration for the 8 GB GPU tier (2026-11-25)

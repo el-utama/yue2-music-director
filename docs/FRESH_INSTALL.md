@@ -1,5 +1,7 @@
 # First run on a fresh Windows PC
 
+Hardware-dependent configuration advice is planned in [Hardware Advisor](HARDWARE_ADVISOR.md), not yet available. Until implementation and target validation, the existing strict production gate remains in effect; no requirement to use that profile for export/offline.
+
 This is the current installation runbook for a PC with a newly installed
 YuE2 Studio and **no previous Music Director run, agent, provider settings,
 models, library songs, local indexes, jobs, or receipts assumed**. The
