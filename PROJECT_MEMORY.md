@@ -301,3 +301,18 @@ relative M3U8 path and immutable package covered by synthetic tests. Actual
 installed collection reads and player acceptance remain unverified.
 Playlist is not final release type. Exact-head CI pending. Exporter remains
 priority before deferred creative work; preserve all other requirements.
+
+
+2026-11-28: PR #142 merged at 04ee99e after two exact-head green jobs
+(46091872058). Native playlist/album export now implemented for retained
+Director songs; installed live acceptance remains pending. R07 next
+increment adds explicit native-library-only draft source, list songs,
+manual native song IDs or native collection membership, byte-preserving
+FLAC/PCM WAV/MP3, local duration probe, native plain lyrics/instrumental
+handling, existing karaoke and mixed-format relative playlist. No new
+encoding, inference, release approval or library writes. Strict retained
+source unchanged; no silent downgrade. Native-only drafts excluded from
+reviewed assembly. Tests and docs added; exact-head CI pending. Need
+installed route live acceptance, specialized presets, native timing
+correction and naming/usability audit before Exporter acceptance. No
+operator commands or new songs required at this development step.

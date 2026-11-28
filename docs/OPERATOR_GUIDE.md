@@ -191,3 +191,8 @@ Use `music.cmd --export RELEASE --native-collection ID --confirm-run` to
 package an existing playlist or album of completed autonomous results.
 See [native playlists and albums](RELEASE_EXPORT.md#native-playlists-and-albums).
 Studio-only library songs remain unsupported in this increment.
+
+For ordinary Studio library tracks, use `music.cmd --export --list-songs`
+and `music.cmd --export DRAFT --native-song ID --confirm-run`. Native
+collection drafts use `--native-collection ID --library-only` with export.
+See [native draft sources](RELEASE_EXPORT.md#native-library-draft-sources).
