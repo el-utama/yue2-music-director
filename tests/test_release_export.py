@@ -54,6 +54,7 @@ class ExportTests(unittest.TestCase):
                     root=repo/"results/exports"/folder/("Collection--"+kind)
                     self.assertTrue((root/"01 - two/01 - two.srt").exists())
                     self.assertTrue((root/"02 - one/02 - one.flac").exists())
+                    self.assertEqual((root/"01 - two/01 - two.clean.txt").read_bytes(),b"One two\nThree four\n")
                 root=repo/"results/exports/songs/one--one"
                 self.assertEqual((root/"one.flac").read_bytes(),tracks["one"]["audio"].read_bytes())
                 (root/"one.txt").write_text("tampered")
@@ -72,3 +73,31 @@ class ExportTests(unittest.TestCase):
             self.assertFalse((root/"one.srt").exists())
             self.assertFalse((root/"one.lrc").exists())
             self.assertEqual(nd.read(root/"release.json")["status"],"partial_missing_timing")
+
+
+    def test_clean_lyrics_preserve_repeated_stanzas_and_sung_parentheticals(self):
+        track={"brief":{"lyrics":"[Intro]\n[Verse 1]\nDon't go (stay)\n\nWe’re here\n[Chorus]\nHold on\n[Instrumental]\n[Chorus]\nHold on\n"}}
+        self.assertEqual(ex.clean_lyric_bytes(track).decode("utf-8"),
+                         "Don't go (stay)\nWe’re here\n\nHold on\n\nHold on\n")
+        self.assertIn(b"[Verse 1]",ex.lyric_bytes(track))
+
+    def test_distribution_preset_is_offline_and_immutable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo=Path(tmp)
+            t=fixture(repo,"one")
+            with patch.object(ex,"retained",return_value=t):
+                args=(repo,"one",["one"],URL)
+                self.assertEqual(ex.launch(*args,preset="distribution",confirm=True,
+                                 timing_reader=lambda *a:self.fail("native read")),0)
+                root=repo/"results/exports/songs/one--one"
+                manifest=nd.read(root/"release.json")
+                self.assertEqual(manifest["tracks"][0]["timing"]["status"],"not_requested")
+                self.assertEqual(manifest["status"],"complete")
+                self.assertEqual((root/"one.clean.txt").read_bytes(),b"One two\nThree four\n")
+                self.assertEqual((root/"one.txt").read_bytes(),ex.lyric_bytes(t))
+                self.assertFalse((root/"one.lrc").exists())
+                self.assertFalse((root/"one.srt").exists())
+                self.assertEqual(ex.launch(*args,preset="distribution",confirm=True,
+                                 timing_reader=lambda *a:self.fail("repeat read")),0)
+                with self.assertRaises(ValueError):
+                    ex.launch(*args,preset="production",confirm=True)

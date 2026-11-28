@@ -35,3 +35,35 @@ finished audio. Portable filenames avoid Windows device basenames, bound
 Unicode component length and reject unsafe Windows path lengths before
 writing. A failed package write leaves only its identity reservation (and
 the prior package, if any); retry the identical contract, not a changed ID.
+
+
+## Production and distribution presets
+
+New exports and new snapshots additionally contain TITLE.clean.txt, a UTF-8
+plain lyric view using the existing section grammar. TITLE.txt retains the
+original tagged production text (exact bytes for verbatim typed lyrics).
+Clean text removes standalone bracketed section/direction labels and groups
+sung lines into blank-line-separated stanzas, preserving repeats,
+punctuation, sung parentheticals and Unicode. It does not rewrite lyrics,
+guess ambiguous inline directions, certify aggregator-specific formatting,
+or imply artistic approval. Existing snapshots are unchanged.
+
+```powershell
+.\music.cmd --export JOB --confirm-run
+.\music.cmd --export NEW-ID --song JOB --preset distribution --confirm-run
+```
+
+The default production preset keeps original FLAC, both lyric texts and
+native LRC/SRT (when available); use it for archives and video subtitles.
+The distribution preset includes original FLAC and both texts but skips all
+native timing lookups; absence of LRC/SRT is intentional, not a partial
+failure. Single, EP and album use the same preset rules and existing
+portable title/ID paths and ordered numbered track folders. Preset is bound
+to release identity through timing policy; use a distinct release ID to
+change presets and repeat the same preset on snapshots/resume. Missing
+artist, cover or aggregator identifiers do not block draft export. Do not
+invent ISRC, credits or cover files. Existing optional cover-prompt and
+approved release delivery remain independent. Native audio format conversion
+and metadata capabilities should be reused after auditing installed route
+and output identity, not duplicated. Timestamp editing and more specialized
+video presets remain open. No new inference or publication.

@@ -38,7 +38,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 
 ## Current baseline and work in progress
 
-- Verified main `7b41d7428a2f3c434fa62bd6cf59b75d38baf439` after [PR #139](https://github.com/el-utama/yue2-music-director/pull/139); both exact-head Python 3.11 jobs passed [CI 46089129650](https://github.com/el-utama/yue2-music-director/actions/runs/46089129650). Live supervised recovery and fixed-gain finishing succeeded technically; operator rejected the Indonesian lyrics. English remains the default. Seven historical works, 853 candidate IDs and 147 slots open.
+- Verified main `740680f09c01450179c581cfafc703ea3ced3400` after [PR #140](https://github.com/el-utama/yue2-music-director/pull/140); both exact-head Python 3.11 jobs passed CI 46090732870. English default guarded; negative Indonesian lyric feedback retained. Operator now prioritizes draft Exporter before creative improvements. Seven historical works, 853 candidate IDs and 147 slots open.
 - P0 recovery follow-up (R01/R08/R09): a local interruption between saving the Studio acknowledgment and updating the journal can now recover the existing plan or song ID. Regression coverage injects that interruption and checks that planning and synthesis are each submitted once. Windows Studio recovery and independent live artistic acceptance remain open.
 - Preserve retained reference Unreachable and its separate gain-only
   candidate. No new generation, ASR, MOSS, cover or export rerun required.
@@ -57,7 +57,7 @@ unpublished lyrics, audio, private paths or personal preferences here.
 | R04 | Native controls, actual installed capability and limitations | Source-pinned audit and live velocity fixture; velocity not retained in ABC, schedule coverage advisory only | Complete remaining melody/harmony/arrangement/replay/cover/adapter audit; installed binary identity not verified; no fake controls |
 | R05 | Human feedback, persistent artist profiles, confirmed vs inferred preference | Local immutable feedback and opt-in Artist Memory implemented/CI; explicit typed job selection | Live hosted typed-schema validation; usable profile management, no inferred preferences silently applied; artist naming PR115 merged; live usage pending |
 | R06 | Audio finishing, original preserved, separate variant | Gain-only finishing passed live technical check on retained reference | General mastering, repair and artistic comparison are not established; no automatic acceptance |
-| R07 | Cover art direction, release export and complete release package | Cover prompt/original single-song export live; approved variant assembly/delivery CI only | Actual authorized cover and metadata, human review, multi-track release verification; no publishing without approval |
+| R07 | Cover art direction, release export and complete release package | Cover prompt/original single-song export live; approved variant assembly/delivery CI only | Draft export: clean and original lyric texts, native LRC/SRT, useful presets, portable naming and ordered Single/EP/Album; live acceptance pending. Full credits and actual cover optional at draft stage, cover prompt suffices. Separate final release rights/approval remains open; no publishing without approval |
 | R08 | One short launcher, intuitive human-readable names and safe recovery | Readiness and multiple specialist launchers CI; previous launcher help failure fixed | Usability audit with real multiword/Unicode names, quoted paths, realistic input and minimal commands; actual Windows readiness not live checked |
 | R09 | Robust journals, failure isolation, no duplicate calls | Local locks, receipts, explicit recovery and CI | Supervised workers/process isolation, cross-client durable queue, startup/reconnect/ambiguous failures |
 | R10 | Private multi-device operation from Mac and Windows | Audit bridge only | Authenticated production service, queue, status, playback, approvals, reconnect, local host startup; no public exposure |
@@ -269,3 +269,21 @@ editorial evaluation before expensive native generation. These are quality
 targets, not implemented acceptance guarantees. No new private lyrics,
 local IDs or paths committed. Existing English CLI default verified in code;
 regression tests guard it. CI pending for this checkpoint.
+
+
+2026-11-28: Operator explicitly reprioritized R07 draft Exporter before
+Composer, Lyricist and Reviewer improvements. Focus clean aggregator lyric
+text alongside tagged source, native LRC/SRT, presets, naming/layout and
+Single/EP/Album. Do not require full metadata or actual artwork for draft
+export; optional cover prompt suffices. Prefer verified native YuE2 cover,
+format conversion, metadata and timestamp functions over duplication.
+Existing native song_export source audit identifies WAV/FLAC/MP3 route;
+installed capability and actual output still need verification. First
+increment adds section-stripped clean TXT alongside preserved original,
+production and distribution presets (distribution explicitly skips timing),
+maintains existing path/identity and ordered-track rules, and validates
+clean asset in downstream assembly. Old snapshots remain unchanged.
+Native timing correction, specialized video presets, real naming/usability
+and multi-track live acceptance remain open. No inference or new song.
+Exact-head two-job CI pending. All deferred R01/R02/R03 and other
+requirements retained; English lyric default unchanged.

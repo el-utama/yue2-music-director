@@ -142,3 +142,16 @@ independent of idea language; Indonesian is opt-in. Prioritize narrative
 coherence, idiomatic and singable English, concrete imagery, and meaningful
 editorial gates before native generation. Multilingual research remains an
 open requirement; technical success does not erase negative human feedback.
+
+
+### Operator priority: draft Exporter first (2026-11-28)
+
+Finish R07 draft exports before improving creative roles. Provide clean lyric
+text and immutable original tagged text, native timing, purpose-based
+presets and portable ordered Single/EP/Album packages. Metadata minimal and
+optional; actual cover optional, cover prompt sufficient. Do not duplicate
+verified native format conversion, cover, metadata or timing features.
+Production and distribution presets are the first bounded increment;
+additional video preset and timing/naming/live acceptance remain open.
+After exporter acceptance return to English-first Composer/Lyricist/Reviewer
+quality, without dropping other requirements or artistic rejection evidence.

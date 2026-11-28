@@ -30,6 +30,24 @@ def lyric_bytes(track):
     return (lyrics.rstrip()+"\n").encode("utf-8")
 
 
+CLEAN_LYRIC_POLICY="section-stripped-stanzas-v1"
+PRESETS={"production":"studio-display-anchors-v2","distribution":"not-requested-v1"}
+
+
+def clean_lyric_bytes(track):
+    """Use existing lyric section grammar, not a generative text rewrite.
+
+    Keep repetitions, punctuation and sung parentheticals. Only standalone
+    bracket section/direction tags and excess blank lines are removed.
+    Ambiguous inline directions remain for human review.
+    """
+    groups=parse_lyrics(track["brief"]["lyrics"])
+    stanzas=["\n".join(group["lines"]) for group in groups if group["lines"]]
+    if not stanzas:
+        raise ValueError("No sung lyric lines to export")
+    return ("\n\n".join(stanzas)+"\n").encode("utf-8")
+
+
 def stamp(ms,*,srt=False):
     minutes,rest=divmod(ms,60000)
     second,milli=divmod(rest,1000)
@@ -90,7 +108,9 @@ def verify_export(root,contract):
     return manifest
 
 
-def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=ri.DEFAULT_SNAPSHOT,confirm=False,timing_reader=None):
+def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=ri.DEFAULT_SNAPSHOT,confirm=False,timing_reader=None,preset="production"):
+    if preset not in PRESETS:
+        raise ValueError("Unknown export preset")
     cc.validate_job(release,"placeholder","en",195)
     if (kind not in ("single","album","ep") or not 1<=len(jobs)<=24
             or len(set(jobs))!=len(jobs) or (kind=="single" and len(jobs)!=1)):
@@ -104,7 +124,7 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
     exports=repo/"results/exports"
     original_contract={"schema":"release-export-v1","release":release,"type":kind,"title":title,"artist":artist,
                        "sources":[t["evidence"] for t in tracks],"audio_variant":"original",
-                       "timing_policy":"studio-display-anchors-v2"}
+                       "timing_policy":PRESETS[preset]}
     def destination():
         original,index,record=ri.original(exports,original_contract)
         root,contract=ri.revision(exports,original_contract,original,snapshot)
@@ -113,6 +133,7 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
         return root,contract,index,record
     root,contract,index,record=destination()
     print("Export folder:",root,flush=True)
+    print("Export preset:",preset,flush=True)
     if not confirm:
         print("Plan only; no writes or Studio calls.",flush=True)
         return 0
@@ -127,7 +148,7 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
                for i,t in enumerate(tracks,1)]
         def paths(base):
             return [base/"release.json",*[(base/name if kind!="single" else base)/(name+suffix)
-                    for name in names for suffix in (".flac",".txt",".lrc",".srt")]]
+                    for name in names for suffix in (".flac",".txt",".clean.txt",".lrc",".srt")]]
         ri.ensure_paths([index,*paths(root)])
         ri.reserve(index,record)
         base=root.parent
@@ -146,26 +167,30 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
                     raise ValueError("Audio changed during export")
                 lyrics=t["brief"]["lyrics"]
                 (dest/(name+".txt")).write_bytes(lyric_bytes(t))
+                (dest/(name+".clean.txt")).write_bytes(clean_lyric_bytes(t))
                 timing={"status":"unavailable","acoustic_timing_verified":False}
-                try:
-                    lrc=(timing_reader or read_timing)(t,url)
-                    if not lrc:
-                        raise ValueError("No retained native karaoke LRC")
-                    lrc_out,srt_out=timed_text(lrc,lyrics,t["report"]["acoustic"]["duration_seconds"])
-                except (ValueError,MCPError,TypeError,KeyError,OSError) as exc:
-                    timing["reason"]=str(exc)
+                if preset=="distribution":
+                    timing={"status":"not_requested","acoustic_timing_verified":False}
                 else:
-                    # Write failures are not timing unavailability. Abort the
-                    # staged export instead of publishing a partial timed pair.
-                    (dest/(name+".lrc")).write_bytes(lrc_out.encode("utf-8"))
-                    (dest/(name+".srt")).write_bytes(srt_out.encode("utf-8"))
-                    timing={"status":"exported_unverified_display_anchors","acoustic_timing_verified":False,
-                            "source_lrc_sha256":nd.digest(lrc.encode("utf-8")),
-                            "srt_end_policy":"Studio UI word-tail/plain-line heuristic; capped at next onset, final 3 seconds and measured duration",
-                            "lrc_preserved":True}
-                    if timing_reader is None:
-                        timing["source_identity_screen"]="matched_retained_audio_and_stable_library_snapshot_v1"
-                        timing["karaoke_provenance_verified"]=False
+                    try:
+                        lrc=(timing_reader or read_timing)(t,url)
+                        if not lrc:
+                            raise ValueError("No retained native karaoke LRC")
+                        lrc_out,srt_out=timed_text(lrc,lyrics,t["report"]["acoustic"]["duration_seconds"])
+                    except (ValueError,MCPError,TypeError,KeyError,OSError) as exc:
+                        timing["reason"]=str(exc)
+                    else:
+                        # Write failures are not timing unavailability. Abort the
+                        # staged export instead of publishing a partial timed pair.
+                        (dest/(name+".lrc")).write_bytes(lrc_out.encode("utf-8"))
+                        (dest/(name+".srt")).write_bytes(srt_out.encode("utf-8"))
+                        timing={"status":"exported_unverified_display_anchors","acoustic_timing_verified":False,
+                                "source_lrc_sha256":nd.digest(lrc.encode("utf-8")),
+                                "srt_end_policy":"Studio UI word-tail/plain-line heuristic; capped at next onset, final 3 seconds and measured duration",
+                                "lrc_preserved":True}
+                        if timing_reader is None:
+                            timing["source_identity_screen"]="matched_retained_audio_and_stable_library_snapshot_v1"
+                            timing["karaoke_provenance_verified"]=False
                 if nd._sha(t["audio"])!=t["result"]["audio_sha256"]:
                     raise ValueError("Source audio changed during timing export")
                 details.append({"track":i,"job":t["job"],"title":t["brief"]["title"],"audio_sha256":t["result"]["audio_sha256"],
@@ -173,7 +198,8 @@ def launch(repo,release,jobs,url,*,kind="single",title=None,artist="",snapshot=r
                 print("Track",i,":",timing["status"],flush=True)
             files={p.relative_to(stage).as_posix():nd._sha(p) for p in stage.rglob("*") if p.is_file()}
             manifest={"contract":contract,"tracks":details,"files":files,
-                      "status":"complete" if all(t["timing"]["status"]=="exported_unverified_display_anchors" for t in details) else "partial_missing_timing",
+                      "lyric_assets":CLEAN_LYRIC_POLICY,
+                      "status":"complete" if all(t["timing"]["status"] in ("exported_unverified_display_anchors","not_requested") for t in details) else "partial_missing_timing",
                       "release_approved":False,"studio_mutations":0,"inference_calls":0}
             nd.atomic_write(stage/"release.json",manifest)
             if root.exists():
@@ -196,11 +222,12 @@ def main():
     p.add_argument("--type",choices=("single","album","ep"),default="single")
     p.add_argument("--title")
     p.add_argument("--artist",default="")
+    p.add_argument("--preset",choices=sorted(PRESETS),default="production",help="production: audio, both lyric texts and native LRC/SRT; distribution: audio and both lyric texts only")
     p.add_argument("--snapshot",default=ri.DEFAULT_SNAPSHOT,help="Explicit immutable revision of existing v1 release")
     p.add_argument("--confirm-run",action="store_true")
     a=p.parse_args()
     try:
-        return launch(a.repo.resolve(),a.export,a.song or [a.export],a.url,kind=a.type,title=a.title,artist=a.artist,snapshot=a.snapshot,confirm=a.confirm_run)
+        return launch(a.repo.resolve(),a.export,a.song or [a.export],a.url,kind=a.type,title=a.title,artist=a.artist,snapshot=a.snapshot,confirm=a.confirm_run,preset=a.preset)
     except (OSError,ValueError,KeyError,TypeError,MCPError) as exc:
         print("ERROR:",exc,file=sys.stderr)
         return 2
