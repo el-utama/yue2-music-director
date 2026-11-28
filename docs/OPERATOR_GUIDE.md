@@ -191,7 +191,7 @@ production workflow. See [development](../DEVELOPMENT.md) and
 [research handbook](RESEARCH_HANDBOOK.md) for context.
 
 
-If a completed duration continuation has an acoustic hash mismatch, use the
+If a completed duration or instrumental intro continuation has an acoustic hash mismatch, use the
 [explicit retained audio identity recovery](AUTONOMOUS_CLI.md#explicit-retained-audio-identity-recovery)
 only after the current exact hash is confirmed and approved. No new song
 submission is permitted on that path.
